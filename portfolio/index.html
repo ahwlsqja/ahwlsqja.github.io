@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
 <style>
-/* Layout v3: 히어로(근거 3개) → 한 일 2열 → 대표 사례(본문 | 그림) → 장애 노트 카드 → 실험실 카드 → 90일 3칸 → 기록 → 연락처. 섹션 간 여백은 넓게, 본문은 짧게. */
+/* Layout v4: 히어로 → 네 단계 지도 → 대표 프로젝트 1~4(본문 | 그림과 관측 기록, 아래 장면) → 월드랜드 → 보조 3카드 → 노드 실험실 → 오픈소스·글·수상 → 연락처 */
 :root {
   --bg: #F3F5F7;
   --surface: #FFFFFF;
@@ -22,6 +22,7 @@
   --ok: #1E7F55;
   --warn: #9A6412;
   --bad: #B23A30;
+  --orange: #B35C00;
   --code-bg: #EEF1F4;
   --shadow: rgba(21, 32, 43, 0.07);
   --f-display: 'Hahmlet', 'Apple SD Gothic Neo', sans-serif;
@@ -40,6 +41,7 @@
     --ok: #4CC38A;
     --warn: #E0A84A;
     --bad: #F2786C;
+    --orange: #F0A35A;
     --code-bg: #1A232C;
     --shadow: rgba(0, 0, 0, 0.35);
     color-scheme: dark;
@@ -55,6 +57,7 @@
   --ok: #4CC38A;
   --warn: #E0A84A;
   --bad: #F2786C;
+  --orange: #F0A35A;
   --code-bg: #1A232C;
   --shadow: rgba(0, 0, 0, 0.35);
   color-scheme: dark;
@@ -77,13 +80,12 @@ body {
 }
 
 .page {
-  max-width: 72rem;
+  max-width: 76rem;
   margin-inline: auto;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 56px 96px;
 }
-.col { max-width: var(--measure); }
 [id] { scroll-margin-top: 24px; }
 
 h1, h2, h3 { text-wrap: balance; }
@@ -122,7 +124,7 @@ a {
   text-underline-offset: 3px;
 }
 a:hover { text-decoration-thickness: 2px; }
-a:focus-visible, button:focus-visible, .fig-scroll:focus-visible, .log:focus-visible {
+a:focus-visible, button:focus-visible, .fig-scroll:focus-visible, .log:focus-visible, .tbl:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: 2px;
@@ -137,6 +139,7 @@ code {
 }
 .mono { font-family: var(--f-mono); }
 .muted { color: var(--muted); }
+.svg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 /* 상태 칩 */
 .chip {
@@ -165,10 +168,12 @@ code {
 .chip.ok::before { background: currentColor; }
 .chip.stg { color: var(--warn); }
 .chip.stg::before { border: 1.5px solid currentColor; }
-.chip.shadow { color: var(--warn); border-style: dashed; }
-.chip.shadow::before { border: 1.5px dashed currentColor; }
+.chip.merge { color: var(--accent); }
+.chip.merge::before { background: currentColor; }
 .chip.priv { color: var(--muted); border-radius: 3px; }
 .chip.priv::before { background: currentColor; border-radius: 1px; }
+.chip.res { color: var(--ink); background: var(--surface); border-color: var(--rule); font-variant-numeric: tabular-nums; }
+.chip.res::before { display: none; }
 
 /* 히어로 */
 .kicker {
@@ -178,49 +183,42 @@ code {
   letter-spacing: 0.02em;
   margin: 0 0 14px;
 }
-.subtitle {
-  font-size: 1.08rem;
-  color: var(--muted);
-  margin: 10px 0 26px;
-}
 .lead {
-  font-size: 1.16rem;
-  line-height: 1.68;
+  font-size: 1.12rem;
+  line-height: 1.72;
   max-width: var(--measure);
-  margin-bottom: 0;
+  margin: 22px 0 0;
 }
 .proof {
   list-style: none;
   padding: 0;
-  margin: 40px 0 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  margin: 34px 0 0;
+  max-width: 58rem;
   border-top: 3px solid var(--ink);
 }
 .proof > li {
-  min-width: 0;
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 2px 18px;
   margin: 0;
-  padding: 18px 0 20px;
+  padding: 13px 0 14px;
   border-bottom: 1px solid var(--rule);
+  font-size: 15.5px;
+  line-height: 1.62;
 }
-.proof .n {
-  font-family: var(--f-display);
-  font-weight: 700;
-  font-size: clamp(1.45rem, 3.2vw, 1.75rem);
-  line-height: 1.25;
-  margin: 0 0 8px;
-  font-variant-numeric: tabular-nums;
+.proof .tag {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  padding-top: 0.2em;
 }
-.proof .d {
-  font-size: 15px;
-  line-height: 1.65;
-  color: var(--muted);
-  margin: 0;
-}
+.proof .tag a { text-decoration: none; }
+.proof .tag a:hover { text-decoration: underline; }
+.proof p { margin: 0; min-width: 0; }
+.proof .sub { color: var(--muted); }
 .career {
   list-style: none;
   padding: 0;
-  margin: 28px 0 0;
+  margin: 26px 0 0;
   display: grid;
   gap: 6px;
   font-size: 15px;
@@ -242,7 +240,7 @@ code {
 .links {
   list-style: none;
   padding: 0;
-  margin: 22px 0 0;
+  margin: 20px 0 0;
   display: flex;
   flex-wrap: wrap;
   gap: 10px 28px;
@@ -280,25 +278,8 @@ code {
 .fine {
   font-size: 13.5px;
   color: var(--muted);
-  margin: 18px 0 0;
+  margin: 16px 0 0;
 }
-
-/* 목차 */
-.toc { margin-top: 36px; }
-.toc ul {
-  list-style: none;
-  margin: 0;
-  padding: 12px 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 22px;
-  border-block: 1px solid var(--rule);
-  font-size: 14.5px;
-}
-.toc li { margin: 0; }
-.toc a { text-decoration: none; }
-.toc a:hover { text-decoration: underline; }
-.toc .idx { font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin-right: 6px; }
 
 /* 섹션 */
 .sec { margin-top: 112px; }
@@ -317,46 +298,112 @@ code {
   flex: none;
 }
 .sec-h h2 { min-width: 0; }
-.h2-sub { font-family: var(--f-mono); font-size: 0.5em; font-weight: 400; color: var(--muted); margin-left: 6px; white-space: nowrap; }
+.h2-sub { font-family: var(--f-mono); font-size: 0.5em; font-weight: 400; color: var(--muted); margin-left: 6px; }
+.sec-intro { max-width: var(--measure); color: var(--muted); font-size: 15px; margin: -10px 0 26px; }
 
-/* 한 일 */
-.did {
-  list-style: none;
-  counter-reset: did;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 18px 44px;
-  font-size: 15.5px;
-  line-height: 1.68;
-}
-.did > li {
-  counter-increment: did;
-  min-width: 0;
-  margin: 0;
-  display: grid;
-  grid-template-columns: 2rem minmax(0, 1fr);
-  gap: 0 6px;
-}
-.did > li::before {
-  content: counter(did, decimal-leading-zero);
+/* 지도 */
+.map-sec { margin-top: 72px; }
+.row-h {
   font-family: var(--f-mono);
   font-size: 12.5px;
   color: var(--muted);
-  padding-top: 0.2em;
+  letter-spacing: 0.04em;
+  margin: 0 0 10px;
 }
-.did > li > p { margin: 0; min-width: 0; }
+.steps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.step {
+  display: block;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px var(--shadow);
+  padding: 14px 16px 13px;
+}
+.step:hover { border-color: var(--accent); text-decoration: none; }
+.step .s-n {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.step .s-v {
+  display: block;
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  line-height: 1.3;
+  margin: 2px 0 4px;
+}
+.step .s-t { display: block; font-size: 14.5px; line-height: 1.5; }
+.step .s-go {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--accent);
+}
+.join {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 0 8px 18px;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.join::before { content: "↓"; color: var(--accent); font-size: 14px; flex: none; }
+.xlinks {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 28px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.xlinks li { margin: 0; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sw { flex: none; display: inline-block; width: 26px; height: 0; border-top: 2px dashed var(--orange); }
+.sw.gray { border-top-color: var(--muted); border-top-width: 1.5px; }
+.noderow {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  font-size: 14px;
+}
+.noderow .row-h { margin: 0 8px 0 0; }
+.ncell {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--surface);
+  color: inherit;
+  text-decoration: none;
+}
+a.ncell:hover { border-color: var(--accent); }
+.narrow { color: var(--accent); font-family: var(--f-mono); }
+.nnote { font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin-left: 6px; }
 
-/* 사례 */
-.case { margin-top: 72px; }
-.case:first-of-type { margin-top: 0; }
-.case-head {
+/* 대표 프로젝트 */
+.proj { margin-top: 96px; }
+.proj:first-of-type { margin-top: 0; }
+.proj-head {
   border-top: 3px solid var(--ink);
   padding-top: 20px;
-  margin-bottom: 22px;
+  margin-bottom: 14px;
 }
-.case-head h3 { max-width: var(--measure); }
 .stamp {
   display: flex;
   flex-wrap: wrap;
@@ -368,48 +415,165 @@ code {
   margin: 0 0 10px;
   font-variant-numeric: tabular-nums;
 }
-.case-head h3 { font-size: clamp(1.25rem, 2.8vw, 1.5rem); }
-.case-grid {
+.stamp .stage { color: var(--ink); font-weight: 500; }
+.proj-head h3 { font-size: clamp(1.3rem, 2.9vw, 1.6rem); max-width: 52rem; }
+.stack {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 10px 0 0;
+  line-height: 1.6;
+}
+.oneline {
+  font-size: 1.06rem;
+  line-height: 1.7;
+  max-width: 56rem;
+  margin: 0 0 30px;
+}
+.oneline .k { margin-right: 8px; }
+.proj-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 28px 48px;
+  gap: 32px 44px;
   align-items: start;
 }
-.case-body { min-width: 0; font-size: 15.5px; line-height: 1.7; }
-.case-body h4 {
+.proj-body { min-width: 0; font-size: 15.5px; line-height: 1.72; }
+.proj-body h4, .side h4, .scene h4 {
   font-family: var(--f-mono);
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.06em;
   color: var(--muted);
-  margin: 1.4em 0 0.4em;
+  margin: 1.6em 0 0.45em;
 }
-.case-body h4:first-child { margin-top: 0; }
-.case-body ul { padding-left: 1.1em; }
-.call {
-  border-left: 3px solid var(--accent);
-  padding: 2px 0 2px 14px;
-  margin: 1.2em 0;
-}
-.call h4 { margin-top: 0; }
-.call p:last-child { margin-bottom: 0; }
-.case-links {
-  list-style: none;
-  padding: 0;
-  margin: 1em 0 0;
+.proj-body h4:first-child { margin-top: 0; }
+.side { min-width: 0; display: grid; gap: 18px; }
+
+/* 설계 결정 표 */
+.tbl { overflow-x: auto; margin: 0.2em 0 1em; }
+.dec {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 14px;
-  display: grid;
-  gap: 4px;
+  line-height: 1.6;
 }
-.case-links li { margin: 0; min-width: 0; overflow-wrap: anywhere; }
-.case-links .k { margin-right: 6px; }
+.dec th {
+  text-align: left;
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 0 10px 6px 0;
+  border-bottom: 1px solid var(--ink);
+}
+.dec td {
+  vertical-align: top;
+  padding: 10px 10px 11px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.dec td:first-child { width: 42%; }
+.dec td:nth-child(2) { width: 22%; color: var(--muted); }
+.dec td b { display: block; font-weight: 600; margin-bottom: 2px; }
+.dec .none { color: var(--muted); }
+
+/* 그림 */
+.fig { margin: 0; min-width: 0; }
+.fig-h {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 0 0 8px;
+}
+.fig-t { font-family: var(--f-mono); font-size: 12.5px; color: var(--muted); min-width: 0; }
+.fig-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 14px;
+}
+.fig-scroll + .fig-scroll { margin-top: 10px; }
+.fig figcaption {
+  margin: 0.6rem 0 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; width: 18px; height: 0; border-top: 2.5px solid var(--accent); }
+.legend i.r { border-top: 1.5px dashed var(--bad); }
+.legend i.o { border-top: 2.5px solid var(--orange); }
+.legend i.g { border-top: 1.5px dashed var(--muted); }
+
+.dg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 440px;
+  font-family: var(--f-body);
+  font-size: 12.5px;
+}
+.dg text { fill: var(--ink); }
+.dg .tm { fill: var(--muted); }
+.dg .tp { fill: var(--accent); }
+.dg .tr { fill: var(--bad); }
+.dg .to { fill: var(--orange); }
+.dg .tok { fill: var(--ok); }
+.dg .tb { font-weight: 600; }
+.dg .tn { font-weight: 400; }
+.dg .mono { font-family: var(--f-mono); font-size: 11.5px; }
+.dg .sm { font-size: 11.5px; }
+.dg .lb {
+  stroke: var(--surface);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+.dg .b { fill: var(--surface); stroke: var(--ink); stroke-width: 1.25; }
+.dg .bk { fill: var(--surface); stroke: var(--ink); stroke-width: 2.5; }
+.dg .b2 { fill: var(--code-bg); stroke: var(--muted); stroke-width: 1; }
+.dg .bp { fill: var(--surface); stroke: var(--accent); stroke-width: 2.25; }
+.dg .br { fill: var(--surface); stroke: var(--bad); stroke-width: 1.5; }
+.dg .brd { fill: var(--surface); stroke: var(--bad); stroke-width: 1.25; stroke-dasharray: 5 3; }
+.dg .bo { fill: var(--surface); stroke: var(--orange); stroke-width: 2; }
+.dg .bg { fill: var(--code-bg); stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 3; }
+.dg .bok { fill: var(--surface); stroke: var(--ok); stroke-width: 2.25; }
+.dg .grp { fill: none; stroke: var(--muted); stroke-width: 1; }
+.dg .zone { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 4; }
+.dg .zg { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 5 4; }
+.dg .w { fill: none; stroke: var(--ink); stroke-width: 1.25; }
+.dg .wm { fill: none; stroke: var(--muted); stroke-width: 1; }
+.dg .wd { fill: none; stroke: var(--muted); stroke-width: 1.25; stroke-dasharray: 5 4; }
+.dg .wp { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.dg .wr { fill: none; stroke: var(--bad); stroke-width: 1.5; stroke-dasharray: 5 3; }
+.dg .wrs { fill: none; stroke: var(--bad); stroke-width: 2; }
+.dg .wo { fill: none; stroke: var(--orange); stroke-width: 2.5; }
+.dg .wg { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.dg .ll { fill: none; stroke: var(--rule); stroke-width: 1.25; stroke-dasharray: 4 4; }
+.ah { fill: var(--ink); }
+.ahp { fill: var(--accent); }
+.ahr { fill: var(--bad); }
+.aho { fill: var(--orange); }
+.ahm { fill: var(--muted); }
 
 /* 관측 기록 */
 .obs {
   background: var(--code-bg);
   border-radius: 4px;
   padding: 13px 15px 11px;
-  margin: 1em 0 1.2em;
+  margin: 0;
   font-family: var(--f-mono);
   font-size: 13px;
   line-height: 1.55;
@@ -425,11 +589,11 @@ code {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 7px;
+  gap: 9px;
 }
 .obs li {
   display: grid;
-  grid-template-columns: 11rem minmax(0, 1fr);
+  grid-template-columns: 9.5rem minmax(0, 1fr);
   gap: 2px 12px;
   align-items: baseline;
   margin: 0;
@@ -442,62 +606,47 @@ code {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
-.obs-v { min-width: 0; color: var(--ink); }
-.obs-v b { font-weight: 600; }
+.obs-v { min-width: 0; color: var(--ink); font-family: var(--f-body); font-size: 13.5px; }
+.obs-v b { font-weight: 600; font-family: var(--f-mono); font-size: 13px; }
 .obs-v .ar { color: var(--muted); }
+.obs-v .q { color: var(--muted); }
 
-/* 그림 */
-.fig { margin: 0; min-width: 0; }
-.fig-scroll {
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
+/* 장면, 가져갈 것 */
+.scene {
+  margin-top: 32px;
   background: var(--surface);
   border: 1px solid var(--rule);
   border-radius: 6px;
-  padding: 14px;
+  box-shadow: 0 1px 2px var(--shadow), 0 8px 24px var(--shadow);
+  padding: 20px 22px 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px 40px;
 }
-.fig figcaption {
-  margin: 0.6rem 0 0;
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: var(--muted);
+.scene > div { min-width: 0; }
+.scene h4 { margin-top: 0; }
+.scene h5 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 1.06rem;
+  line-height: 1.45;
+  margin: 0 0 8px;
 }
-.dg {
-  display: block;
-  width: 100%;
-  height: auto;
-  min-width: 440px;
-  font-family: var(--f-body);
-  font-size: 12.5px;
+.scene p { font-size: 15px; line-height: 1.72; }
+.links-row { font-size: 15px; margin: 0.9em 0 0; display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.links-row a { overflow-wrap: anywhere; }
+.carry {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--rule);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px 20px;
+  font-size: 15px;
+  line-height: 1.7;
 }
-.dg text { fill: var(--ink); }
-.dg .tm { fill: var(--muted); }
-.dg .tbad { fill: var(--bad); }
-.dg .tok { fill: var(--ok); }
-.dg .tb { font-weight: 600; }
-.dg .tn { font-weight: 400; }
-.dg .mono { font-family: var(--f-mono); font-size: 11.5px; }
-.dg .sm { font-size: 11.5px; }
-.dg .lb {
-  stroke: var(--surface);
-  stroke-width: 5px;
-  stroke-linejoin: round;
-  paint-order: stroke fill;
-}
-.dg .b { fill: var(--surface); stroke: var(--ink); stroke-width: 1.25; }
-.dg .b2 { fill: var(--code-bg); stroke: var(--muted); stroke-width: 1; }
-.dg .bk { fill: var(--surface); stroke: var(--ink); stroke-width: 2.75; }
-.dg .g { fill: none; stroke: var(--muted); stroke-width: 1; }
-.dg .z { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 4; }
-.dg .w { fill: none; stroke: var(--ink); stroke-width: 1.25; }
-.dg .wm { fill: none; stroke: var(--muted); stroke-width: 1.25; }
-.dg .wd { fill: none; stroke: var(--muted); stroke-width: 1.25; stroke-dasharray: 5 4; }
-.dg .ll { fill: none; stroke: var(--rule); stroke-width: 1.25; stroke-dasharray: 4 4; }
-.dg .ah { fill: var(--ink); }
-.dg .ahm { fill: var(--muted); }
-.dg .dot { fill: var(--muted); }
-.dg .gapbad { fill: var(--bad); }
-.dg .gapok { fill: var(--ok); }
+.carry .k { font-size: 12px; padding-top: 0.25em; color: var(--accent); }
+.carry p { margin: 0; min-width: 0; }
 
 /* 카드 공통 */
 .cards {
@@ -562,46 +711,6 @@ code {
 }
 .lab-links li { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .lab-links .k { margin-right: 6px; }
-.after {
-  font-size: 15px;
-  color: var(--muted);
-  margin: 20px 0 0;
-  max-width: var(--measure);
-}
-
-/* 90일 */
-.why { max-width: var(--measure); padding-left: 1.2em; }
-.plan {
-  list-style: none;
-  padding: 0;
-  margin: 32px 0 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  border-top: 3px solid var(--ink);
-}
-.plan > li {
-  min-width: 0;
-  margin: 0;
-  padding: 16px 0 18px;
-  border-bottom: 1px solid var(--rule);
-  font-size: 15px;
-  line-height: 1.66;
-}
-.plan .day {
-  font-family: var(--f-display);
-  font-weight: 700;
-  font-size: 1.3rem;
-  margin: 0 0 6px;
-}
-.plan p:last-child { margin: 0; }
-.src {
-  font-size: 13.5px;
-  color: var(--muted);
-  margin: 20px 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-}
 
 /* 기록 */
 .rec {
@@ -633,10 +742,9 @@ code {
   margin-right: 8px;
   font-variant-numeric: tabular-nums;
 }
-.rec p { font-size: 15px; line-height: 1.62; }
 
 /* 연락처 */
-.contact { margin: 0; display: grid; gap: 10px; }
+.contact { margin: 0; display: grid; gap: 10px; max-width: var(--measure); }
 .contact > div {
   display: grid;
   grid-template-columns: 7rem minmax(0, 1fr);
@@ -654,541 +762,1062 @@ code {
 }
 
 @media (min-width: 760px) {
-  .proof { grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--rule); }
-  .proof > li { border-bottom: 0; padding: 20px 24px 22px; border-left: 1px solid var(--rule); }
-  .proof > li:first-child { padding-left: 0; border-left: 0; }
-  .proof > li:last-child { padding-right: 0; }
-  .did { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .plan { grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--rule); }
-  .plan > li { border-bottom: 0; padding: 18px 22px 20px; border-left: 1px solid var(--rule); }
-  .plan > li:first-child { padding-left: 0; border-left: 0; }
-  .plan > li:last-child { padding-right: 0; }
   .rec { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .carry { grid-template-columns: 11rem minmax(0, 1fr); }
 }
-@media (min-width: 980px) {
-  .case-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); }
-  .case-grid > .fig { position: sticky; top: 24px; }
+@media (min-width: 920px) {
+  .steps { grid-template-columns: minmax(0, 1fr) 7.5rem minmax(0, 1fr) 7.5rem minmax(0, 1fr) 7.5rem minmax(0, 1fr); align-items: stretch; }
+  .join { flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px; padding: 0 10px; }
+  .join::before { content: "→"; font-size: 16px; }
+  .scene.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1080px) {
+  .proj-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
   .cards.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .cards.three > .card.wide { grid-column: span 1; }
 }
 @media (max-width: 600px) {
   body { font-size: 16px; }
   .page { padding-block: 32px 72px; }
   .sec { margin-top: 80px; }
-  .career li, .obs li, .contact > div { grid-template-columns: minmax(0, 1fr); }
-  .card { padding: 18px 16px 16px; }
+  .proj { margin-top: 72px; }
+  .proof > li, .career li, .obs li, .contact > div { grid-template-columns: minmax(0, 1fr); }
+  .card, .scene { padding-left: 16px; padding-right: 16px; }
   .fig-scroll { padding: 10px; }
+  .dec, .dec tbody, .dec tr, .dec td { display: block; width: auto; }
+  .dec td:first-child, .dec td:nth-child(2) { width: auto; }
+  .dec thead { display: none; }
+  .dec tr { border-bottom: 1px solid var(--rule); padding: 10px 0; }
+  .dec td { border: 0; padding: 2px 0; }
+  .dec td[data-l]::before {
+    content: attr(data-l);
+    display: block;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
 }
 </style>
 </head>
 <body>
 
 
+<svg class="svg-defs" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="mi" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="ah" d="M0 0 L10 5 L0 10 Z"/></marker>
+    <marker id="mp" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path class="ahp" d="M0 0 L10 5 L0 10 Z"/></marker>
+    <marker id="mr" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="ahr" d="M0 0 L10 5 L0 10 Z"/></marker>
+    <marker id="mo" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path class="aho" d="M0 0 L10 5 L0 10 Z"/></marker>
+    <marker id="mm" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="ahm" d="M0 0 L10 5 L0 10 Z"/></marker>
+  </defs>
+</svg>
+
 <div class="page">
 
+<!-- 히어로 -->
 <header class="hero" id="top">
   <p class="kicker">람다256(Nodit) · Blockchain Node Operations Specialist 지원</p>
   <h1>모진영</h1>
-  <p class="subtitle">상태를 가진 시스템을 띄우고, 멈추면 원인까지 좁힙니다</p>
-  <p class="lead">저는 상태를 가진 시스템을 직접 띄우고, 멈추면 로그와 시스템 테이블로 원인을 좁히는 개발자입니다. 학부 때는 Besu와 Fabric 네트워크를 Kubernetes에 띄워 동기화 실패와 인증서 오류를 풀었고, 지금은 수파리드의 이벤트 저장소 ClickHouse를 GKE 자체 운영 클러스터로 옮겨 관리형 서비스 해지까지 혼자 맡았습니다.</p>
+  <p class="lead">저는 상태를 가진 시스템을 처음부터 만들고, 느려지면 엔진 동작까지 내려가 원인을 찾고, 옮길 때는 되돌림과 동일성을 먼저 증명하는 개발자입니다. 학부 때는 Besu와 Fabric 노드를 Kubernetes에 직접 띄웠고, 그 후 월드랜드에서 GPU 머신을 Kubernetes 워커로 붙이는 노드 데몬과 Hub를 만들었습니다. 지금은 수파리드 초기 멤버로 데이터 파이프라인을 0부터 만들고, 그 저장소를 GKE로 옮겨 관리형 서비스 해지까지 맡았습니다(화면과 광고 연동 일부는 동료 몫).</p>
 
   <ul class="proof" aria-label="핵심 근거">
-    <li>
-      <p class="n">1.3억 행 이관, 실패 0</p>
-      <p class="d">Keeper 3대와 레플리카 2대를 3개 존에 나눠 띄우고, 고객사 10곳의 이벤트 수를 ±0.2% 안으로 맞춘 뒤 전환했습니다.</p>
-    </li>
-    <li>
-      <p class="n">503 한 건 → 315회 연속 200</p>
-      <p class="d">롤아웃 중 503을 NEG 준비 게이트가 로드밸런서보다 먼저 열리는 순서 문제로 좁히고, staging 검증 뒤 46분 만에 운영에 반영했습니다.</p>
-    </li>
-    <li>
-      <p class="n">Besu 블록 15초 → 5초</p>
-      <p class="d">노드 동기화 실패를 겹친 원인 4개로 나눠 풀고 합의를 Clique에서 QBFT로 바꿨습니다(프라이빗 체인).</p>
-    </li>
+    <li><span class="tag"><a href="#p5">노드</a></span><p><b>키 파일 하나와 명령 한 줄로 GPU 머신이 Kubernetes 워커가 되게 했습니다.</b> 지갑 인증 → 인증서 → mTLS → kubeadm join을 노드 데몬이 잇고, Hub가 여러 클러스터의 GPU 용량을 추적합니다. <span class="sub">(월드랜드, Kind e2e까지)</span></p></li>
+    <li><span class="tag"><a href="#p1">만들고</a></span><p><b>장애 구간 이벤트 ID 약 3,900개를 양방향으로 대조해 누락 0을 확인했습니다.</b> 큐가 비었다는 신호로 복구를 끝내지 않았습니다.</p></li>
+    <li><span class="tag"><a href="#p2">파고들고</a></span><p><b>part 454 → 11.</b> 해시 파티션이 pruning 이득 없이 INSERT를 쪼갠다는 것을 MergeTree 동작에서 짚었습니다.</p></li>
+    <li><span class="tag"><a href="#p3">옮기고</a></span><p><b>약 1.3억 행을 실패 0으로 옮기고 관리형 서비스를 해지했습니다.</b> 청크마다 dedup 토큰과 정족수 쓰기로 다시 돌려도 한 번 넣은 것과 같게 했습니다.</p></li>
+    <li><span class="tag"><a href="#p4">지킨다</a></span><p><b>새 기능 배포 직후의 수신 회귀를 다음 수집 주기에서 잡아 약 10분 안에 롤백했습니다.</b> 관측 28건 중 7건만 들어온 것을 보고 원장을 보존한 채 되돌렸습니다.</p></li>
   </ul>
 
   <ul class="career" aria-label="경력">
     <li><span class="when">2026.04 ~ 재직</span><span><b>수파리드</b> 초기 멤버, 백엔드와 데이터 및 인프라</span></li>
-    <li><span class="when">2026.01 ~ 04</span><span><b>리버벤스(월드랜드)</b> 계약직 인턴, GPU 노드 데몬과 Hub</span></li>
+    <li><span class="when">2026.01 ~ 04</span><span><b>리버벤스(월드랜드)</b> 계약직 인턴</span></li>
     <li><span class="when">학력</span><span><b>상명대학교</b> 빅데이터융합 전공 수료</span></li>
   </ul>
 
   <ul class="links">
     <li><span class="k">GitHub</span><a href="https://github.com/ahwlsqja" target="_blank" rel="noopener">github.com/ahwlsqja</a></li>
-    <li><span class="k">velog</span><a href="https://velog.io/@ahwlsqja" target="_blank" rel="noopener">velog.io/@ahwlsqja</a><span class="muted">(글 137편)</span></li>
+    <li><span class="k">velog</span><a href="https://velog.io/@ahwlsqja" target="_blank" rel="noopener">velog.io/@ahwlsqja</a></li>
     <li><span class="k">이메일</span><span class="email" id="email-hero">ahwlsqja1324@gmail.com</span><button type="button" class="copy" data-copy="email-hero" aria-live="polite">복사</button></li>
   </ul>
-  <p class="fine">코드 작성에는 AI 코딩 에이전트를 함께 썼고, 설계와 전환 판단, 운영 디버깅은 직접 했습니다.</p>
-
-  <nav class="toc" aria-label="목차">
-    <ul>
-      <li><a href="#work"><span class="idx">01</span>한 일</a></li>
-      <li><a href="#cases"><span class="idx">02</span>대표 사례</a></li>
-      <li><a href="#incidents"><span class="idx">03</span>장애 노트</a></li>
-      <li><a href="#lab"><span class="idx">04</span>노드 실험실</a></li>
-      <li><a href="#plan"><span class="idx">05</span>왜 노딧, 90일</a></li>
-      <li><a href="#records"><span class="idx">06</span>오픈소스와 기록</a></li>
-      <li><a href="#contact"><span class="idx">07</span>연락처</a></li>
-    </ul>
-  </nav>
+  <p class="fine">코드 작성에는 AI 코딩 에이전트를 함께 썼고, 설계와 원리 탐구, 검증, 장애 판단은 직접 했습니다.</p>
 </header>
 
-<!-- 01 한 일 -->
-<section class="sec" id="work" aria-labelledby="h-work">
-  <div class="sec-h"><span class="idx">01</span><h2 id="h-work">한 일 <span class="h2-sub">수파리드, 2026.04 ~ 10</span></h2></div>
-  <ol class="did">
-    <li><p><b>수집과 ELT 0→1.</b> SDK → Worker → Queue → ClickHouse 경로를 처음부터 만들어 고객사 10곳의 원본 이벤트를 월 2천만 건 넘게 받았고, 10월에는 Go 수신기 → Kafka → Flink → Go 적재기 경로를 설계해 미러링 뒤 갈아탔습니다.</p></li>
-    <li><p><b>ClickHouse 저장과 조회.</b> EXPLAIN, query_log, part_log로 테이블마다 파티션과 정렬 키를 다시 정해 INSERT p95 약 6배 단축, 저장량 약 1/4, Overview 읽은 행 약 99% 감소를 냈습니다(운영).</p></li>
-    <li><p><b>정합성 전환.</b> 이벤트 논리 키를 (고객, 세션, 이벤트)로 바꾸며 운영 테이블 7개를 교체하고, 파생 집계 19개를 살린 채 세션 조합 1만여 개를 대조해 누락 0을 확인했습니다.</p></li>
-    <li><p><b>광고 연동.</b> Meta와 Google 계정 연결부터 최초 90일 수집까지 9개 경로를 멱등한 상태 전이로 만들고, 운영 Meta 계정 하나로 캠페인부터 광고까지 90일 수집을 끝까지 확인했습니다(화면과 연동 일부는 동료).</p></li>
-    <li><p><b>배포와 시크릿.</b> 검증한 산출물을 다시 빌드하지 않고 승격하는 배포 대기열과 Atlas 스키마 게이트를 만들고, 시크릿 약 40개를 Infisical로 모아 CI는 OIDC로 받게 했습니다. Cloud Run 일 청구는 약 86% 줄였습니다.</p></li>
-    <li><p><b>GKE와 GitOps.</b> Cloud Run을 GKE 블루/그린(5% → 롤백 → 100%)으로 옮기고, 쓰기의 약 90%가 손작업이던 운영 GKE를 객체 63개 역수입과 diff 0 확인 뒤 Argo CD로 넘기고(앱 25/25 Synced), staging은 Kargo 자동 승격과 External Secrets로 돌렸습니다.</p></li>
-    <li><p><b>ClickHouse 자체 운영 이전.</b> 관리형 ClickHouse Cloud를 GKE 위 클러스터로 옮기고 해지했습니다(<a href="#case-ch">사례 1</a>).</p></li>
-    <li><p><b>모니터링.</b> 관리형 Prometheus를 PromQL 28개로 5분마다 읽는 수집기를 올리고, ClickHouse 알림 정책 88개를 Terraform으로 선언해 섀도로 평가 중입니다. heartbeat 경보는 클러스터 밖에 뒀습니다.</p></li>
-  </ol>
+<!-- 지도 -->
+<section class="sec map-sec" id="map" aria-labelledby="h-map">
+  <div class="sec-h"><span class="idx">00</span><h2 id="h-map">만들고, 파고들고, 옮기고, 지킨다</h2></div>
+  <p class="row-h">수파리드 6개월</p>
+  <div class="steps">
+    <a class="step" href="#p1"><span class="s-n">1 · 2026.04 ~ 10</span><span class="s-v">만들고</span><span class="s-t">수집과 ELT 0→1</span><span class="s-go">프로젝트 1 ↓</span></a>
+    <p class="join">64 해시 파티션, (고객, 이벤트) 키가 병목으로</p>
+    <a class="step" href="#p2"><span class="s-n">2 · 2026.08 ~ 09</span><span class="s-v">파고들고</span><span class="s-t">ClickHouse 저장 구조</span><span class="s-go">프로젝트 2 ↓</span></a>
+    <p class="join">정렬 키 원리 → 복사 읽기 약 1/10</p>
+    <a class="step" href="#p3"><span class="s-n">3 · 2026.09 ~ 10</span><span class="s-v">옮기고</span><span class="s-t">GKE와 ClickHouse 자체 운영</span><span class="s-go">프로젝트 3 ↓</span></a>
+    <p class="join">늘어난 홉 → 감지 5종</p>
+    <a class="step" href="#p4"><span class="s-n">4 · 2026.09 ~ 10</span><span class="s-v">지킨다</span><span class="s-t">관측과 SRE 에이전트 (사내 운영)</span><span class="s-go">프로젝트 4 ↓</span></a>
+  </div>
+  <ul class="xlinks">
+    <li><span class="sw" aria-hidden="true"></span>1 → 3 · Kafka 미러 대조 = 관리형 해지 근거</li>
+    <li><span class="sw gray" aria-hidden="true"></span>보조 3 배포 대기열 → 3 · 멈춘 자리를 GitOps가</li>
+  </ul>
+  <div class="noderow">
+    <span class="row-h">노드 쪽</span>
+    <a class="ncell" href="#lab">학부: Fabric, Besu</a><span class="narrow" aria-hidden="true">→</span>
+    <a class="ncell" href="#p5"><b>월드랜드 GPU 노드 플랫폼</b> (5)</a><span class="narrow" aria-hidden="true">→</span>
+    <a class="ncell" href="#lab">Prysm 포크 데브넷 연구</a>
+    <span class="nnote">프라이빗 체인과 데브넷까지</span>
+  </div>
 </section>
 
-<!-- 02 대표 사례 -->
-<section class="sec" id="cases" aria-labelledby="h-cases">
-  <div class="sec-h"><span class="idx">02</span><h2 id="h-cases">대표 사례</h2></div>
+<!-- 대표 프로젝트 -->
+<section class="sec" id="projects" aria-labelledby="h-proj">
+  <div class="sec-h"><span class="idx">01</span><h2 id="h-proj">대표 프로젝트 <span class="h2-sub">수파리드, 2026.04 ~ 10</span></h2></div>
 
-  <!-- 사례 1 -->
-  <article class="case" id="case-ch" aria-labelledby="h-ch">
-    <div class="case-head">
-      <p class="stamp"><span>사례 1</span><span>2026.09 ~ 10</span><span class="chip ok">운영 반영</span><span>단독 담당</span></p>
-      <h3 id="h-ch">관리형 ClickHouse를 GKE 자체 운영 클러스터로 옮기고 해지까지</h3>
+  <!-- 1. 만들고 -->
+  <article class="proj" id="p1" aria-labelledby="h-p1">
+    <div class="proj-head">
+      <p class="stamp"><span class="stage">1 · 만들고</span><span>2026.04 – 10</span><span class="chip ok">운영 중</span></p>
+      <h3 id="h-p1">제품 데이터 파이프라인 0→1</h3>
+      <p class="stack">TypeScript · Go · Cloudflare Workers와 Queues · ClickHouse · Kafka · Flink</p>
     </div>
-    <div class="case-grid">
-      <div class="case-body">
-        <h4>문제</h4>
-        <p>관리형 레플리카의 CPU p99가 상한 4 vCPU에 붙어 있었고 복구 리허설은 한 번도 없었습니다. 회사는 GCP 단일화를 이유로 10월 말 이전을 정했습니다.</p>
-        <h4>한 일</h4>
-        <ul>
-          <li>Altinity operator를 namespace 권한으로만 깔고 Keeper 3대를 존 a, b, c에 하나씩 띄웠습니다. Autopilot이 <code>safe-to-evict: false</code> 파드를 한 존에 몰아 넣는 것을 잡아 minDomains를 필수로 바꿨고, Keeper Ready 뒤에 ClickHouse를 올리는 순서로 크래시루프를 없앴습니다.</li>
-          <li>grants를 주지 않은 users.xml 사용자가 전체 권한을 갖는 것을 26.8에서 실측해 <code>REVOKE ALL</code>을 넣고, 읽기 계정의 <code>max_execution_time=0</code> 우회는 constraints min으로 막았습니다.</li>
-          <li>staging에서 3,300만 행 복구 리허설(105초, 표별 해시 일치)을 하고, 레플리카 1대를 0으로 내려 <code>insert_quorum=2</code>가 쓰기를 Code 285로 거부하며 유실 0인 것을 봤습니다.</li>
-          <li>과거 데이터를 (표, 고객, 일) 청크와 dedup 토큰으로 옮기고, 고객사별 24시간 이벤트 수와 Kafka 커밋 위치 12개 파티션을 대조한 뒤 읽기 경로를 설정값 하나로 넘겼습니다.</li>
-        </ul>
-        <div class="obs" role="group" aria-label="결과">
-          <p class="obs-h">결과</p>
-          <ul>
-            <li><span class="obs-k">과거 데이터 <span class="chip ok">prod</span></span><span class="obs-v">청크 2,640개 <span class="ar">→</span> <b>1.3억 행, 실패 0</b></span></li>
-            <li><span class="obs-k">24시간 대조</span><span class="obs-v">고객사 10곳 <span class="ar">→</span> <b>모두 ±0.2% 안</b></span></li>
-            <li><span class="obs-k">복구 리허설 <span class="chip stg">staging</span></span><span class="obs-v">3,300만 행 <span class="ar">→</span> <b>105초</b>, 표별 해시 일치</span></li>
-            <li><span class="obs-k">해지</span><span class="obs-v"><b>10월 16일</b> 관리형 서비스 해지</span></li>
-          </ul>
+    <p class="oneline"><span class="k">한 줄</span>브라우저 SDK → 수집 게이트웨이 → 큐 → 원본 → 현재 상태 → 서빙 테이블을 처음부터 만들었고, 10월에는 같은 원칙으로 Kafka 경로를 설계해 미러 대조 뒤 갈아탔습니다.</p>
+    <div class="proj-grid">
+      <div class="proj-body">
+        <h4>왜, 내 몫</h4>
+        <p>사이트 행동과 광고 유입을 이어 보여 주는 B2B 분석 제품에 브라우저 이벤트를 모으는 경로가 없었습니다. 데이터 모델과 수집, 적재, 층 설계, 실패 경로를 주도했습니다(SDK 탭 수명 모델 선행 구현과 광고 연동 일부, 화면은 동료). 10월 경로는 동료가 요구사항을 썼고 저는 구조 결정과 장애 시험, 전환 판단을 맡았습니다.</p>
+        <h4>파고든 원리</h4>
+        <p>브라우저 재전송, Queue 재전달, Kafka 재소비는 모두 at-least-once라 같은 이벤트가 여러 번 올 수 있고, 저장소는 그걸 전제로 짜야 했습니다. 같은 이벤트가 두 번 INSERT되면 ReplacingMergeTree 원본은 언제일지 모르는 병합 때 1행으로 합쳐지지만, INSERT에 걸린 Materialized View는 블록마다 바로 +1을 더해 집계가 2로 남고 나중 병합으로도 돌아오지 않습니다. 그래서 원본은 다시 읽을 수 있게 두고, 정확한 값은 논리 키로 다시 읽는 층에서, 빠른 값은 미리 집계하는 층에서 내도록 나눠야 한다고 생각했습니다.</p>
+        <h4>설계 결정</h4>
+        <div class="tbl">
+          <table class="dec">
+            <thead><tr><th scope="col">선택</th><th scope="col">버린 대안</th><th scope="col">이유</th></tr></thead>
+            <tbody>
+              <tr><td data-l="선택"><b>층 분리</b>원본 → 현재 상태(논리 키 argMax) → 세션 Fact → 서빙을 다른 그레인으로</td><td data-l="버린 대안">조회마다 원본 FINAL, INSERT 시점 집계만 믿기</td><td data-l="이유">중복 INSERT가 MV 집계에는 그대로 남아, 정확한 값은 다시 읽는 층에서 내야 함</td></tr>
+              <tr><td data-l="선택"><b>실패분 붙잡기</b>본 큐 재시도 → DLQ → 1회 재발행 → 소비자 없는 보관 큐, 보관이 성공한 뒤에만 ack</td><td data-l="버린 대안"><span class="none">—</span></td><td data-l="이유">실패분을 잃지 않고, 적재 직전에 남는 R2 원본 기록을 복구 대조의 기준으로 씀</td></tr>
+              <tr><td data-l="선택"><b>10월 경로</b>Go 수신 서버 → Kafka(12 파티션) → Flink → Go 적재기. 적재기는 구간을 원장에 먼저 쓰고 두 레플리카가 모두 받아야 성공. 트래픽은 Worker 다이얼 off → mirror → primary</td><td data-l="버린 대안">기존 경로 유지</td><td data-l="이유">세션 커버리지가 사흘 사이 약 60%에서 30%로 떨어지고, 그 경로가 기대던 관리형 ClickHouse 해지가 잡힘</td></tr>
+            </tbody>
+          </table>
         </div>
-        <div class="call">
-          <h4>판단과 대가</h4>
-          <p>7일 관찰은 비용 때문에 생략했습니다. 대신 바깥 기준 두 개(기존 쪽 이벤트 수, Kafka 커밋 위치)를 맞춰 본 뒤 해지했고, 직전 대조에서 새 쪽이 0.1~0.5% 많은 차이는 재전송 중복으로 보고 감수했습니다.</p>
-        </div>
-        <h4>배운 점</h4>
-        <p>레플리카를 직접 내려 봐야 나머지가 무엇을 보장하는지 안다고 생각합니다. 노드도 한 대를 빼 보는 것부터 하겠습니다.</p>
+        <h4>앞뒤로 이어진 것</h4>
+        <p>초기에 둔 64 해시 파티션과 (고객, 이벤트) 키가 데이터가 늘며 쓰기 병목과 다른 세션 이벤트가 합쳐질 위험으로 돌아와 <a href="#p2">2</a>의 출발점이 됐고, 미러 대조는 <a href="#p3">3</a>의 해지 근거로 쓰였습니다.</p>
       </div>
 
-      <figure class="fig">
-        <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 1, 가로로 스크롤할 수 있습니다">
-          <svg class="dg" viewBox="0 0 560 572" role="img" aria-label="그림 1. 위는 전환 사다리입니다. 복구 리허설 105초, 24시간 대조 ±0.2%와 Kafka 12/12, 1.3억 행 복사, 읽기 전환, 해지 순서이고, 읽기 전환은 같은 값과 재시작으로 되돌릴 수 있으며 해지는 되돌릴 수 없습니다. 아래는 GKE 클러스터입니다. 존 a, b, c에 Keeper가 1대씩 있고, 존 a와 b에 백업 사이드카가 붙은 레플리카가 있습니다. Go 적재기는 두 레플리카에 insert_quorum=2로 쓰고, 사이드카는 클러스터 밖 GCS로 일 단위 백업을 보냅니다.">
-            <defs>
-              <marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0 L10 5 L0 10 Z"/></marker>
-              <marker id="m1m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahm" d="M0 0 L10 5 L0 10 Z"/></marker>
-            </defs>
-            <text class="tm mono" x="4" y="14">전환 순서</text>
+      <div class="side">
+        <figure class="fig">
+          <div class="fig-h"><span class="fig-t">그림 1 · 두 경로와 ClickHouse 층</span><span class="chip res">ID 약 3,900 대조, 누락 0</span></div>
+          <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 1, 가로로 스크롤할 수 있습니다">
+            <svg class="dg" viewBox="0 0 600 612" role="img" aria-label="그림 1. 위 띠는 6월부터 9월까지의 경로입니다. SDK에서 수집 게이트웨이(Workers, KV 중복 필터), 본 큐, 적재 컨슈머를 거쳐 ClickHouse 원본으로 들어갔고, 적재 직전 R2에 원본 기록이 남습니다. 재실패분은 본 큐에서 DLQ를 거쳐 소비자 없는 14일 보관 큐로 가고 보관 뒤 ack합니다. 이 컨슈머 적재는 2026년 10월에 멈췄습니다. 아래 띠는 10월 경로로, 게이트웨이의 다이얼이 off, mirror, primary 순으로 바뀌며 Go 수신 서버, Kafka 12 파티션, Flink 세션 처리, Go 적재기를 거쳐 원본에 쓰고, 적재기는 적재 원장에 기록하며 원장과 Kafka 커밋 위치는 12/12 일치합니다. ClickHouse 안은 원본, 현재 상태(논리 키 argMax), 세션 Fact, 서빙 테이블 순이고 대시보드 API가 서빙 테이블을 읽습니다. R2와 원본 사이 장애 구간 ID 약 3,900개를 양방향 대조해 차집합 0이었습니다.">
+              <!-- 실패 경로 -->
+              <rect class="b" x="218" y="24" width="76" height="40" rx="4"/>
+              <text class="mono" x="256" y="48" text-anchor="middle">DLQ</text>
+              <rect class="br" x="318" y="22" width="132" height="44" rx="4"/>
+              <text x="384" y="40" text-anchor="middle">보관 큐 14일</text>
+              <text class="tm sm" x="384" y="57" text-anchor="middle">소비자 없음</text>
+              <path class="wr" d="M256 90 V66" marker-end="url(#mr)"/>
+              <path class="wr" d="M294 44 H316" marker-end="url(#mr)"/>
+              <text class="tr sm" x="460" y="40">재실패,</text>
+              <text class="tr sm" x="460" y="56">보관 뒤 ack</text>
 
-            <rect class="b" x="4" y="26" width="96" height="64" rx="4"/>
-            <text x="52" y="52" text-anchor="middle">복구 리허설</text>
-            <text class="mono tb" x="52" y="71" text-anchor="middle">105초</text>
-            <path class="w" d="M100 58 H116" marker-end="url(#m1)"/>
+              <!-- 6~9월 -->
+              <text class="tm mono" x="4" y="80">6 ~ 9월</text>
+              <rect class="b" x="4" y="90" width="52" height="44" rx="4"/>
+              <text class="mono" x="30" y="116" text-anchor="middle">SDK</text>
+              <path class="wp" d="M56 112 H72" marker-end="url(#mp)"/>
+              <rect class="bp" x="74" y="90" width="126" height="44" rx="4"/>
+              <text x="137" y="108" text-anchor="middle">수집 게이트웨이</text>
+              <text class="tm mono" x="137" y="125" text-anchor="middle">Workers</text>
+              <path class="w" d="M200 112 H216" marker-end="url(#mi)"/>
+              <rect class="b" x="218" y="90" width="76" height="44" rx="4"/>
+              <text x="256" y="116" text-anchor="middle">본 큐</text>
+              <path class="w" d="M294 112 H310" marker-end="url(#mi)"/>
+              <rect class="b" x="312" y="90" width="104" height="44" rx="4"/>
+              <text x="364" y="116" text-anchor="middle">적재 컨슈머</text>
+              <path class="wd" d="M416 112 H438" marker-end="url(#mm)"/>
+              <rect class="b" x="440" y="90" width="156" height="44" rx="4"/>
+              <text x="518" y="108" text-anchor="middle">R2 원본 기록</text>
+              <text class="tm sm" x="518" y="125" text-anchor="middle">적재 직전 남는 원본 기록</text>
+              <rect class="b2" x="100" y="140" width="96" height="20" rx="10"/>
+              <text class="sm" x="148" y="154" text-anchor="middle">KV 중복 필터</text>
 
-            <rect class="b" x="118" y="26" width="96" height="64" rx="4"/>
-            <text x="166" y="46" text-anchor="middle">24시간 대조</text>
-            <text class="mono tb" x="166" y="64" text-anchor="middle">±0.2%</text>
-            <text class="mono tm" x="166" y="81" text-anchor="middle">Kafka 12/12</text>
-            <path class="w" d="M214 58 H230" marker-end="url(#m1)"/>
+              <!-- 은퇴 경로 -->
+              <path class="wg" d="M364 134 V176 H532 V382 H486" marker-end="url(#mm)"/>
+              <text class="tm sm lb" x="448" y="170" text-anchor="middle">2026-10 적재 중지</text>
 
-            <rect class="b" x="232" y="26" width="96" height="64" rx="4"/>
-            <text x="280" y="52" text-anchor="middle">1.3억 행 복사</text>
-            <text class="mono tm" x="280" y="71" text-anchor="middle">실패 0</text>
-            <path class="w" d="M328 58 H344" marker-end="url(#m1)"/>
+              <!-- 10월 -->
+              <path class="wp" d="M88 134 V208" marker-end="url(#mp)"/>
+              <text class="tp mono" x="98" y="192">다이얼 off → mirror → primary</text>
+              <text class="tm mono" x="4" y="236">10월</text>
+              <rect class="bp" x="74" y="210" width="90" height="44" rx="4"/>
+              <text x="119" y="236" text-anchor="middle">Go 수신 서버</text>
+              <path class="wp" d="M164 232 H180" marker-end="url(#mp)"/>
+              <rect class="bp" x="182" y="210" width="90" height="44" rx="4"/>
+              <text x="227" y="228" text-anchor="middle">Kafka</text>
+              <text class="tm mono" x="227" y="245" text-anchor="middle">12 파티션</text>
+              <path class="wp" d="M272 232 H288" marker-end="url(#mp)"/>
+              <rect class="bp" x="290" y="210" width="90" height="44" rx="4"/>
+              <text x="335" y="228" text-anchor="middle">Flink</text>
+              <text class="tm sm" x="335" y="245" text-anchor="middle">세션 처리</text>
+              <path class="wp" d="M380 232 H396" marker-end="url(#mp)"/>
+              <rect class="bp" x="398" y="210" width="90" height="44" rx="4"/>
+              <text x="443" y="236" text-anchor="middle">Go 적재기</text>
+              <rect class="b" x="172" y="286" width="110" height="36" rx="4"/>
+              <text x="227" y="309" text-anchor="middle">적재 원장</text>
+              <path class="wo" d="M227 257 V283" marker-start="url(#mo)" marker-end="url(#mo)"/>
+              <text class="to sm tb" x="218" y="276" text-anchor="end">커밋 위치 12/12</text>
+              <path class="wd" d="M420 254 V304 H284" marker-end="url(#mm)"/>
+              <path class="wp" d="M466 254 V369" marker-end="url(#mp)"/>
 
-            <rect class="b" x="346" y="26" width="96" height="64" rx="4"/>
-            <text x="394" y="52" text-anchor="middle">읽기 전환</text>
-            <text class="mono tm" x="394" y="71" text-anchor="middle">설정값 1개</text>
-            <path class="w" d="M442 58 H458" marker-end="url(#m1)"/>
+              <!-- R2 대조 -->
+              <path class="wo" d="M580 137 V398 H487" marker-start="url(#mo)" marker-end="url(#mo)"/>
+              <text class="to sm tb" x="596" y="424" text-anchor="end">ID 약 3,900</text>
+              <text class="to sm tb" x="596" y="440" text-anchor="end">= 3,900</text>
+              <text class="to sm tb" x="596" y="456" text-anchor="end">차집합 0</text>
+              <text class="tm sm" x="596" y="474" text-anchor="end">2026-06 복구</text>
 
-            <rect class="bk" x="460" y="26" width="96" height="64" rx="4"/>
-            <text class="tb" x="508" y="52" text-anchor="middle">해지</text>
-            <text class="mono" x="508" y="71" text-anchor="middle">10.16</text>
-            <text class="tb sm" x="508" y="110" text-anchor="middle">되돌릴 수 없음</text>
+              <!-- ClickHouse -->
+              <rect class="grp" x="286" y="344" width="210" height="256" rx="6"/>
+              <text class="tm mono" x="296" y="362">ClickHouse</text>
+              <rect class="bk" x="300" y="372" width="184" height="36" rx="4"/>
+              <text class="tb" x="392" y="395" text-anchor="middle">원본</text>
+              <path class="wp" d="M392 408 V426" marker-end="url(#mp)"/>
+              <rect class="bp" x="300" y="428" width="184" height="44" rx="4"/>
+              <text x="392" y="446" text-anchor="middle">현재 상태</text>
+              <text class="tm mono" x="392" y="463" text-anchor="middle">논리 키 argMax</text>
+              <path class="wp" d="M392 472 V490" marker-end="url(#mp)"/>
+              <rect class="bp" x="300" y="492" width="184" height="36" rx="4"/>
+              <text x="392" y="515" text-anchor="middle">세션 Fact</text>
+              <path class="wp" d="M392 528 V546" marker-end="url(#mp)"/>
+              <rect class="bp" x="300" y="548" width="184" height="36" rx="4"/>
+              <text x="392" y="571" text-anchor="middle">서빙 테이블</text>
+              <path class="wp" d="M484 566 H506" marker-end="url(#mp)"/>
+              <rect class="b" x="508" y="548" width="88" height="36" rx="4"/>
+              <text x="552" y="571" text-anchor="middle">대시보드 API</text>
 
-            <path class="wd" d="M394 90 V108 H282 V92" marker-end="url(#m1m)"/>
-            <text class="tm sm lb" x="338" y="126" text-anchor="middle">되돌림: 같은 값 + 재시작</text>
-
-            <rect class="b" x="170" y="150" width="220" height="38" rx="4"/>
-            <text x="280" y="174" text-anchor="middle">Go 적재기</text>
-            <path class="w" d="M210 188 V202 H101 V270" marker-end="url(#m1)"/>
-            <path class="w" d="M280 188 V270" marker-end="url(#m1)"/>
-            <text class="mono lb" x="290" y="232">insert_quorum=2</text>
-
-            <rect class="g" x="4" y="212" width="552" height="290" rx="6"/>
-            <text class="tm mono" x="548" y="230" text-anchor="end">GKE Autopilot</text>
-            <rect class="z" x="14" y="244" width="174" height="248" rx="4"/>
-            <rect class="z" x="193" y="244" width="174" height="248" rx="4"/>
-            <rect class="z" x="372" y="244" width="174" height="248" rx="4"/>
-            <text class="tm mono" x="24" y="262">존 a</text>
-            <text class="tm mono" x="203" y="262">존 b</text>
-            <text class="tm mono" x="382" y="262">존 c</text>
-
-            <rect class="b" x="28" y="272" width="146" height="80" rx="4"/>
-            <text class="mono" x="101" y="292" text-anchor="middle">replica 1</text>
-            <rect class="b2" x="40" y="304" width="122" height="32" rx="3"/>
-            <text class="sm" x="101" y="325" text-anchor="middle">백업 사이드카</text>
-            <rect class="b" x="207" y="272" width="146" height="80" rx="4"/>
-            <text class="mono" x="280" y="292" text-anchor="middle">replica 2</text>
-            <rect class="b2" x="219" y="304" width="122" height="32" rx="3"/>
-            <text class="sm" x="280" y="325" text-anchor="middle">백업 사이드카</text>
-            <path class="w" d="M176 286 H205" marker-start="url(#m1)" marker-end="url(#m1)"/>
-
-            <text class="tm mono" x="459" y="306" text-anchor="middle">minDomains 3</text>
-            <text class="tm sm" x="459" y="324" text-anchor="middle">(필수로 변경)</text>
-
-            <path class="wm" d="M101 352 V400"/>
-            <path class="wm" d="M280 352 V400"/>
-            <path class="wm" d="M101 376 H459 V400"/>
-            <circle class="dot" cx="101" cy="376" r="3"/>
-            <circle class="dot" cx="280" cy="376" r="3"/>
-            <text class="tm sm lb" x="370" y="370" text-anchor="middle">메타데이터 합의</text>
-
-            <rect class="b" x="41" y="400" width="120" height="36" rx="4"/>
-            <text class="mono" x="101" y="423" text-anchor="middle">Keeper 1</text>
-            <rect class="b" x="220" y="400" width="120" height="36" rx="4"/>
-            <text class="mono" x="280" y="423" text-anchor="middle">Keeper 2</text>
-            <rect class="b" x="399" y="400" width="120" height="36" rx="4"/>
-            <text class="mono" x="459" y="423" text-anchor="middle">Keeper 3</text>
-            <text class="tm sm lb" x="280" y="468" text-anchor="middle">1대가 죽어도 과반 2대 유지 · Keeper Ready 뒤 ClickHouse</text>
-
-            <path class="wd" d="M40 320 H22 V520" marker-end="url(#m1m)"/>
-            <path class="wd" d="M341 320 H362 V520" marker-end="url(#m1m)"/>
-            <rect class="b" x="4" y="522" width="552" height="40" rx="4"/>
-            <text x="280" y="547" text-anchor="middle">GCS 백업 버킷 <tspan class="tm">(클러스터 밖, 일 단위)</tspan></text>
-          </svg>
+              <!-- 왼쪽 주석 -->
+              <text class="tb sm" x="14" y="384">같은 이벤트 2번 INSERT</text>
+              <text class="sm" x="14" y="403">원본: 병합 때 1행</text>
+              <text class="tr sm" x="14" y="421">MV 집계: 2로 남음</text>
+              <path class="wd" d="M170 396 H298"/>
+              <text class="tm sm" x="278" y="455" text-anchor="end">정확한 값: 다시 읽는 층</text>
+              <text class="tm sm" x="278" y="571" text-anchor="end">빠른 값: 미리 집계한 층</text>
+            </svg>
+          </div>
+          <p class="legend"><span><i></i>현재 주 경로</span><span><i class="r"></i>실패 경로</span><span><i class="o"></i>대조, 검증</span><span><i class="g"></i>은퇴, 비활성</span></p>
+        </figure>
+        <div class="obs" role="group" aria-label="결과 관측 기록">
+          <p class="obs-h">결과 관측 기록</p>
+          <ul>
+            <li><span class="obs-k">장애 구간 대조 <span class="chip ok">운영</span></span><span class="obs-v">이벤트 ID 약 3,900개 <span class="ar">→</span> <b>누락 0, 중복 0</b> <span class="q">(그 구간 한정)</span></span></li>
+            <li><span class="obs-k">운영 미러 24시간</span><span class="obs-v">고유 이벤트 차이 <b>약 0.06%</b> <span class="q">(고객사별 ±0.2% 안)</span></span></li>
+            <li><span class="obs-k">Kafka 커밋 위치</span><span class="obs-v">적재 원장과 <b>12/12 파티션 일치</b></span></li>
+            <li><span class="obs-k">미러 첫날 사본</span><span class="obs-v">약 0.2% 누락을 Worker의 <code>waitUntil</code> 등록 순서로 좁혀 고친 뒤 <span class="ar">→</span> <b>약 4천 건 누락 0</b></span></li>
+          </ul>
         </div>
-        <figcaption>위는 되돌릴 수 있는 단계와 없는 단계를 나눈 전환 순서, 아래는 새 클러스터입니다. 점선은 되돌림과 백업 경로입니다.</figcaption>
-      </figure>
+      </div>
     </div>
+
+    <div class="scene">
+      <div>
+        <h4>그 안의 장면 · 2026-06</h4>
+        <h5>큐가 비었다로 끝내지 않은 복구</h5>
+        <p>저장소 인스턴스가 종료돼 적재가 약 4시간 멈추고 실패분이 보관 큐에 쌓였습니다. 보관 큐에 임시 consumer를 붙여 10건 canary 뒤 나머지를 본 큐로 다시 흘리고, 본 큐 전송이 성공한 뒤에만 ack했습니다. 큐가 비었다는 건 큐에 있던 것이 나갔다는 뜻일 뿐이라, 장애 구간의 R2 원본 ID와 저장소 ID를 양방향으로 대조했습니다.</p>
+      </div>
+    </div>
+    <div class="carry"><span class="k">노드 운영으로 가져갈 것</span><p>큐가 비었다는 신호와 원본이 모두 들어왔다는 사실 사이에는 틈이 있었습니다. 노드 재동기화도 동기화 완료 표시만 보고 끝내지 않고, 기준 노드와 같은 높이의 블록 해시를 맞춰 본 뒤 복구를 닫겠습니다.</p></div>
   </article>
 
-  <!-- 사례 2 -->
-  <article class="case" id="case-503" aria-labelledby="h-503">
-    <div class="case-head">
-      <p class="stamp"><span>사례 2</span><span>2026.09.29</span><span class="chip stg">staging 검증</span><span class="chip ok">운영 반영</span></p>
-      <h3 id="h-503">롤아웃 중 503 한 건: Ready가 트래픽보다 먼저 왔다</h3>
+  <!-- 2. 파고들고 -->
+  <article class="proj" id="p2" aria-labelledby="h-p2">
+    <div class="proj-head">
+      <p class="stamp"><span class="stage">2 · 파고들고</span><span>2026.08 – 09</span><span class="chip ok">운영 반영</span></p>
+      <h3 id="h-p2">ClickHouse 저장 구조를 MergeTree 동작부터 다시 짜기</h3>
+      <p class="stack">ClickHouse(projection, refreshable MV) · EXPLAIN · query_log · part_log</p>
     </div>
-    <div class="case-grid">
-      <div class="case-body">
-        <h4>문제</h4>
-        <p>Argo CD로 처음 운영을 동기화한 롤아웃에서 외부 /health에 503이 한 번 찍혔습니다. 보름 전 같은 증상에 종료 쪽(preStop 60초)만 막았는데 다시 났습니다.</p>
-        <h4>한 일</h4>
-        <ul>
-          <li>새 Pod의 <code>status.conditions</code>에서 NEG 준비 게이트가 LoadBalancerNegWithoutHealthCheck 사유로 LB 헬스체크(5초 × 2회)보다 먼저 True가 된 것을 찾았습니다. replica가 1개라 그 틈에 옛 Pod가 빠지며 정상 endpoint가 0이 됐습니다.</li>
-          <li><code>minReadySeconds</code> 30, replica 2, PDB minAvailable 1을 걸었습니다. 늘리기 전에 코드에 리더 선출과 프로세스 내 스케줄러가 없는 것을 확인했습니다.</li>
-          <li>staging 롤아웃 2회 동안 외부 /health를 1초 간격으로 폴링하고, 운영은 <code>argocd app sync --resource</code>로 Deployment와 PDB만 넘겼습니다.</li>
-        </ul>
-        <div class="obs" role="group" aria-label="결과">
-          <p class="obs-h">결과</p>
-          <ul>
-            <li><span class="obs-k"><span class="chip stg">staging</span></span><span class="obs-v">1초 폴링 <span class="ar">→</span> <b>315회 연속 200</b></span></li>
-            <li><span class="obs-k"><span class="chip ok">prod</span></span><span class="obs-v">적용 구간 <span class="ar">→</span> <b>100회 연속 200</b></span></li>
-            <li><span class="obs-k">걸린 시간</span><span class="obs-v">탐지 <span class="ar">→</span> 운영 반영 <b>46분</b></span></li>
-          </ul>
+    <p class="oneline"><span class="k">한 줄</span>해시 파티션이 INSERT를 여러 part로 쪼갤 뿐 pruning 이득이 없다는 것을 엔진 동작에서 짚고, 테이블과 화면마다 파티션, 정렬 키, 읽기 경로를 다시 정했습니다.</p>
+    <div class="proj-grid">
+      <div class="proj-body">
+        <h4>왜, 내 몫</h4>
+        <p>데이터가 늘자 쓰기 지연과 병합 부담이 커지고 요약과 채널 화면이 읽기 한도에 걸려 실패했는데, 실행 시간만으로는 원인을 나눌 수 없었습니다. 원리 분석, 비교 실험, 운영 테이블 전환, 화면별 읽기 경로를 주도했습니다(채널 분류 기반은 동료와 함께).</p>
+        <h4>파고든 원리</h4>
+        <p>쓰기 쪽부터 따라갔습니다. MergeTree는 INSERT 한 번을 파티션 값마다 나눠 따로 part를 만들어, 64개 해시 파티션이면 배치 하나가 최대 64개 part가 됩니다. 병합은 파티션 경계를 넘지 않아 part가 쌓였고, FINAL은 그 part를 모두 펼쳐 합치느라 메모리를 썼습니다. 그 대가로 얻는다는 pruning은 실제 파티션 식과 EXPLAIN을 맞춰 보니 조건이 DDL의 해시 식과 정확히 같을 때만 1/64를 건너뛰었고, 식이 조금만 달라도 0%였습니다. 화면 필터(고객, 세션, 시각)는 그 해시 식을 쓰지 않아, 파티션은 이득 없이 쓰기 비용만 늘리고 있었습니다.</p>
+        <h4>설계 결정</h4>
+        <div class="tbl">
+          <table class="dec">
+            <thead><tr><th scope="col">선택</th><th scope="col">버린 대안</th><th scope="col">이유</th></tr></thead>
+            <tbody>
+              <tr><td data-l="선택"><b>테이블마다 파티션을 반대로</b>원본 이벤트는 무파티션, 원본 신호는 월 파티션과 (고객, 시각, 이벤트) 정렬</td><td data-l="버린 대안">64 해시 파티션 유지</td><td data-l="이유">판본을 합치는 원본 이벤트는 part를 줄여야 했고, 원본 신호는 시간 범위 조회와 보존 정리가 핵심</td></tr>
+              <tr><td data-l="선택"><b>정렬 키는 식별용, 읽기 경로는 따로</b>원본은 (고객, 세션, 이벤트) 논리 키로 정렬, 날짜로 읽는 요약은 7개 열만 (고객, 시각) 순으로 둔 projection, AI 유입은 15분 주기 서빙 테이블</td><td data-l="버린 대안">원본을 시간순으로 되돌리기, 명시적 PREWHERE</td><td data-l="이유">희소 기본 인덱스는 정렬 키 앞부분으로만 granule을 건너뜀. 원본 ORDER BY는 판본을 합치는 기준이라 조회 속도 때문에 바꾸면 정합성이 바뀜</td></tr>
+              <tr><td data-l="선택"><b>온라인 교체</b>새 테이블 → 실시간 브리지 → 차이분 백필 → 논리 키 대조 → <code>EXCHANGE TABLES</code></td><td data-l="버린 대안"><span class="none">—</span></td><td data-l="이유">논리 키 전환에서 운영 테이블 7개를 바꾸며 파생 집계 19개를 살렸고, 재발행 대조 누락 0</td></tr>
+            </tbody>
+          </table>
         </div>
-        <h4>배운 점</h4>
-        <p>Pod가 Ready인 시점과 트래픽을 받는 시점은 다릅니다. 노드라면 HTTP 200 대신 참조 노드 대비 head lag로 readiness를 걸어야 한다고 생각합니다(beacon은 동기화 중 206, CometBFT는 뒤처져도 200).</p>
+        <h4>앞뒤로 이어진 것</h4>
+        <p>정렬 키 원리는 <a href="#p3">3</a>의 과거 데이터 복사에서 FINAL이 고객 전 기간을 병합하던 읽기를 고치는 데 그대로 쓰였습니다.</p>
       </div>
 
-      <figure class="fig">
-        <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 2, 가로로 스크롤할 수 있습니다">
-          <svg class="dg" viewBox="0 0 540 318" role="img" aria-label="그림 2. 시간축 두 줄. 수정 전 replica 1에서는 새 Pod, NEG 게이트 True, 옛 Pod 제거, LB 통과 순서여서 제거와 통과 사이에 endpoint가 0이 되어 503이 났습니다. 수정 후에는 NEG 게이트 True, 30초 대기, LB 통과, 옛 Pod 제거 순서이고 PDB로 1개가 항상 서빙합니다.">
-            <defs>
-              <marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0 L10 5 L0 10 Z"/></marker>
-              <marker id="m2m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahm" d="M0 0 L10 5 L0 10 Z"/></marker>
-            </defs>
-            <text class="tm sm" x="4" y="18">시간</text>
-            <path class="wm" d="M36 14 H532" marker-end="url(#m2m)"/>
+      <div class="side">
+        <figure class="fig">
+          <div class="fig-h"><span class="fig-t">그림 2 · 원리, 그리고 바뀐 읽기 경로</span><span class="chip res">part 454 → 11</span></div>
+          <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 2 위, 가로로 스크롤할 수 있습니다">
+            <svg class="dg" viewBox="0 0 600 282" role="img" aria-label="그림 2 위, 원리. 64 해시 파티션에서는 INSERT 배치 하나가 최대 64개 part로 나뉘고, 병합은 파티션 안에서만 돌아 part가 쌓이며, FINAL은 모든 part를 펼쳐 합칩니다. 해시 식과 다른 조건이면 pruning은 0%이고 화면 필터(고객, 세션, 시각)는 해시 식을 쓰지 않습니다. 무파티션에서는 배치 하나가 part 하나가 되고 병합 뒤 FINAL이 가볍습니다.">
+              <text class="tb" x="4" y="14">64 해시 파티션 <tspan class="tm sm tn">INSERT 1번이 파티션 값마다 part로</tspan></text>
+              <rect class="b" x="4" y="64" width="114" height="44" rx="4"/>
+              <text class="mono" x="61" y="82" text-anchor="middle">INSERT 배치</text>
+              <text class="tm sm" x="61" y="100" text-anchor="middle">1개</text>
+              <path class="wm" d="M118 86 L194 40"/>
+              <path class="wm" d="M118 86 L194 70"/>
+              <path class="wm" d="M118 86 L194 100"/>
+              <path class="wm" d="M118 86 L194 148"/>
+              <text class="tb sm lb" x="146" y="140" text-anchor="middle">× 최대 64</text>
+              <rect class="b2" x="196" y="28" width="74" height="24" rx="3"/>
+              <text class="mono" x="233" y="44" text-anchor="middle">part p0</text>
+              <rect class="b2" x="196" y="58" width="74" height="24" rx="3"/>
+              <text class="mono" x="233" y="74" text-anchor="middle">part p1</text>
+              <rect class="b2" x="196" y="88" width="74" height="24" rx="3"/>
+              <text class="mono" x="233" y="104" text-anchor="middle">part p2</text>
+              <text class="tm tb" x="233" y="128" text-anchor="middle">⋮</text>
+              <rect class="b2" x="196" y="136" width="74" height="24" rx="3"/>
+              <text class="mono" x="233" y="152" text-anchor="middle">part p63</text>
+              <path class="wm" d="M278 34 a8 6 0 1 1 0 12" marker-end="url(#mm)"/>
+              <path class="wm" d="M278 64 a8 6 0 1 1 0 12" marker-end="url(#mm)"/>
+              <path class="wm" d="M278 94 a8 6 0 1 1 0 12" marker-end="url(#mm)"/>
+              <path class="wm" d="M278 142 a8 6 0 1 1 0 12" marker-end="url(#mm)"/>
+              <text class="tm sm" x="233" y="178" text-anchor="middle">병합은 파티션 안에서만</text>
+              <path class="wm" d="M298 40 L380 86"/>
+              <path class="wm" d="M298 70 L380 86"/>
+              <path class="wm" d="M298 100 L380 86"/>
+              <path class="wm" d="M298 148 L380 86"/>
+              <path class="w" d="M380 86 H398" marker-end="url(#mi)"/>
+              <rect class="br" x="400" y="60" width="196" height="52" rx="4"/>
+              <text class="mono tb" x="498" y="81" text-anchor="middle">FINAL</text>
+              <text class="sm" x="498" y="99" text-anchor="middle">모든 part를 펼쳐 합침</text>
+              <rect class="brd" x="350" y="124" width="246" height="54" rx="4"/>
+              <path class="wrs" d="M361 138 l12 12 M373 138 l-12 12"/>
+              <text class="sm" x="384" y="146">해시 식과 다른 조건 → pruning 0%</text>
+              <text class="sm" x="384" y="165">화면 필터(고객, 세션, 시각)는 해시 식 없음</text>
 
-            <text class="tb" x="4" y="50">수정 전 <tspan class="tm mono tn">replica 1</tspan></text>
-            <rect class="b" x="4" y="62" width="118" height="52" rx="4"/>
-            <text x="63" y="85" text-anchor="middle">새 Pod</text>
-            <text class="tm sm" x="63" y="102" text-anchor="middle">시작</text>
-            <path class="w" d="M122 88 H136" marker-end="url(#m2)"/>
-            <rect class="b" x="138" y="62" width="118" height="52" rx="4"/>
-            <text class="mono" x="197" y="85" text-anchor="middle">NEG 게이트</text>
-            <text class="mono" x="197" y="102" text-anchor="middle">True</text>
-            <path class="w" d="M256 88 H270" marker-end="url(#m2)"/>
-            <rect class="b" x="272" y="62" width="118" height="52" rx="4"/>
-            <text x="331" y="85" text-anchor="middle">옛 Pod</text>
-            <text x="331" y="102" text-anchor="middle">제거</text>
-            <path class="w" d="M390 88 H404" marker-end="url(#m2)"/>
-            <rect class="b" x="406" y="62" width="118" height="52" rx="4"/>
-            <text x="465" y="85" text-anchor="middle">LB 통과</text>
-            <text class="tm mono" x="465" y="102" text-anchor="middle">5초 × 2</text>
-            <rect class="gapbad" x="331" y="122" width="134" height="8" rx="2"/>
-            <text class="tbad tb" x="398" y="150" text-anchor="middle">endpoint 0 → 503</text>
+              <path class="zone" d="M4 198 H596"/>
+              <text class="tb" x="4" y="220">무파티션 <tspan class="tm sm tn">배치 하나가 part 하나로</tspan></text>
+              <rect class="b" x="4" y="234" width="114" height="36" rx="4"/>
+              <text class="mono" x="61" y="257" text-anchor="middle">INSERT 배치</text>
+              <path class="w" d="M118 252 H194" marker-end="url(#mi)"/>
+              <rect class="b2" x="196" y="234" width="74" height="36" rx="3"/>
+              <text class="mono" x="233" y="257" text-anchor="middle">part 1개</text>
+              <path class="w" d="M270 252 H298" marker-end="url(#mi)"/>
+              <rect class="b" x="300" y="234" width="72" height="36" rx="4"/>
+              <text x="336" y="257" text-anchor="middle">병합</text>
+              <path class="w" d="M372 252 H398" marker-end="url(#mi)"/>
+              <rect class="bok" x="400" y="234" width="196" height="36" rx="4"/>
+              <text class="mono tb" x="498" y="257" text-anchor="middle">FINAL</text>
+            </svg>
+          </div>
+          <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 2 아래, 가로로 스크롤할 수 있습니다">
+            <svg class="dg" viewBox="0 0 600 388" role="img" aria-label="그림 2 아래, 바뀐 읽기 경로. ClickHouse 테이블은 원본 이벤트(무파티션, 고객, 세션, 이벤트 순 정렬, 안에 날짜순 7열 projection), 원본 신호(월 파티션), 채널 스냅샷(AI 여부 2구역), AI 유입 서빙 테이블(15분)입니다. 방문 여정 화면은 원본 이벤트를 읽어 읽은 행이 99.9% 줄었고, 요약 화면은 projection을 읽어 약 99% 줄었습니다. AI 유입 화면은 서빙 테이블을 읽고, 완료 표시가 1시간을 넘으면 채널 스냅샷으로 원래 조회합니다. 아래 회색 점선은 실험 기간에만 있던 비교 경로로, 수집 게이트웨이에서 본 큐 성공 뒤 복제 큐로 복제해 비교용 ClickHouse에 넣었습니다.">
+              <text class="tm mono" x="14" y="18">ClickHouse 테이블</text>
+              <text class="tm mono" x="596" y="18" text-anchor="end">화면 조회</text>
+              <rect class="grp" x="4" y="26" width="326" height="256" rx="6"/>
+              <rect class="bk" x="16" y="38" width="302" height="92" rx="4"/>
+              <text class="tb" x="28" y="58">원본 이벤트</text>
+              <text class="tm mono" x="28" y="77">무파티션 · ORDER BY 고객, 세션, 이벤트</text>
+              <rect class="b2" x="28" y="88" width="278" height="32" rx="3"/>
+              <text class="sm" x="40" y="109">날짜순 projection 7열 (고객, 시각)</text>
+              <rect class="b" x="16" y="142" width="302" height="34" rx="4"/>
+              <text x="28" y="164">원본 신호</text>
+              <text class="tm sm" x="96" y="164">월 파티션 · (고객, 시각, 이벤트) 정렬</text>
+              <rect class="b" x="16" y="188" width="302" height="34" rx="4"/>
+              <text x="28" y="210">채널 스냅샷</text>
+              <text class="tm sm" x="108" y="210">AI 여부 2구역</text>
+              <rect class="b" x="16" y="234" width="302" height="34" rx="4"/>
+              <text x="28" y="256">AI 유입 서빙 테이블</text>
+              <text class="tm sm" x="164" y="256">15분 주기</text>
 
-            <path class="z" d="M4 172 H536"/>
+              <rect class="b" x="462" y="44" width="134" height="32" rx="4"/>
+              <text x="529" y="65" text-anchor="middle">방문 여정</text>
+              <rect class="b" x="462" y="90" width="134" height="32" rx="4"/>
+              <text x="529" y="111" text-anchor="middle">요약</text>
+              <rect class="b" x="462" y="190" width="134" height="32" rx="4"/>
+              <text x="529" y="211" text-anchor="middle">채널</text>
+              <rect class="b" x="462" y="236" width="134" height="32" rx="4"/>
+              <text x="529" y="257" text-anchor="middle">AI 유입</text>
 
-            <text class="tb" x="4" y="202">수정 후 <tspan class="tm mono tn">replica 2 · minReadySeconds 30</tspan></text>
-            <rect class="b" x="4" y="214" width="118" height="52" rx="4"/>
-            <text class="mono" x="63" y="237" text-anchor="middle">NEG 게이트</text>
-            <text class="mono" x="63" y="254" text-anchor="middle">True</text>
-            <path class="w" d="M122 240 H136" marker-end="url(#m2)"/>
-            <rect class="b" x="138" y="214" width="118" height="52" rx="4"/>
-            <text x="197" y="245" text-anchor="middle">30초 대기</text>
-            <path class="w" d="M256 240 H270" marker-end="url(#m2)"/>
-            <rect class="b" x="272" y="214" width="118" height="52" rx="4"/>
-            <text x="331" y="245" text-anchor="middle">LB 통과</text>
-            <path class="w" d="M390 240 H404" marker-end="url(#m2)"/>
-            <rect class="b" x="406" y="214" width="118" height="52" rx="4"/>
-            <text x="465" y="237" text-anchor="middle">옛 Pod</text>
-            <text x="465" y="254" text-anchor="middle">제거</text>
-            <rect class="gapok" x="4" y="274" width="520" height="6" rx="2"/>
-            <text class="tok tb" x="4" y="304">PDB minAvailable 1: 롤아웃 내내 1개 항상 서빙</text>
-          </svg>
+              <path class="wp" d="M462 60 H321" marker-end="url(#mp)"/>
+              <text class="tp sm tb lb" x="392" y="52" text-anchor="middle">읽은 행 99.9%↓</text>
+              <path class="wp" d="M462 106 H309" marker-end="url(#mp)"/>
+              <text class="tp sm tb lb" x="392" y="98" text-anchor="middle">읽은 행 약 99%↓</text>
+              <path class="w" d="M462 206 H320" marker-end="url(#mi)"/>
+              <path class="w" d="M462 252 H320" marker-end="url(#mi)"/>
+              <path class="wd" d="M462 242 L322 216" marker-end="url(#mm)"/>
+              <text class="tm sm" x="596" y="290" text-anchor="end">점선: 완료 표시 1시간 초과 시 원래 조회</text>
+
+              <rect class="zg" x="4" y="308" width="592" height="74" rx="6"/>
+              <text class="tm sm" x="14" y="326">비교 경로(실험 기간만) · 본 큐 성공 뒤 복제, 실패 분리</text>
+              <rect class="bg" x="14" y="338" width="130" height="32" rx="4"/>
+              <text class="tm" x="79" y="359" text-anchor="middle">수집 게이트웨이</text>
+              <path class="wg" d="M144 354 H188" marker-end="url(#mm)"/>
+              <rect class="bg" x="190" y="338" width="100" height="32" rx="4"/>
+              <text class="tm" x="240" y="359" text-anchor="middle">복제 큐</text>
+              <path class="wg" d="M290 354 H328" marker-end="url(#mm)"/>
+              <rect class="bg" x="330" y="338" width="150" height="32" rx="4"/>
+              <text class="tm" x="405" y="359" text-anchor="middle">비교용 ClickHouse</text>
+            </svg>
+          </div>
+          <p class="legend"><span><i></i>바뀐 읽기 경로</span><span><i class="r"></i>문제 지점</span><span><i class="g"></i>실험 기간만</span></p>
+        </figure>
+        <div class="obs" role="group" aria-label="결과 관측 기록">
+          <p class="obs-h">결과 관측 기록</p>
+          <ul>
+            <li><span class="obs-k">무파티션 전환 <span class="chip ok">운영</span></span><span class="obs-v">part <b>454 → 11</b>, 대표 FINAL 집계 메모리 <b>약 80% 감소</b> <span class="q">(낮은 부하 시점 관측)</span></span></li>
+            <li><span class="obs-k">원본 신호 INSERT <span class="chip ok">운영</span></span><span class="obs-v">p95 <b>약 6배 단축</b>, 저장량 <b>약 1/4</b> <span class="q">(같은 13시간 관측, 정렬 압축 효과 포함)</span></span></li>
+            <li><span class="obs-k">단일 세션 조회</span><span class="obs-v">읽은 행 <b>약 99.9% 감소</b> <span class="q">(전환 후 분석 서비스, 6회 교차 중앙값)</span></span></li>
+            <li><span class="obs-k">AI 유입 집계</span><span class="obs-v">평균 약 2.4초 <span class="ar">→</span> <b>7ms 수준</b> <span class="q">(전환 직후 짧은 운영 관측)</span></span></li>
+          </ul>
         </div>
-        <figcaption>수정 전에는 옛 Pod가 LB 통과보다 먼저 빠져 빈틈이 생겼습니다. 수정 후에는 30초 대기가 순서를 뒤집습니다.</figcaption>
-      </figure>
+      </div>
     </div>
+
+    <div class="scene">
+      <div>
+        <h4>그 안의 장면</h4>
+        <h5>비교 직전에 멈춘 이유</h5>
+        <p>비교 직전 24시간 감사에서 같은 이벤트, 같은 판본인데 내용이 다른 묶음이 30개 넘게 나왔습니다. 다른 값은 소비 시각 하나였지만 같은 판본이면 병합 순서가 승자를 정해, 파티션을 바꾸는 순간 화면 숫자가 바뀔 수 있었습니다. 비교를 멈추고 이벤트 본체를 동일성 기준으로 고정한 뒤(이 기준이 뒤이은 논리 키 전환의 대조 기준이 됨) 파티션만 다른 두 테이블에 같은 입력을 재생해(로컬) 독립 기대값과 불일치 0을 확인했고, 느려지는 반례도 함께 남겼습니다.</p>
+      </div>
+    </div>
+    <div class="carry"><span class="k">노드 운영으로 가져갈 것</span><p>학부 때 Besu에서도 Clique period를 5로 바꿨는데 블록은 계속 15초마다 나왔습니다. 설정에 적힌 값과 엔진이 실제로 하는 일은 다를 수 있어서, 노드 튜닝도 옵션을 바꾼 뒤 클라이언트가 실제로 내놓는 지표로 효과를 확인하고 넘어가겠습니다.</p></div>
   </article>
 
-  <!-- 사례 3 -->
-  <article class="case" id="case-node" aria-labelledby="h-node">
-    <div class="case-head">
-      <p class="stamp"><span>사례 3</span><span>리버벤스, 2026.01 ~ 02</span><span class="chip ok">공식 org 반영</span></p>
-      <h3 id="h-node">GPU 머신을 Kubernetes 노드로 붙이는 Go 노드 데몬과 Hub</h3>
+  <!-- 3. 옮기고 -->
+  <article class="proj" id="p3" aria-labelledby="h-p3">
+    <div class="proj-head">
+      <p class="stamp"><span class="stage">3 · 옮기고</span><span>2026.09 – 10</span><span class="chip ok">운영 중</span><span class="chip stg">운영 자동 승격은 진행 중</span></p>
+      <h3 id="h-p3">Cloud Run 서비스와 관리형 ClickHouse를 GKE로</h3>
+      <p class="stack">GKE Autopilot · Terraform · Argo CD · Kargo · ClickHouse Keeper · Altinity Operator</p>
     </div>
-    <div class="case-grid">
-      <div class="case-body">
-        <h4>문제</h4>
-        <p>프로바이더 머신마다 드라이버, containerd, kubeadm 상태가 달라 사람이 붙여야 했고, Hub를 재배포하면 노드가 끊겼습니다.</p>
-        <h4>한 일</h4>
-        <ul>
-          <li><b>노드 데몬.</b> SIWE 인증 → Hub CA의 90일 mTLS 인증서 → 30초 heartbeat, 끊기면 5초에서 60초까지 백오프 재접속, NVML로 GPU 자동 감지.</li>
-          <li><b>V3 설치기.</b> nvidia-smi, containerd, nvidia-ctk 점검 → <code>kubeadm reset -f</code>와 cni0 잔재 정리 → <code>kubeadm join</code> → kubelet 재시작.</li>
-          <li><b>Hub.</b> client-go Informer로 여러 클러스터의 Pod를 감시하고, 지갑마다 Namespace, ResourceQuota, NetworkPolicy로 격리하며, 온체인 receipt가 확인된 렌탈만 GPU Pod로 띄웠습니다.</li>
-          <li>같은 지갑의 두 번째 노드가 pending에 묶이던 문제, GPU 한 장 대여에 노드 전체가 마켓에서 사라지던 쿼리, 초당 단가 1,000배 오류를 커밋마다 원인을 적어 고쳤습니다.</li>
-        </ul>
-        <div class="obs" role="group" aria-label="결과">
-          <p class="obs-h">결과</p>
-          <ul>
-            <li><span class="obs-k">구조</span><span class="obs-v">일주일 동안 V2 <span class="ar">→</span> V3 <span class="ar">→</span> V4, <b>Docker 경로 제거, Kubernetes 전용</b></span></li>
-            <li><span class="obs-k">Hub 테스트</span><span class="obs-v"><b>356개</b> (Kind e2e 포함)</span></li>
-            <li><span class="obs-k">노드 SDK</span><span class="obs-v"><b>월드랜드 공식 GitHub org에 반영</b></span></li>
-          </ul>
+    <p class="oneline"><span class="k">한 줄</span>API와 인증 서비스를 블루/그린으로 GKE에 옮기고 배포를 GitOps로 바꾼 뒤, Keeper 3대와 레플리카 2대의 자체 운영 ClickHouse로 약 1.3억 행을 옮겨 관리형 서비스를 해지했습니다.</p>
+    <div class="proj-grid">
+      <div class="proj-body">
+        <h4>왜, 내 몫</h4>
+        <p>배포 대기열은 9월 중순 이후 성공이 없었고 운영 쓰기의 약 90%가 손작업이었으며, 관리형 ClickHouse는 CPU p99가 상한에 붙었는데 복구 리허설이 없었습니다. 회사가 인프라를 GCP로 모으기로 정했고, 저는 ClickHouse 이전의 유일한 담당이자 블루/그린과 GitOps 전환 리드로 kubectl과 system 테이블로 직접 디버깅하며 전환 시점을 판단했습니다.</p>
+        <h4>파고든 원리</h4>
+        <p>상태를 가진 것은 "떠 있다"보다 "같은 데이터로 되돌릴 수 있다"를 먼저 증명해야 한다고 생각했습니다. Keeper는 Raft 과반이 살아야 쓰기를 받아 3대를 존 a, b, c에 나눴습니다. ReplicatedMergeTree는 INSERT 블록의 해시(또는 dedup 토큰)를 Keeper에 남겨 같은 블록을 다시 쓰지 않으므로, 같은 청크를 다시 돌려도 한 번 넣은 것과 같습니다. 여기에 <code>insert_quorum=2</code>를 걸면 두 레플리카가 모두 받아야 성공으로 봐 사본이 어긋나지 않습니다. 레플리카 하나가 빠지면 쓰기가 멈추지만, 앞단 Kafka가 버퍼라 사본 하나만 조용히 남는 것보다 낫다고 판단했습니다.</p>
+        <h4>설계 결정</h4>
+        <div class="tbl">
+          <table class="dec">
+            <thead><tr><th scope="col">선택</th><th scope="col">버린 대안</th><th scope="col">이유</th></tr></thead>
+            <tbody>
+              <tr><td data-l="선택"><b>트래픽</b>가중치 5% → 기존 쪽 롤백 → 100%</td><td data-l="버린 대안"><span class="none">—</span></td><td data-l="이유">되돌림부터 확인. 공개 전환 몇 시간 전 새벽 점검에서 기존 쪽과 새 쪽이 staging 공유 DB 연결 한도를 함께 잡아 권한 서비스가 뜨지 못하자, 서비스별 연결 예산을 나눈 뒤 그날 오후 진행</td></tr>
+              <tr><td data-l="선택"><b>복사</b>(표, 고객, 일) 청크마다 dedup 토큰과 정족수를 걸고, 새 쪽에서 다시 읽어 대조한 청크만 완료로 기록</td><td data-l="버린 대안">날짜 조건만 건 FINAL 읽기</td><td data-l="이유">날짜 조건이 정렬 키 밖이라 FINAL이 고객 전 기간을 병합. 정렬 키 조건을 먼저 걸어 약 37 GiB → 3 GiB</td></tr>
+              <tr><td data-l="선택"><b>GitOps와 해지</b>운영 객체 60여 개를 역수입해 server-side diff 0을 본 뒤 Argo CD에 넘김. 해지는 청크 검증과 1의 미러 대조를 근거로</td><td data-l="버린 대안">7일 병행 관찰</td><td data-l="이유">비용을 우선한 제 결정. 직전 대조에서 원본 이벤트 표만 새 쪽이 0.1 ~ 0.5% 많았던 것은 재전송과 dedup 차이로 판단</td></tr>
+            </tbody>
+          </table>
         </div>
-        <h4>배운 점</h4>
-        <p>이벤트 리스너는 끊긴 RPC를 다음 주소로 넘겼지만 뒤처진 노드는 거르지 못했습니다. 다음에 붙일 것은 RPC 간 블록 높이 비교라고 생각합니다.</p>
-        <ul class="case-links">
-          <li><span class="k">GitHub</span><a href="https://github.com/cryptoecc/worldland-sdk" target="_blank" rel="noopener">cryptoecc/worldland-sdk</a></li>
-          <li><span class="k">GitHub</span><a href="https://github.com/ForrestCrew/worldland-sdk/tree/V3" target="_blank" rel="noopener">ForrestCrew/worldland-sdk (V3)</a></li>
-        </ul>
+        <h4>앞뒤로 이어진 것</h4>
+        <p><a href="#p2">2</a>의 정렬 키 원리가 복사 읽기를 고쳤고, GitOps는 멈춘 배포 대기열을 대신했습니다. 이전으로 홉이 늘어난 수집 경로는 <a href="#p4">4</a>의 출발점이 됐습니다.</p>
       </div>
 
-      <figure class="fig">
-        <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 3, 가로로 스크롤할 수 있습니다">
-          <svg class="dg" viewBox="0 0 540 388" role="img" aria-label="그림 3. 노드 온보딩 순서. 1 노드 데몬이 Hub에 SIWE 인증, 2 Hub CA가 노드 데몬에 90일 인증서 발급, 3 노드 데몬과 Hub가 mTLS로 30초 heartbeat, 4 Hub가 노드 데몬에 join 토큰과 CA 해시 전달, 5 노드 데몬이 점검, reset, join으로 control plane에 붙음, 6 control plane을 Hub가 Informer로 감시하며 GPU 용량을 동기화.">
-            <defs>
-              <marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0 L10 5 L0 10 Z"/></marker>
-            </defs>
-            <rect class="bk" x="10" y="8" width="120" height="40" rx="4"/>
-            <text class="tb" x="70" y="33" text-anchor="middle">노드 데몬</text>
-            <rect class="b" x="145" y="8" width="110" height="40" rx="4"/>
-            <text x="200" y="33" text-anchor="middle">Hub CA</text>
-            <rect class="b" x="275" y="8" width="110" height="40" rx="4"/>
-            <text class="tb" x="330" y="33" text-anchor="middle">Hub</text>
-            <rect class="b" x="404" y="8" width="132" height="40" rx="4"/>
-            <text class="mono" x="470" y="33" text-anchor="middle">control plane</text>
+      <div class="side">
+        <figure class="fig">
+          <div class="fig-h"><span class="fig-t">그림 3 · 트래픽, GitOps, ClickHouse</span><span class="chip res">약 1.3억 행, 실패 0</span></div>
+          <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 3 A, 가로로 스크롤할 수 있습니다">
+            <svg class="dg" viewBox="0 0 600 292" role="img" aria-label="그림 3 A, 트래픽. 사용자에서 외부 로드밸런서가 가중치로 Cloud Run 기존 쪽과 GKE NEG 새 쪽에 나누고, 두 쪽 모두 연결 한도 25인 PostgreSQL을 씁니다. staging 공유 DB를 두 쪽이 함께 잡아 서비스별 연결 예산을 나눴고, NEG 준비 게이트가 LB 헬스체크보다 먼저 통과하던 문제는 minReadySeconds 30, replica 2, PDB로 막았습니다. 전환 순서는 5%, 0%로 롤백(12/12), 100%(12/12)입니다.">
+              <text class="tb" x="4" y="14">A. 트래픽</text>
+              <rect class="b" x="4" y="70" width="70" height="36" rx="4"/>
+              <text x="39" y="93" text-anchor="middle">사용자</text>
+              <path class="w" d="M74 88 H92" marker-end="url(#mi)"/>
+              <rect class="b" x="94" y="62" width="140" height="52" rx="4"/>
+              <text x="164" y="84" text-anchor="middle">외부 로드밸런서</text>
+              <text class="tm sm" x="164" y="102" text-anchor="middle">가중치</text>
+              <path class="w" d="M234 80 H258 V40 H288" marker-end="url(#mi)"/>
+              <path class="wp" d="M234 96 H258 V136 H287" marker-end="url(#mp)"/>
+              <rect class="b" x="290" y="22" width="140" height="36" rx="4"/>
+              <text x="360" y="45" text-anchor="middle">Cloud Run 기존</text>
+              <rect class="bp" x="290" y="118" width="140" height="36" rx="4"/>
+              <text class="tb" x="360" y="141" text-anchor="middle">GKE NEG 새 쪽</text>
+              <path class="w" d="M430 40 H450 V80 H468" marker-end="url(#mi)"/>
+              <path class="w" d="M430 136 H450 V96 H468" marker-end="url(#mi)"/>
+              <rect class="b" x="470" y="62" width="126" height="52" rx="4"/>
+              <text x="533" y="84" text-anchor="middle">PostgreSQL</text>
+              <text class="tm sm" x="533" y="102" text-anchor="middle">연결 한도 25</text>
 
-            <path class="ll" d="M70 48 V378"/>
-            <path class="ll" d="M200 48 V378"/>
-            <path class="ll" d="M330 48 V378"/>
-            <path class="ll" d="M470 48 V378"/>
+              <path class="wrs" d="M360 154 V170"/>
+              <rect class="brd" x="104" y="170" width="296" height="48" rx="4"/>
+              <text class="tr sm" x="252" y="189" text-anchor="middle">준비 게이트가 LB 헬스체크보다 먼저</text>
+              <text class="tr mono" x="252" y="207" text-anchor="middle">→ minReadySeconds 30, replica 2, PDB</text>
+              <path class="wrs" d="M533 114 V170"/>
+              <rect class="brd" x="412" y="170" width="184" height="62" rx="4"/>
+              <text class="tr sm" x="504" y="188" text-anchor="middle">staging 공유 DB</text>
+              <text class="tr sm" x="504" y="204" text-anchor="middle">기존 쪽과 새 쪽이 함께 잡음</text>
+              <text class="tr sm" x="504" y="220" text-anchor="middle">→ 서비스별 연결 예산</text>
 
-            <path class="w" d="M70 92 H328" marker-end="url(#m3)"/>
-            <text class="lb" x="200" y="84" text-anchor="middle">① SIWE 인증</text>
+              <text class="tm sm" x="4" y="270">전환 순서</text>
+              <rect class="b" x="94" y="250" width="120" height="34" rx="4"/>
+              <text class="mono" x="154" y="271" text-anchor="middle">가중치 5%</text>
+              <path class="wo" d="M214 267 H250" marker-end="url(#mo)" stroke-dasharray="5 3"/>
+              <rect class="bo" x="252" y="250" width="150" height="34" rx="4"/>
+              <text class="mono" x="327" y="271" text-anchor="middle">0% 롤백 12/12</text>
+              <path class="wp" d="M402 267 H438" marker-end="url(#mp)"/>
+              <rect class="bp" x="440" y="250" width="156" height="34" rx="4"/>
+              <text class="mono tb" x="518" y="271" text-anchor="middle">100% 12/12</text>
+            </svg>
+          </div>
+          <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 3 B, 가로로 스크롤할 수 있습니다">
+            <svg class="dg" viewBox="0 0 600 270" role="img" aria-label="그림 3 B, GitOps. 운영 객체 60여 개를 GitOps 저장소로 역수입해 diff 0을 확인했고, Kargo가 저장소를 갱신하며, Argo CD(PreSync, selfHeal on, prune off)가 GKE 앱 25개로 동기화합니다. Secret Manager에서 External Secrets를 거쳐 앱에 시크릿이 들어가고, CI가 GKE에 직접 쓰는 경로는 없습니다.">
+              <text class="tb" x="4" y="14">B. GitOps</text>
+              <rect class="b" x="230" y="24" width="120" height="34" rx="4"/>
+              <text x="290" y="46" text-anchor="middle">Kargo</text>
+              <path class="w" d="M290 58 V84" marker-end="url(#mi)"/>
+              <rect class="b" x="4" y="86" width="146" height="36" rx="4"/>
+              <text x="77" y="109" text-anchor="middle">운영 객체 60여 개</text>
+              <path class="wo" d="M150 104 H227" marker-end="url(#mo)"/>
+              <text class="to sm tb lb" x="189" y="140" text-anchor="middle">역수입, diff 0</text>
+              <rect class="bk" x="230" y="86" width="120" height="36" rx="4"/>
+              <text class="tb" x="290" y="109" text-anchor="middle">GitOps 저장소</text>
+              <path class="wp" d="M350 104 H377" marker-end="url(#mp)"/>
+              <rect class="bp" x="380" y="78" width="100" height="52" rx="4"/>
+              <text class="tb" x="430" y="109" text-anchor="middle">Argo CD</text>
+              <text class="tm mono" x="402" y="150" text-anchor="middle">PreSync · selfHeal on · prune off</text>
+              <path class="wp" d="M480 104 H497" marker-end="url(#mp)"/>
+              <rect class="bp" x="500" y="86" width="96" height="36" rx="4"/>
+              <text x="548" y="109" text-anchor="middle">GKE 앱 25개</text>
 
-            <path class="w" d="M200 140 H72" marker-end="url(#m3)"/>
-            <text class="lb" x="135" y="132" text-anchor="middle">② 인증서</text>
-            <text class="lb tm mono" x="135" y="158" text-anchor="middle">mTLS, 90일</text>
+              <rect class="b" x="4" y="172" width="146" height="36" rx="4"/>
+              <text x="77" y="195" text-anchor="middle">Secret Manager</text>
+              <path class="w" d="M150 190 H188" marker-end="url(#mi)"/>
+              <rect class="b" x="190" y="172" width="150" height="36" rx="4"/>
+              <text x="265" y="195" text-anchor="middle">External Secrets</text>
+              <path class="w" d="M340 190 H530 V124" marker-end="url(#mi)"/>
 
-            <path class="w" d="M72 196 H328" marker-start="url(#m3)" marker-end="url(#m3)"/>
-            <text class="lb" x="200" y="188" text-anchor="middle">③ mTLS heartbeat 30초</text>
-            <text class="lb tm sm" x="200" y="214" text-anchor="middle">끊기면 5초 → 60초 백오프</text>
+              <rect class="bg" x="4" y="228" width="76" height="34" rx="4"/>
+              <text class="tm mono" x="42" y="250" text-anchor="middle">CI</text>
+              <path class="wg" d="M80 245 H578 V124" marker-end="url(#mm)"/>
+              <path class="wm" d="M434 239 l12 12 M446 239 l-12 12" stroke-width="2"/>
+              <text class="tm sm lb" x="456" y="238">직접 쓰기 없음</text>
+            </svg>
+          </div>
+          <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 3 C, 가로로 스크롤할 수 있습니다">
+            <svg class="dg" viewBox="0 0 600 470" role="img" aria-label="그림 3 C, ClickHouse 이전. GKE 리전의 존 a, b, c에 Keeper가 1대씩 있고 Raft 과반 2/3이라 존 하나가 빠져도 쓰기를 받습니다. 존 a와 b에 backup이 붙은 레플리카 1, 2가 있고 Keeper 로그로 복제합니다. Kafka에서 적재기가 insert_quorum=2로 두 레플리카에 씁니다. 관리형 ClickHouse에서 복사 Job이 표, 고객, 일 청크로 레플리카 1에 쓰고, dedup 토큰과 정족수, 새 쪽 FINAL 재조회로 verified를 기록합니다. 복사 Job은 4 GiB를 넘던 INSERT를 스레드 4에서 1로 바꿔 약 0.6 GiB로 넣었고 Cloud Run에 남겼습니다. backup은 GCS로 가고 복구 리허설은 staging 약 2분, 운영 약 30초였습니다. 관리형 ClickHouse는 해지했습니다.">
+              <text class="tb" x="4" y="14">C. ClickHouse 이전</text>
+              <rect class="b" x="210" y="26" width="80" height="32" rx="4"/>
+              <text x="250" y="47" text-anchor="middle">Kafka</text>
+              <path class="wp" d="M290 42 H313" marker-end="url(#mp)"/>
+              <rect class="bp" x="316" y="26" width="100" height="32" rx="4"/>
+              <text x="366" y="47" text-anchor="middle">적재기</text>
+              <path class="wp" d="M346 58 V90 H263 V123" marker-end="url(#mp)"/>
+              <path class="wp" d="M386 58 V90 H397 V123" marker-end="url(#mp)"/>
+              <text class="tp mono" x="420" y="86">insert_quorum=2</text>
 
-            <path class="w" d="M330 252 H72" marker-end="url(#m3)"/>
-            <text class="lb" x="200" y="244" text-anchor="middle">④ join 토큰 + CA 해시</text>
+              <rect class="grp" x="190" y="74" width="406" height="326" rx="6"/>
+              <text class="tm mono" x="588" y="390" text-anchor="end">GKE 리전</text>
+              <rect class="zone" x="200" y="100" width="126" height="290" rx="4"/>
+              <rect class="zone" x="334" y="100" width="126" height="290" rx="4"/>
+              <rect class="zone" x="468" y="100" width="120" height="270" rx="4"/>
+              <text class="tm mono" x="208" y="116">존 a</text>
+              <text class="tm mono" x="342" y="116">존 b</text>
+              <text class="tm mono" x="476" y="116">존 c</text>
 
-            <path class="w" d="M70 302 H468" marker-end="url(#m3)"/>
-            <text class="lb" x="270" y="294" text-anchor="middle">⑤ 점검 → reset → join</text>
-            <text class="lb tm mono" x="270" y="320" text-anchor="middle">nvidia-smi · kubeadm reset -f · join</text>
+              <rect class="bp" x="210" y="126" width="106" height="66" rx="4"/>
+              <text x="263" y="146" text-anchor="middle">레플리카 1</text>
+              <rect class="b2" x="222" y="158" width="82" height="26" rx="3"/>
+              <text class="mono" x="263" y="175" text-anchor="middle">backup</text>
+              <rect class="bp" x="344" y="126" width="106" height="66" rx="4"/>
+              <text x="397" y="146" text-anchor="middle">레플리카 2</text>
+              <rect class="b2" x="356" y="158" width="82" height="26" rx="3"/>
+              <text class="mono" x="397" y="175" text-anchor="middle">backup</text>
+              <path class="w" d="M318 140 H342" marker-start="url(#mi)" marker-end="url(#mi)"/>
+              <text class="tm sm lb" x="330" y="214" text-anchor="middle">Keeper 로그로 복제</text>
 
-            <path class="w" d="M470 356 H332" marker-end="url(#m3)"/>
-            <text class="lb" x="400" y="348" text-anchor="middle">⑥ Informer</text>
-            <text class="lb tm sm" x="400" y="374" text-anchor="middle">GPU 용량</text>
-          </svg>
+              <path class="wrs" d="M514 146 l30 30 M544 146 l-30 30"/>
+              <text class="tr sm" x="529" y="198" text-anchor="middle">존 장애 가정</text>
+
+              <path class="wm" d="M298 306 H494"/>
+              <path class="wm" d="M298 314 L362 346"/>
+              <path class="wm" d="M432 346 L494 314"/>
+              <rect class="b" x="228" y="290" width="70" height="32" rx="4"/>
+              <text class="mono" x="263" y="311" text-anchor="middle">Keeper 1</text>
+              <rect class="b" x="362" y="336" width="70" height="32" rx="4"/>
+              <text class="mono" x="397" y="357" text-anchor="middle">Keeper 2</text>
+              <rect class="b2" x="494" y="290" width="70" height="32" rx="4"/>
+              <text class="tm mono" x="529" y="311" text-anchor="middle">Keeper 3</text>
+              <text class="sm tb lb" x="396" y="300" text-anchor="middle">Raft 과반 2/3</text>
+              <text class="tok sm lb" x="396" y="384" text-anchor="middle">존 하나가 빠져도 2/3 남아 쓰기 계속</text>
+              <path class="wd" d="M263 192 V288"/>
+              <path class="wd" d="M397 192 V334"/>
+
+              <!-- 관리형과 복사 -->
+              <rect class="bg" x="4" y="110" width="172" height="46" rx="4"/>
+              <text class="tm" x="90" y="129" text-anchor="middle">관리형 ClickHouse</text>
+              <text class="tm sm" x="90" y="147" text-anchor="middle">(기존) → 해지</text>
+              <path class="w" d="M90 156 V182" marker-end="url(#mi)"/>
+              <rect class="bo" x="4" y="184" width="172" height="52" rx="4"/>
+              <text class="tb" x="90" y="204" text-anchor="middle">복사 Job</text>
+              <text class="tm sm" x="90" y="224" text-anchor="middle">(표, 고객, 일) 청크</text>
+              <path class="wo" d="M176 200 H196 V150 H207" marker-end="url(#mo)"/>
+              <path class="wo" d="M210 180 H186 V226 H179" marker-end="url(#mo)"/>
+              <rect class="brd" x="4" y="248" width="172" height="44" rx="4"/>
+              <text class="tr sm" x="90" y="266" text-anchor="middle">4 GiB 초과 → 약 0.6 GiB</text>
+              <text class="tr sm" x="90" y="283" text-anchor="middle">스레드 4 → 1</text>
+              <rect class="bg" x="4" y="300" width="172" height="24" rx="4"/>
+              <text class="tm sm" x="90" y="316" text-anchor="middle">Job은 Cloud Run에 남김</text>
+              <text class="to sm tb" x="4" y="346">dedup 토큰 + 정족수</text>
+              <text class="to sm tb" x="4" y="362">→ 새 쪽 FINAL 재조회</text>
+              <text class="to sm tb" x="4" y="378">→ verified</text>
+
+              <!-- 백업 -->
+              <path class="wd" d="M216 192 V418" marker-end="url(#mm)"/>
+              <path class="wd" d="M350 192 V418" marker-end="url(#mm)"/>
+              <rect class="b" x="200" y="420" width="260" height="32" rx="4"/>
+              <text x="330" y="441" text-anchor="middle">GCS 백업</text>
+              <path class="wd" d="M460 436 H474" marker-end="url(#mm)"/>
+              <rect class="b" x="476" y="410" width="120" height="54" rx="4"/>
+              <text x="536" y="428" text-anchor="middle">복구 리허설</text>
+              <text class="tm sm" x="536" y="444" text-anchor="middle">staging 약 2분</text>
+              <text class="tm sm" x="536" y="459" text-anchor="middle">운영 약 30초</text>
+            </svg>
+          </div>
+          <p class="legend"><span><i></i>현재 주 경로</span><span><i class="r"></i>장면의 문제 지점</span><span><i class="o"></i>대조, 검증, 롤백</span><span><i class="g"></i>은퇴, 금지</span></p>
+        </figure>
+        <div class="obs" role="group" aria-label="결과 관측 기록">
+          <p class="obs-h">결과 관측 기록</p>
+          <ul>
+            <li><span class="obs-k">과거 데이터 <span class="chip ok">운영</span></span><span class="obs-v">약 1.3억 행, 청크 2,600여 개 <span class="ar">→</span> <b>모두 검증 통과, 실패 0</b></span></li>
+            <li><span class="obs-k">GitOps</span><span class="obs-v">앱 25개 <b>Synced 차이 0</b> <span class="q">(10/2 기준)</span></span></li>
+            <li><span class="obs-k">복구 리허설</span><span class="obs-v">staging <b>약 2분</b> <span class="q">(행 수와 해시 일치)</span>, 운영 <b>약 30초</b> <span class="q">(같은 1.95 GiB)</span></span></li>
+            <li><span class="obs-k">레플리카 1대 내림 <span class="chip stg">staging</span></span><span class="obs-v"><b>쓰기 거부</b>, 복귀 약 2분 뒤 따라잡음</span></li>
+          </ul>
         </div>
-        <figcaption>위에서 아래로 실제 순서입니다. ⑤가 끝나면 GPU 머신은 클러스터의 워커 노드가 되고, Hub는 ⑥으로 그 용량을 마켓에 올립니다.</figcaption>
-      </figure>
+      </div>
     </div>
+
+    <div class="scene two">
+      <div>
+        <h4>그 안의 장면</h4>
+        <h5>4 GiB를 넘던 INSERT와 틀린 첫 설명</h5>
+        <p>큰 청크가 4 GiB 한도에 계속 걸려 블록을 잘게 쪼갰지만 같은 오류가 났고, 블록 크기 탓이라는 설명은 오진이었습니다. <code>system.trace_log</code>의 메모리 스택을 thread_id로 세자 쓰기 sink 4개가 각자 서버가 다시 묶은 블록과 병합용 사본을 들고 있었습니다. <code>max_insert_threads</code> 1과 64 MiB 묶음으로 바꾸고 실패 쿼리가 남긴 파트가 0인지 확인한 뒤(부분 커밋이 있으면 dedup이 어긋남) 약 0.6 GiB로 넣었고, 틀린 설명은 기록에서 정정했습니다.</p>
+      </div>
+      <div>
+        <h4>짧은 장면</h4>
+        <h5>롤아웃 503 한 번</h5>
+        <p>Argo 첫 동기화에서 외부 헬스체크에 503이 한 번 찍혔습니다. GKE가 넣는 NEG 준비 게이트가 로드밸런서 헬스체크(5초 간격, 연속 2회)보다 먼저 통과하고 replica가 1개라 옛 Pod가 먼저 빠진 것이었고, 보름 전 같은 사유에 종료 쪽만 막은 것이 첫 오판이었습니다. minReadySeconds 30, replica 2, PDB를 1시간 안에 운영에 반영했고, staging 롤아웃 2회 동안 1초 간격 315회와 운영 적용 구간 100회가 모두 200이었습니다.</p>
+      </div>
+    </div>
+    <div class="carry"><span class="k">노드 운영으로 가져갈 것</span><p>503에서 준비 표시가 실제 준비보다 먼저 섰던 것처럼, 노드도 프로세스는 Ready인데 체인을 따라잡지 못했을 수 있습니다. 로드밸런서에 넣는 기준은 최신 블록과의 높이 차이로 두고, 옮길 때는 스냅샷 복구 시간을 먼저 재고 새 노드가 따라잡기 전에는 옛 노드를 빼지 않겠습니다.</p></div>
+  </article>
+
+  <!-- 4. 지킨다 -->
+  <article class="proj" id="p4" aria-labelledby="h-p4">
+    <div class="proj-head">
+      <p class="stamp"><span class="stage">4 · 지킨다</span><span>2026.09 – 10</span><span class="chip ok">운영 중</span><span>10/7 운영 배포, 10/9 자연 사건으로 인수</span><span class="chip priv">사내 운영</span></p>
+      <h3 id="h-p4">관측과 SRE 에이전트</h3>
+      <p class="stack">TypeScript · Cloudflare Workers · Durable Object(SQLite) · Queues · Managed Prometheus</p>
+    </div>
+    <p class="oneline"><span class="k">한 줄</span>5분마다 PromQL 28개를 읽어 감지 5종으로 사건을 만들고, AI가 저장된 근거에 묶인 1차 진단을 남긴 뒤 P1은 스레드, P2는 평일 17시 요약으로 보내는 사내 SRE 서비스를 올렸습니다. P0는 기존 독립 호출 경로에 두었고 복구는 모두 사람이 승인합니다.</p>
+    <div class="proj-grid">
+      <div class="proj-body">
+        <h4>왜, 내 몫</h4>
+        <p>경로가 바뀌자 Pod Ready나 lag 하나로 정상이나 유실을 단정하는 오판이 생길 수 있었고, 신호는 많은데 사람이 판단할 장애는 드물었습니다(heartbeat 경보는 먼저 클러스터 밖으로 뺐습니다). 등급 정책, 원장과 권한 구조, 배포와 인수, 롤백 판단을 맡은 단독 프로젝트이고 사내에서 운영 중인 서비스입니다.</p>
+        <h4>파고든 원리</h4>
+        <p>Durable Object 하나는 요청을 한 번에 하나씩 처리하고, 내장 SQLite 트랜잭션은 그 안에서 원자적입니다. 그래서 조직별 DO를 사건 원장으로 두면 락 없이 "중복 제거 → 사건 갱신 → 작업 → 보낼 의도"를 한 번에 기록할 수 있지만, 요청 하나가 무거워지면 뒤 요청이 모두 기다립니다. Queue는 최소 한 번 전달이라 트랜잭션에는 보낼 의도(outbox)만 남기고, 소비자는 작업마다 매긴 번호로 중복 전달과 늦게 끝난 모델 응답을 걸러 냅니다. 빈 응답을 0으로 채우면 멈춘 경로가 조용한 경로처럼 보인다고 생각했습니다.</p>
+        <h4>설계 결정</h4>
+        <div class="tbl">
+          <table class="dec">
+            <thead><tr><th scope="col">선택</th><th scope="col">버린 대안</th><th scope="col">이유</th></tr></thead>
+            <tbody>
+              <tr><td data-l="선택"><b>원장</b>조직별 SQLite DO + Queue + alarm</td><td data-l="버린 대안"><span class="none">—</span></td><td data-l="이유">사건 상태와 전송 의도를 한 트랜잭션으로 묶기 위해</td></tr>
+              <tr><td data-l="선택"><b>권한</b>모델에는 근거와 승인된 런북 목록만. 복구 실행기는 staging 단일 Pod 축출 하나만 갖춘 채 비활성. 등급은 서버 규칙으로 다시 계산</td><td data-l="버린 대안">모델 합의, Slack 확인 응답, 제안 승인을 실행 권한으로 쓰기</td><td data-l="이유">그중 무엇도 실행 권한이 되면 안 된다고 판단</td></tr>
+              <tr><td data-l="선택"><b>호출</b>진짜 P0만 24시간 호출. P0 호출은 기존 독립 경로, 이 서비스는 사본 기록</td><td data-l="버린 대안">섀도로 평가 중인 ClickHouse 알림 정책 88개를 Slack에 바로 붙이기</td><td data-l="이유">P0 정책을 우회하는 두 번째 통로가 생김</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>앞뒤로 이어진 것</h4>
+        <p><a href="#p1">1</a>의 10월 경로와 <a href="#p3">3</a>의 이전으로 홉이 늘어난 수집 경로(Kafka, Flink, 적재기)의 진행을 감지 5종으로 봅니다. 빈 응답 규칙은 1에서 "큐가 비었다"를 정상으로 읽지 않은 것과 같은 원칙입니다.</p>
+      </div>
+
+      <div class="side">
+        <figure class="fig">
+          <div class="fig-h"><span class="fig-t">그림 4 · 관측에서 사람까지</span><span class="chip res">롤백 약 10분, 이후 28/28</span></div>
+          <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 4, 가로로 스크롤할 수 있습니다">
+            <svg class="dg" viewBox="0 0 600 606" role="img" aria-label="그림 4. GCP에서 Cloud Scheduler가 5분마다 관측 수집기(Cloud Run Job, PromQL 28개)를 돌려 Managed Prometheus를 읽고, heartbeat 경보는 클러스터 밖 Cloud Monitoring에 있습니다. 수집기는 Cloudflare의 수신 API(OIDC 검증)로 보내고, 조직별 Durable Object SQLite 원장(signals, incidents, timeline, jobs, outbox, receipts, budget)이 요청을 한 번에 하나씩 기록합니다. alarm 디스패처, 작업 Queue, 진단 소비자, 진단 모델과 판정 모델로 이어지고 모델에는 근거와 런북 목록만 갑니다. 소비자는 결과를 원장에 다시 쓰고, 디스패처가 Slack(P1 스레드, P2 17시 요약)과 Linear 이슈로 보냅니다. 한 번 기록하고 여러 번 전달돼도 한 번 반영됩니다. 10월 12일 수신 경로에서 전체 사건 진행 기록 재조회를 뗐습니다(15분 읽은 행 약 460배, join 342에서 0). 기존 P0 호출 경로는 독립이고 원장에는 사본만 기록하며, ClickHouse 알림 정책 88개는 섀도 평가 중이라 Slack 직결을 보류했습니다. 복구 실행기는 staging Pod 축출 1종만 있고 비활성이며 사람 승인 뒤 수동 실행만 합니다.">
+              <text class="tm mono" x="4" y="16">GCP</text>
+              <rect class="grp" x="4" y="22" width="592" height="96" rx="6"/>
+              <rect class="b" x="14" y="40" width="160" height="40" rx="4"/>
+              <text x="94" y="65" text-anchor="middle">Managed Prometheus</text>
+              <path class="w" d="M174 60 H211" marker-end="url(#mi)"/>
+              <rect class="b" x="214" y="34" width="200" height="56" rx="4"/>
+              <text class="tb" x="314" y="52" text-anchor="middle">관측 수집기</text>
+              <text class="tm mono" x="314" y="68" text-anchor="middle">Cloud Run Job</text>
+              <text class="tm sm" x="314" y="84" text-anchor="middle">PromQL 28개</text>
+              <path class="w" d="M450 60 H417" marker-end="url(#mi)"/>
+              <rect class="b" x="450" y="40" width="136" height="40" rx="4"/>
+              <text x="518" y="58" text-anchor="middle">Cloud Scheduler</text>
+              <text class="tm mono" x="518" y="74" text-anchor="middle">*/5</text>
+              <rect class="b2" x="14" y="92" width="196" height="20" rx="10"/>
+              <text class="sm" x="112" y="106" text-anchor="middle">heartbeat 경보 · Cloud Monitoring</text>
+
+              <text class="tm mono" x="4" y="140">Cloudflare</text>
+              <rect class="grp" x="4" y="146" width="448" height="298" rx="6"/>
+              <path class="wo" d="M260 90 V159" marker-end="url(#mo)"/>
+              <rect class="b" x="150" y="162" width="180" height="36" rx="4"/>
+              <text x="240" y="185" text-anchor="middle">수신 API · OIDC 검증</text>
+              <path class="wo" d="M260 198 V215" marker-end="url(#mo)"/>
+              <rect class="bk" x="14" y="218" width="428" height="148" rx="4"/>
+              <text class="tb" x="26" y="238">조직별 Durable Object: SQLite 원장</text>
+              <text class="tm sm" x="26" y="256">요청을 한 번에 하나씩, 조직당 1개</text>
+              <rect class="b2" x="26" y="266" width="96" height="22" rx="3"/>
+              <text class="mono" x="74" y="281" text-anchor="middle">signals</text>
+              <rect class="b2" x="126" y="266" width="96" height="22" rx="3"/>
+              <text class="mono" x="174" y="281" text-anchor="middle">incidents</text>
+              <rect class="b2" x="226" y="266" width="96" height="22" rx="3"/>
+              <text class="mono" x="274" y="281" text-anchor="middle">timeline</text>
+              <rect class="b2" x="326" y="266" width="112" height="22" rx="3"/>
+              <text class="mono" x="382" y="281" text-anchor="middle">jobs(작업 번호)</text>
+              <rect class="b2" x="26" y="294" width="96" height="22" rx="3"/>
+              <text class="mono" x="74" y="309" text-anchor="middle">outbox</text>
+              <rect class="b2" x="126" y="294" width="96" height="22" rx="3"/>
+              <text class="mono" x="174" y="309" text-anchor="middle">receipts</text>
+              <rect class="b2" x="226" y="294" width="96" height="22" rx="3"/>
+              <text class="mono" x="274" y="309" text-anchor="middle">budget</text>
+              <rect class="brd" x="26" y="326" width="412" height="28" rx="3"/>
+              <path class="wrs" d="M36 334 l11 11 M47 334 l-11 11"/>
+              <text class="tr sm" x="56" y="345">전체 사건 진행 기록 재조회 · 10/12 수신 경로에서 제거</text>
+
+              <path class="wo" d="M57 366 V381" marker-end="url(#mo)"/>
+              <rect class="b" x="14" y="384" width="86" height="44" rx="4"/>
+              <text class="mono" x="57" y="402" text-anchor="middle">alarm</text>
+              <text x="57" y="419" text-anchor="middle">디스패처</text>
+              <path class="wo" d="M100 406 H113" marker-end="url(#mo)"/>
+              <rect class="b" x="116" y="384" width="80" height="44" rx="4"/>
+              <text x="156" y="402" text-anchor="middle">작업</text>
+              <text class="mono" x="156" y="419" text-anchor="middle">Queue</text>
+              <path class="wo" d="M196 406 H209" marker-end="url(#mo)"/>
+              <rect class="b" x="212" y="384" width="80" height="44" rx="4"/>
+              <text x="252" y="402" text-anchor="middle">진단</text>
+              <text x="252" y="419" text-anchor="middle">소비자</text>
+              <path class="wo" d="M252 384 V369" marker-end="url(#mo)"/>
+              <path class="w" d="M292 406 H305" marker-end="url(#mi)"/>
+              <rect class="b" x="308" y="384" width="62" height="44" rx="4"/>
+              <text x="339" y="402" text-anchor="middle">진단</text>
+              <text x="339" y="419" text-anchor="middle">모델</text>
+              <path class="w" d="M370 406 H379" marker-end="url(#mi)"/>
+              <rect class="b" x="382" y="384" width="60" height="44" rx="4"/>
+              <text x="412" y="402" text-anchor="middle">판정</text>
+              <text x="412" y="419" text-anchor="middle">모델</text>
+              <text class="tm sm" x="375" y="379" text-anchor="middle">근거와 런북 목록만</text>
+
+              <!-- 오른쪽 레인 -->
+              <rect class="bg" x="466" y="218" width="130" height="44" rx="4"/>
+              <text class="tm sm" x="531" y="236" text-anchor="middle">기존 P0 호출 경로</text>
+              <text class="tm sm" x="531" y="252" text-anchor="middle">(독립)</text>
+              <path class="wg" d="M466 240 H445" marker-end="url(#mm)"/>
+              <text class="tm sm" x="531" y="278" text-anchor="middle">원장엔 사본만 기록</text>
+              <rect class="brd" x="466" y="296" width="130" height="60" rx="4"/>
+              <text class="tr sm" x="531" y="314" text-anchor="middle">15분 읽은 행</text>
+              <text class="tr sm" x="531" y="330" text-anchor="middle">평소의 약 460배</text>
+              <text class="tr mono" x="531" y="346" text-anchor="middle">join 342 → 0</text>
+              <path class="wrs" d="M466 340 H440"/>
+              <rect class="bg" x="466" y="380" width="130" height="72" rx="4"/>
+              <text class="tm sm" x="531" y="398" text-anchor="middle">ClickHouse 알림</text>
+              <text class="tm sm" x="531" y="414" text-anchor="middle">정책 88개</text>
+              <text class="tm sm" x="531" y="430" text-anchor="middle">섀도 평가 중,</text>
+              <text class="tm sm" x="531" y="445" text-anchor="middle">Slack 직결 보류</text>
+
+              <!-- 사람 -->
+              <path class="wo" d="M57 428 V509" marker-end="url(#mo)"/>
+              <path class="wo" d="M57 462 H250 V509" marker-end="url(#mo)"/>
+              <text class="to sm tb" x="262" y="476">한 번 기록, 여러 번 전달돼도 한 번 반영</text>
+              <rect class="grp" x="4" y="490" width="592" height="110" rx="6"/>
+              <text class="tm mono" x="586" y="506" text-anchor="end">사람</text>
+              <rect class="b" x="14" y="512" width="170" height="44" rx="4"/>
+              <text class="tb" x="99" y="530" text-anchor="middle">Slack</text>
+              <text class="tm sm" x="99" y="548" text-anchor="middle">P1 스레드, P2 17시 요약</text>
+              <rect class="b" x="200" y="512" width="100" height="44" rx="4"/>
+              <text x="250" y="538" text-anchor="middle">Linear 이슈</text>
+              <rect class="b" x="316" y="512" width="76" height="44" rx="4"/>
+              <text x="354" y="538" text-anchor="middle">운영자</text>
+              <path class="wd" d="M392 534 H417" marker-end="url(#mm)"/>
+              <rect class="bg" x="420" y="512" width="166" height="44" rx="4"/>
+              <text class="tm" x="503" y="530" text-anchor="middle">복구 실행기</text>
+              <text class="tm sm" x="503" y="548" text-anchor="middle">staging Pod 축출 1종, 비활성</text>
+              <text class="tm sm" x="460" y="584" text-anchor="middle">사람 승인 뒤 수동 실행만</text>
+            </svg>
+          </div>
+          <p class="legend"><span><i class="o"></i>한 번 기록, 한 번 반영</span><span><i class="r"></i>10/12 회귀 지점</span><span><i class="g"></i>독립, 비활성, 보류</span></p>
+        </figure>
+        <div class="obs" role="group" aria-label="결과 관측 기록">
+          <p class="obs-h">결과 관측 기록</p>
+          <ul>
+            <li><span class="obs-k">배포 회귀 <span class="chip ok">운영</span></span><span class="obs-v"><b>약 10분 안에 롤백</b>, 무거운 join <b>342회 → 0</b> <span class="q">(관측 28건 순차 재현 시험)</span>, 이후 자연 주기 연속 2회 <b>28/28</b></span></li>
+            <li><span class="obs-k">자연 발생 P2</span><span class="obs-v">사건 2건이 <b>이슈 기록까지 자동</b>으로 이어짐 <span class="q">(첫 건에서 2차 판정 입력 검사 결함을 고친 뒤 둘째 건은 두 모델 진단까지 통과)</span></span></li>
+            <li><span class="obs-k">빈 응답</span><span class="obs-v">0으로 채우지 않고 <b>따로 기록</b> <span class="q">(자연 주기 28건 중 빈 응답 4건도 판정 불가 없이 수락)</span></span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="scene">
+      <div>
+        <h4>그 안의 장면 · 10/12</h4>
+        <h5>배포 직후 관측 28건 중 7건만 수신</h5>
+        <p>사건 기억 기능을 배포한 직후 자연 주기에서 관측 28건 중 21건이 판정 불가였고, 원천 조회는 정상이었습니다. CPU와 메모리 한도 오류는 0이었지만 DO 지표에서 15분 읽은 행이 평소의 약 460배인 것을 보고 원장을 보존한 채 먼저 롤백했고, 다음 주기에 28건이 모두 돌아왔습니다. 이어 관측마다 모든 사건의 진행 기록을 다시 읽는 join을 가장 유력한 원인으로 보고 수신 경로에서 뗐고, 정상 관측을 미래 시각으로 거부하던 판정도 고쳤습니다. 응답 본문이 남지 않아 21건의 정확한 사유는 확정하지 못했고, 그 빈칸은 거부 사유 코드를 남기는 진단으로 메웠습니다.</p>
+      </div>
+    </div>
+    <div class="carry"><span class="k">노드 운영으로 가져갈 것</span><p>이 서비스의 배포를 다음 자연 주기의 수락 수로 인수했듯이, 노드 업그레이드도 "새 바이너리가 다음 블록 N개를 정상 처리"로 인수하고 실패하면 데이터 디렉터리를 보존한 채 이전 판으로 되돌리겠습니다. 빈 응답과 0을 나눈 것처럼 exporter 무응답과 블록 높이 정체도 다른 신호로 다루겠습니다.</p></div>
   </article>
 </section>
 
-<!-- 03 장애 노트 -->
-<section class="sec" id="incidents" aria-labelledby="h-inc">
-  <div class="sec-h"><span class="idx">03</span><h2 id="h-inc">장애 노트</h2></div>
+<!-- 블록체인: 월드랜드 -->
+<section class="sec" id="chain" aria-labelledby="h-chain">
+  <div class="sec-h"><span class="idx">02</span><h2 id="h-chain">블록체인 <span class="h2-sub">리버벤스(월드랜드), 2026.01 ~ 04</span></h2></div>
+
+  <article class="proj" id="p5" aria-labelledby="h-p5">
+    <div class="proj-head">
+      <p class="stamp"><span class="stage">5 · 블록체인</span><span>2026.01 – 02</span><span>리버벤스(월드랜드)</span><span class="chip merge">머지 구현</span><span>컨트랙트는 Sepolia, 클러스터 경로는 Kind e2e까지</span></p>
+      <h3 id="h-p5">월드랜드 GPU 노드 플랫폼</h3>
+      <p class="stack">Go(client-go) · kubeadm · NVML · mTLS · SIWE · Solidity</p>
+    </div>
+    <p class="oneline"><span class="k">한 줄</span>키 파일 하나로 명령 한 줄을 치면 지갑 인증 → 인증서 발급 → mTLS 연결 → kubeadm join까지 끝나고, Hub가 여러 클러스터의 GPU 용량을 추적해 결제가 확인된 렌탈에만 Pod를 내주는 구조를 만들었습니다.</p>
+    <div class="proj-grid">
+      <div class="proj-body">
+        <h4>왜, 내 몫</h4>
+        <p>월드랜드 체인 위 GPU 렌탈 마켓인데 머신마다 설치 상태가 달라 한 대 붙이는 데 사람 손이 계속 들어갔고, 렌탈이 없을 때는 같은 GPU에서 월드랜드 마이닝 노드를 돌려야 했습니다. Hub 백엔드(커밋 94개 중 93개)와 노드 SDK(월드랜드 공식 org에 커밋 12개), 렌탈 컨트랙트를 맡았습니다(SDK 원형과 컨트롤 플레인 구축, 마이닝 이미지는 팀원).</p>
+        <h4>파고든 원리</h4>
+        <p>새 노드는 처음에 API 서버를 믿을 근거가 없습니다. kubeadm join은 bootstrap token으로 서명된 cluster-info를 받아 그 안의 CA가 <code>--discovery-token-ca-cert-hash</code>와 맞는지 확인해 CA를 고정하고, 같은 토큰으로 kubelet 인증서를 받습니다(TLS bootstrap). 이 해시는 인증서 전체 대신 공개키 필드(SPKI)로 계산해 같은 키로 재발급된 CA에도 맞고, Hub도 그 필드로 계산하게 했습니다. 또 <code>nvidia.com/gpu</code>만으로는 마이닝에 묶인 GPU를 알 수 없어 마이닝분을 따로 빼야 했고, Hub가 재시작해도 클러스터 사실에서 다시 셀 수 있어야 한다고 생각했습니다.</p>
+        <h4>설계 결정</h4>
+        <div class="tbl">
+          <table class="dec">
+            <thead><tr><th scope="col">선택</th><th scope="col">버린 대안</th><th scope="col">이유</th></tr></thead>
+            <tbody>
+              <tr><td data-l="선택"><b>실행 경로</b>머신을 Kubernetes 워커로 편입</td><td data-l="버린 대안">Hub가 mTLS로 원격 Docker를 돌리던 경로</td><td data-l="이유">SSH fallback과 재시작 복구 같은 보정이 이 경로에 계속 붙음. Pod 수명주기를 Kubernetes에 맡기면 한 경로로 줄어듦</td></tr>
+              <tr><td data-l="선택"><b>용량의 기준</b>메모리 안의 tracker가 Total − InUse − Mining으로 세고, Hub 재시작 때 실행 중인 Pod에서 할당을 다시 세움. DB에는 2분 주기와 할당 즉시 동기화하는 사본만</td><td data-l="버린 대안">DB 값을 기준으로 두기</td><td data-l="이유"><code>nvidia.com/gpu</code>만으로는 마이닝분을 알 수 없고, Hub가 재시작해도 클러스터 사실에서 다시 셀 수 있어야 함</td></tr>
+              <tr><td data-l="선택"><b>결제 확인</b>RPC failover, 체크포인트부터의 backfill, tx hash와 log index 기준 멱등 처리</td><td data-l="버린 대안"><span class="none">—</span></td><td data-l="이유">receipt를 확인해야만 GPU Pod를 만듦</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>앞뒤로 이어진 것</h4>
+        <p>합류 무렵 월드랜드 노드 클라이언트(geth 포크) 소스를 읽고 프라이빗 체인을 띄워 보며 구조를 익혔고, 노드 데몬에는 유휴 GPU에서 그 노드 컨테이너를 띄웠다가 렌탈이 오면 멈추고 다시 띄우는 수명주기를 구현했습니다(구현 범위까지, 채굴 운영 규모는 기록 없음).</p>
+        <p class="links-row"><a href="https://github.com/cryptoecc/worldland-sdk" target="_blank" rel="noopener">cryptoecc/worldland-sdk</a><a href="https://github.com/ForrestCrew/worldland-sdk" target="_blank" rel="noopener">ForrestCrew/worldland-sdk</a><a href="https://github.com/ForrestCrew/worldland-contracts" target="_blank" rel="noopener">ForrestCrew/worldland-contracts</a></p>
+      </div>
+
+      <div class="side">
+        <figure class="fig">
+          <div class="fig-h"><span class="fig-t">그림 5 · 온보딩 순서, 결제와 용량</span><span class="chip res">키 파일 1개, 명령 1줄</span></div>
+          <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 5 위, 가로로 스크롤할 수 있습니다">
+            <svg class="dg" viewBox="0 0 600 446" role="img" aria-label="그림 5 위, 노드 온보딩 순서. 1 노드 데몬이 Hub에 SIWE로 인증하고, 2 Hub CA가 CN이 지갑인 인증서를 발급하며, 3 데몬과 Hub가 mTLS로 30초마다 heartbeat를 주고받고 끊기면 5초에서 60초까지 재연결합니다. 4 Hub가 클러스터에 24시간짜리 bootstrap token Secret을 만들고 데몬에 join 토큰과 CA SPKI 해시를 줍니다. 같은 지갑의 두 번째 머신은 지갑 단위 대기 표식 때문에 여기서 멈췄습니다. 5 kubelet이 kubeadm join과 TLS bootstrap으로 API 서버에 붙고, 6 Hub가 Informer로 GPU 용량을 추적합니다.">
+              <rect class="bk" x="10" y="6" width="140" height="48" rx="4"/>
+              <text class="tb" x="80" y="26" text-anchor="middle">노드 데몬</text>
+              <text class="tm sm" x="80" y="44" text-anchor="middle">프로바이더 GPU 머신</text>
+              <rect class="b" x="220" y="6" width="160" height="48" rx="4"/>
+              <text class="tb" x="300" y="26" text-anchor="middle">Hub</text>
+              <text class="tm sm" x="300" y="44" text-anchor="middle">CA · mTLS · join 토큰</text>
+              <rect class="b" x="440" y="6" width="156" height="48" rx="4"/>
+              <text class="tb" x="518" y="26" text-anchor="middle">API 서버</text>
+              <text class="tm sm" x="518" y="44" text-anchor="middle">Kubernetes 클러스터들</text>
+              <path class="ll" d="M80 54 V440"/>
+              <path class="ll" d="M300 54 V440"/>
+              <path class="ll" d="M518 54 V440"/>
+
+              <path class="wp" d="M80 92 H297" marker-end="url(#mp)"/>
+              <text class="lb" x="190" y="84" text-anchor="middle">① SIWE 인증</text>
+              <path class="wp" d="M300 140 H83" marker-end="url(#mp)"/>
+              <text class="lb" x="190" y="132" text-anchor="middle">② 인증서 CN=지갑</text>
+              <text class="lb tm mono" x="190" y="158" text-anchor="middle">Hub CA, mTLS</text>
+              <path class="wd" d="M83 196 H297" marker-start="url(#mm)" marker-end="url(#mm)"/>
+              <text class="lb" x="190" y="188" text-anchor="middle">③ heartbeat 30초</text>
+              <text class="lb tm sm" x="190" y="214" text-anchor="middle">끊기면 5 → 60초 재연결</text>
+              <path class="wp" d="M300 250 H515" marker-end="url(#mp)"/>
+              <text class="lb" x="409" y="242" text-anchor="middle">④ bootstrap token Secret</text>
+              <text class="lb tm mono" x="409" y="268" text-anchor="middle">24시간</text>
+              <path class="wp" d="M300 292 H83" marker-end="url(#mp)"/>
+              <text class="lb" x="190" y="284" text-anchor="middle">join 토큰 + CA SPKI 해시</text>
+
+              <path class="wr" d="M300 328 H160" marker-end="url(#mr)"/>
+              <path class="wrs" d="M224 320 l10 10 M234 320 l-10 10"/>
+              <rect class="brd" x="4" y="306" width="154" height="44" rx="4"/>
+              <text class="tr sm tb" x="81" y="324" text-anchor="middle">두 번째 머신</text>
+              <text class="tr sm" x="81" y="341" text-anchor="middle">지갑 단위 대기 표식</text>
+
+              <path class="wp" d="M80 384 H515" marker-end="url(#mp)"/>
+              <text class="lb" x="298" y="376" text-anchor="middle">⑤ kubeadm join · TLS bootstrap</text>
+              <text class="lb tm sm" x="298" y="402" text-anchor="middle">CA 해시로 API 서버를 먼저 고정</text>
+              <path class="w" d="M518 428 H303" marker-end="url(#mi)"/>
+              <text class="lb" x="409" y="420" text-anchor="middle">⑥ Informer · GPU 용량</text>
+            </svg>
+          </div>
+          <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 5 아래, 가로로 스크롤할 수 있습니다">
+            <svg class="dg" viewBox="0 0 600 300" role="img" aria-label="그림 5 아래, 결제와 용량. 렌터가 Sepolia의 렌탈 컨트랙트에 결제하면 RPC 1부터 n까지(failover, 연결 여부만 봄)를 거쳐 이벤트 리스너와 결제 확인 워커(tx hash와 log index로 멱등)가 받고, receipt 뒤에만 API 서버에 GPU Pod를 만듭니다. 프로바이더 GPU 머신의 NVML, containerd와 kubelet, 월드랜드 마이닝 노드 컨테이너(P2P 30303, RPC 8545)에서 CapacityTracker가 Total − InUse − Mining을 세고, 재시작 때 실행 중 Pod에서 다시 셉니다. PostgreSQL에는 2분 주기와 할당 즉시 사본만 둡니다.">
+              <text class="tb" x="4" y="14">결제 확인</text>
+              <rect class="b" x="4" y="28" width="60" height="44" rx="4"/>
+              <text x="34" y="55" text-anchor="middle">렌터</text>
+              <path class="w" d="M64 50 H77" marker-end="url(#mi)"/>
+              <rect class="b" x="80" y="28" width="120" height="44" rx="4"/>
+              <text x="140" y="46" text-anchor="middle">렌탈 컨트랙트</text>
+              <text class="tm mono" x="140" y="63" text-anchor="middle">Sepolia</text>
+              <path class="w" d="M200 50 H213" marker-end="url(#mi)"/>
+              <rect class="b" x="216" y="28" width="100" height="44" rx="4"/>
+              <text class="mono" x="266" y="46" text-anchor="middle">RPC 1..n</text>
+              <text class="tm sm" x="266" y="63" text-anchor="middle">failover</text>
+              <text class="tr sm" x="266" y="90" text-anchor="middle">연결 여부만 봄</text>
+              <path class="w" d="M316 50 H329" marker-end="url(#mi)"/>
+              <rect class="b" x="332" y="28" width="100" height="44" rx="4"/>
+              <text x="382" y="46" text-anchor="middle">이벤트</text>
+              <text x="382" y="63" text-anchor="middle">리스너</text>
+              <path class="w" d="M432 50 H445" marker-end="url(#mi)"/>
+              <rect class="b" x="448" y="28" width="148" height="44" rx="4"/>
+              <text x="522" y="46" text-anchor="middle">결제 확인 워커</text>
+              <text class="tm mono" x="522" y="63" text-anchor="middle">tx hash + log index</text>
+              <path class="wp" d="M522 72 V117" marker-end="url(#mp)"/>
+              <rect class="bp" x="448" y="120" width="148" height="44" rx="4"/>
+              <text x="522" y="138" text-anchor="middle">API 서버</text>
+              <text class="tm sm" x="522" y="155" text-anchor="middle">receipt 뒤에만 GPU Pod</text>
+
+              <text class="tb" x="4" y="122">용량</text>
+              <rect class="grp" x="4" y="134" width="256" height="156" rx="6"/>
+              <text class="tm sm" x="14" y="152">프로바이더 GPU 머신</text>
+              <rect class="b" x="14" y="162" width="72" height="34" rx="4"/>
+              <text class="mono" x="50" y="184" text-anchor="middle">NVML</text>
+              <rect class="b" x="96" y="162" width="154" height="34" rx="4"/>
+              <text class="mono" x="173" y="184" text-anchor="middle">containerd + kubelet</text>
+              <rect class="b" x="14" y="206" width="236" height="44" rx="4"/>
+              <text class="sm" x="132" y="224" text-anchor="middle">월드랜드 마이닝 노드 컨테이너</text>
+              <text class="tm mono" x="132" y="241" text-anchor="middle">P2P 30303 · RPC 8545</text>
+              <text class="tm sm" x="132" y="276" text-anchor="middle">렌탈이 오면 멈추고 다시 띄움</text>
+              <path class="w" d="M250 179 H270 V206 H287" marker-end="url(#mi)"/>
+              <path class="w" d="M250 228 H270 V218 H287" marker-end="url(#mi)"/>
+              <rect class="bk" x="290" y="186" width="170" height="50" rx="4"/>
+              <text class="mono tb" x="375" y="206" text-anchor="middle">CapacityTracker</text>
+              <text class="mono" x="375" y="224" text-anchor="middle">Total − InUse − Mining</text>
+              <text class="tm sm" x="375" y="256" text-anchor="middle">재시작 때 실행 중 Pod에서 다시 셈</text>
+              <path class="wd" d="M460 211 H477" marker-end="url(#mm)"/>
+              <rect class="b" x="480" y="186" width="116" height="50" rx="4"/>
+              <text x="538" y="206" text-anchor="middle">PostgreSQL</text>
+              <text class="tm sm" x="538" y="224" text-anchor="middle">용량 사본</text>
+              <text class="tm sm" x="538" y="256" text-anchor="middle">2분 주기 + 할당 즉시</text>
+            </svg>
+          </div>
+          <p class="legend"><span><i></i>온보딩 주 경로</span><span><i class="r"></i>장면의 문제 지점</span><span><i class="g"></i>유지 신호, 사본</span></p>
+        </figure>
+        <div class="obs" role="group" aria-label="결과 관측 기록">
+          <p class="obs-h">결과 관측 기록</p>
+          <ul>
+            <li><span class="obs-k">프로바이더 온보딩</span><span class="obs-v">단계별 수동 설정 <span class="ar">→</span> <b>키 파일 하나로 명령 1줄</b>, Hub 재시작 뒤 자동 재연결</span></li>
+            <li><span class="obs-k">구조 교체 커밋</span><span class="obs-v"><b>60개 파일</b>에서 Docker 원격 실행 경로를 걷어내 Kubernetes 한 경로로 합침</span></li>
+            <li><span class="obs-k">테스트</span><span class="obs-v">Hub <b>약 350개</b> <span class="q">(Kind e2e 포함)</span>, 컨트랙트 <b>약 40개</b> <span class="q">(Sepolia 배포)</span></span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="scene">
+      <div>
+        <h4>그 안의 장면</h4>
+        <h5>두 번째 머신이 붙지 않았다</h5>
+        <p>같은 지갑으로 머신 두 대를 올리면 두 번째가 join 대기에 멈췄습니다. 하루 전 DB 등록 키는 GPU UUID(없으면 machine-id)로 바꿨지만 join 대기 표식 키는 지갑 주소에 남아 있었습니다. 대기 검사를 걷어 모든 노드에 join을 보내고 이미 붙었는지는 노드가 로컬에서 판단하게 했습니다. 지금 보면 <code>kubeadm reset -f</code>부터 하는 설치기에 재실행 가드가 없었고, 다음에 막을 빈틈이라고 생각합니다.</p>
+      </div>
+    </div>
+    <div class="carry"><span class="k">노드 운영으로 가져갈 것</span><p>join 명령에 CA 해시를 넣어 무엇을 믿을지 먼저 고정했듯이, 스냅샷으로 노드를 띄울 때도 어떤 출처와 해시를 믿을지부터 정하겠습니다. 이벤트 리스너의 RPC failover는 연결되는지만 보고 골라 연결은 되지만 뒤처진 노드를 거르지 못했는데, 노드 헬스는 블록 높이가 따라잡았는지로 봐야 한다는 것을 여기서 배웠습니다.</p></div>
+  </article>
+</section>
+
+<!-- 그 밖에 맡은 일 -->
+<section class="sec" id="more" aria-labelledby="h-more">
+  <div class="sec-h"><span class="idx">03</span><h2 id="h-more">그 밖에 맡은 일</h2></div>
   <div class="cards three">
-    <article class="card" aria-labelledby="h-i1">
-      <p class="card-meta"><span>01</span><span>2026.10</span><span class="chip ok">운영</span></p>
-      <h3 id="h-i1">INSERT 메모리 초과와 오진 정정</h3>
-      <p>1.3억 행 복사 중 한 청크가 4 GiB 한도(Code 241)에 걸려, 블록을 16,384행으로 쪼갰지만 같은 오류로 다시 멈췄습니다. <code>system.trace_log</code>의 메모리 스택을 집계해 INSERT 하나가 쓰기 스레드 4갈래로 도는 것을 찾고, <code>max_insert_threads</code> 1과 64 MiB 블록으로 같은 청크를 약 0.6 GiB에 넣었습니다. 블록 크기 탓이라던 처음 설명은 기록에서 직접 정정했습니다.</p>
-      <p class="card-foot">4 GiB 초과 <span class="ar">→</span> <b>약 0.6 GiB</b></p>
+    <article class="card" aria-labelledby="h-m1">
+      <p class="card-meta"><span>보조 1</span><span>2026.08 ~ 09</span></p>
+      <h3 id="h-m1">광고 데이터 연동</h3>
+      <p>Meta와 Google 계정 연결부터 복구까지 9개 경로를 멱등 키와 작업 원장으로 묶고(나머지와 화면은 동료), 매핑과 최초 수집 작업을 한 트랜잭션에 넣어 연결만 되고 수집은 안 되는 계정을 막았습니다.</p>
+      <p class="card-foot">운영 계정 하나로 <b>90일 최초 수집</b>을 끝까지 확인</p>
     </article>
-    <article class="card" aria-labelledby="h-i2">
-      <p class="card-meta"><span>02</span><span>2026.09</span><span class="chip stg">staging 공유 DB</span></p>
-      <h3 id="h-i2">블루/그린 전환 직전의 DB 연결 고갈</h3>
-      <p>/health는 200인데 권한 확인 API가 OpenFGA 장애로 503을 냈고, SQLSTATE 53300과 실측 max_connections 25로 두 벌 동시 기동이 기본 풀로 슬롯을 다 잡은 것을 확인했습니다. 서비스별 연결 예산(API 4, OpenFGA 2, Zitadel 2)과 중단 조건을 건 뒤 넘겼습니다.</p>
-      <p class="card-foot">5% <span class="ar">→</span> 롤백 12/12 <span class="ar">→</span> <b>100% 12/12</b></p>
+    <article class="card" aria-labelledby="h-m2">
+      <p class="card-meta"><span>보조 2</span><span>2026.04 ~ 09</span></p>
+      <h3 id="h-m2">AI 협업 개발 체계</h3>
+      <p>구현한 쪽의 "다 됐다"는 검증 근거로 쓰지 않고 다른 리뷰와 QA의 입력으로만 썼고, 파괴적 스키마 변경과 과금은 사람이 판단하며 에이전트의 직접 배포는 hook에서 막았습니다.</p>
+      <p class="card-foot">PR 약 780건 중 <b>약 690건 병합</b></p>
     </article>
-    <article class="card" aria-labelledby="h-i3">
-      <p class="card-meta"><span>03</span><span>2026.06</span><span class="chip ok">운영</span></p>
-      <h3 id="h-i3">적재 약 4시간 정지 뒤 ID 3,907개 대조</h3>
-      <p>큐가 비었다는 것은 큐에 있던 것이 나갔다는 뜻일 뿐이라고 생각해, 장애 구간의 R2 원본 ID와 ClickHouse ID를 양방향으로 대조했습니다.</p>
-      <p class="card-foot">3,907 = 3,907 <span class="ar">→</span> <b>차집합 0</b></p>
-    </article>
-    <article class="card" aria-labelledby="h-i4">
-      <p class="card-meta"><span>04</span><span>2026.10</span><span class="chip ok">운영</span></p>
-      <h3 id="h-i4">새 수집 경로 사본의 조용한 0.2% 누락</h3>
-      <p>크기, 형식, DLQ, 라우팅 가설을 지우고, 빠진 것이 모두 페이지 이탈 이벤트이며 같은 시간 Cloudflare 지표에 클라이언트 끊김이 3천여 건인 것으로 좁혔습니다. Worker가 사본 전송을 waitUntil에 늦게 걸던 순서를 바꿨습니다.</p>
-      <p class="card-foot">누락 0.2% <span class="ar">→</span> <b>0/3,920</b></p>
-    </article>
-    <article class="card" aria-labelledby="h-i5">
-      <p class="card-meta"><span>05</span><span>2026.10.06</span><span class="chip ok">운영</span></p>
-      <h3 id="h-i5">감시기가 장애가 된 날</h3>
-      <p>클러스터 밖 heartbeat 경보로, 매분 도는 Go CronJob이 50초 DB 타임아웃에 연달아 죽는 것을 잡았습니다. 스냅샷 SQL은 0.3초라 기각됐고, 원인은 열린 신호 약 5,600개를 하나씩 닫는 DB 왕복이었습니다. 제한 시간을 임시로 늘려 감시부터 살리고, 집합 쿼리와 heartbeat 우선 시간 예산으로 고친 뒤 임시값을 되돌렸습니다.</p>
-      <p class="card-foot">50초 타임아웃 <span class="ar">→</span> <b>10초 안팎, 실패 0</b></p>
+    <article class="card" aria-labelledby="h-m3">
+      <p class="card-meta"><span>보조 3</span><span>2026.06 ~ 08</span><span class="chip ok">운영</span></p>
+      <h3 id="h-m3">배포 파이프라인과 시크릿, 비용</h3>
+      <p>staging이 검증한 이미지 digest를 다시 빌드하지 않고 올리는 대기열과 Atlas 스키마 게이트를 만들고, 자격증명 약 40개를 Infisical과 OIDC로 모으다 운영 경로에 섞인 staging 계정을 찾았습니다. Cloud Run은 scale-to-zero와 CPU throttling 설정을 실제 구성에 맞췄고, 그 뒤 트래픽 0%인 옛 revision이 하루 종일 돌던 것도 찾아 정리했습니다. 이 대기열이 멈춘 자리를 <a href="#p3">3</a>의 GitOps가 대신했습니다.</p>
+      <p class="card-foot">Cloud Run 일 청구 <b>약 86% 감소</b></p>
     </article>
   </div>
 </section>
 
-<!-- 04 노드 실험실 -->
+<!-- 노드 실험실 -->
 <section class="sec" id="lab" aria-labelledby="h-lab">
   <div class="sec-h"><span class="idx">04</span><h2 id="h-lab">노드 실험실</h2></div>
+  <p class="sec-intro">프라이빗 체인, 로컬 체인, 데브넷에서 직접 띄워 본 것들입니다(퍼블릭 메인넷 운영 기록은 아님).</p>
   <div class="cards">
     <article class="card" aria-labelledby="h-l1">
       <p class="card-meta"><span>프라이빗 체인</span><span>NCP Kubernetes</span><span>2025.09 ~ 12</span></p>
       <h3 id="h-l1">Besu 3노드</h3>
-      <p>OOMKilled와 동기화 실패를 bootnode Pod IP 하드코딩, 최소 피어 5, 15일치 낡은 데이터, 공통 설정의 miner-enabled로 나눠 풀어 노드 2 메모리를 절반으로 줄였습니다. Clique 블록이 15초 아래로 안 내려가 QBFT로 바꾸고 체인을 초기화했고, PUSH0 실패는 genesis가 London까지라 evmVersion을 맞춰 풀었습니다.</p>
-      <pre class="log" tabindex="0">Unable to find sync target. Waiting for 5 peers minimum
-Invalid opcode: 0x5f</pre>
+      <p>블록을 만들지 않는 노드 2, 3이 OOMKilled와 피어 대기로 동기화하지 못했고, 메모리를 늘려도 계속 죽었습니다. bootnode Pod IP 하드코딩, 최소 피어 5개 기본값, 15일치 낡은 데이터를 차례로 고쳤는데도 메모리가 블록을 만드는 노드와 비슷했습니다. "블록을 만들지 않는 노드가 왜 이만큼 쓰지?"를 따라가 공통 설정에 켜져 있던 miner-enabled를 찾아 끄자 두 노드 메모리가 약 390Mi에서 190 ~ 240Mi로 줄었습니다. Clique 블록이 15초 밑으로 안 내려가 QBFT로 바꿨고, PUSH0 실패는 genesis가 London까지라 evmVersion을 맞췄습니다.</p>
+      <pre class="log" tabindex="0">Unable to find sync target. Waiting for 5 peers minimum</pre>
       <ul class="lab-links">
         <li><span class="k">velog</span><a href="https://velog.io/@ahwlsqja/Kubernetes%EC%97%90%EC%84%9C-Besu-%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EC%82%BD%EC%A7%88%EA%B8%B0" target="_blank" rel="noopener">Kubernetes에서 Besu 프라이빗 네트워크 삽질기</a></li>
       </ul>
     </article>
     <article class="card" aria-labelledby="h-l2">
-      <p class="card-meta"><span>허가형 체인</span><span>k3s → minikube</span><span>2025.03 ~ 06</span></p>
+      <p class="card-meta"><span>허가형 체인</span><span>캡스톤, minikube</span><span>2025.03 ~ 06</span></p>
       <h3 id="h-l2">Hyperledger Fabric</h3>
-      <p>오더러 3대(etcdraft), 조직 2개의 peer와 CouchDB, CA 3대, 체인코드 외부 서비스를 올렸습니다. CA 인증서 CN/SAN이 Pod 이름으로 만들어져 enroll이 깨지는 것을 찾아, 서비스 이름을 쓴 설정을 initContainer로 넣었습니다.</p>
+      <p>오더러 3대(etcdraft), 조직 2개의 peer, CA 3대를 올렸고, 12시간 붙잡은 enroll 오류는 CA 인증서 SAN에 서비스 이름 대신 Pod 이름이 들어간 것이라 initContainer로 설정을 먼저 넣어 풀었습니다.</p>
       <pre class="log" tabindex="0">x509: certificate is valid for ca-orderer-549bd75db5-xxg95, localhost, not ca-orderer</pre>
       <ul class="lab-links">
-        <li><span class="k">velog</span><a href="https://velog.io/@ahwlsqja/minikube-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C%EC%9D%98-%ED%95%98%EC%9D%B4%ED%8D%BC%EB%A0%88%EC%A0%80%ED%8C%A8%EB%B8%8C%EB%A6%AD-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EB%B0%B0%ED%8F%AC-%EA%B7%B8%EB%A6%AC%EA%B3%A0-%EC%97%AC%EB%9F%AC%EA%B0%80%EC%A7%80-%EC%9D%B8%EC%A6%9D%EC%84%9C-%EB%AC%B8%EC%A0%9C%EB%93%A4" target="_blank" rel="noopener">minikube 환경에서의 하이퍼레저패브릭 네트워크 배포 그리고 여러가지 인증서 문제들</a></li>
         <li><span class="k">GitHub</span><a href="https://github.com/ahwlsqja/Hyperledgerfabric-Capston" target="_blank" rel="noopener">ahwlsqja/Hyperledgerfabric-Capston</a></li>
       </ul>
     </article>
     <article class="card" aria-labelledby="h-l3">
-      <p class="card-meta"><span>로컬 체인</span><span>Cosmos SDK v0.53.4</span><span>CometBFT v0.38.19</span></p>
-      <h3 id="h-l3">Cosmos 밸리데이터</h3>
-      <p>위임, 슬래싱 파라미터, jail과 unjail, 키 3종과 priv_validator_state.json 백업을 명령으로 정리했습니다. 복원 전에는 마지막 서명 높이를 체인 높이와 먼저 비교해야 이중 서명을 막는다고 생각합니다.</p>
-      <pre class="log" tabindex="0">$ curl -s http://127.0.0.1:26657/status | jq '.result.sync_info.latest_block_height'
-"9300"   # 5초 뒤 "9301"</pre>
-      <ul class="lab-links">
-        <li><span class="k">velog</span><a href="https://velog.io/@ahwlsqja/%EC%BD%94%EC%8A%A4%EB%AA%A8%EC%8A%A4-%EB%B2%A8%EB%A6%AC%EB%8D%B0%EC%9D%B4%ED%84%B0-%EB%A1%9C%EC%BB%AC%EC%97%90%EC%84%9C-%EC%9A%B4%EC%98%81%ED%95%B4%EB%B3%B4%EA%B8%B0" target="_blank" rel="noopener">코스모스 벨리데이터 로컬에서 운영해보기</a></li>
-      </ul>
+      <p class="card-meta"><span>데브넷</span><span>2026.03 ~ 04</span><span class="chip priv">3인 비공개 연구</span></p>
+      <h3 id="h-l3">이더리움 합의 클라이언트(Prysm) 포크 데브넷 연구</h3>
+      <p>attestation 송신을 Prysm에서 가로채 2-hop 릴레이(HPKE, OHTTP 또는 MASQUE)로 보내는 연구에서 릴레이 MVP와 Broadcast 우회, 데브넷(geth, beacon, validator, 릴레이) 연동을 맡았고, 슬래싱 메시지는 릴레이가 실패하면 처벌이 막힐 수 있어 일부러 뺐습니다.</p>
     </article>
     <article class="card" aria-labelledby="h-l4">
-      <p class="card-meta"><span>Go net/http</span><span>2026.01</span></p>
-      <h3 id="h-l4">서버를 끄는 시간</h3>
-      <p>종료 제한 시간이 요청 처리보다 짧으면 요청이 끊기고, Keep-Alive를 끄면 처리량이 절반으로 떨어지는 것을 재현했습니다. geth는 종료 중 DB 쓰기 때문에 넉넉한 유예를 권하는데 Kubernetes 기본은 30초라, 노드 업그레이드에서 가장 먼저 볼 값으로 꼽습니다.</p>
-      <pre class="log" tabindex="0">$ ./bin/server -shutdown-timeout=3s
-curl exit 52 (empty reply)</pre>
-      <ul class="lab-links">
-        <li><span class="k">GitHub</span><a href="https://github.com/ahwlsqja/go-server-liveness-lab" target="_blank" rel="noopener">ahwlsqja/go-server-liveness-lab</a></li>
-      </ul>
+      <p class="card-meta"><span>로컬 체인</span><span>CometBFT v0.38</span><span>2025.11</span></p>
+      <h3 id="h-l4">Cosmos 밸리데이터 로컬 실습</h3>
+      <p>슬래싱 파라미터, jail과 unjail, 키 3종과 <code>priv_validator_state.json</code> 백업을 명령으로 확인했고, 키 복원 전에는 마지막 서명 높이를 체인 높이와 먼저 비교해야 이중 서명을 막는다고 생각합니다.</p>
+      <pre class="log" tabindex="0">$ curl -s http://127.0.0.1:26657/status | jq '.result.sync_info.latest_block_height'
+"9300"   # 5초 뒤 "9301"</pre>
     </article>
   </div>
-  <p class="after">이 밖에 geth, Prysm beacon, validator 데브넷에서 Prysm 송신 경로를 고쳐 attestation을 2-hop 릴레이로 보냈고(<span class="chip priv">비공개 연구</span>), K3s agent join 경로에 Sui 스테이킹 검증을 붙였습니다(해커톤 수상).</p>
 </section>
 
-<!-- 05 왜 노딧, 90일 -->
-<section class="sec" id="plan" aria-labelledby="h-plan">
-  <div class="sec-h"><span class="idx">05</span><h2 id="h-plan">왜 노딧, 그리고 90일</h2></div>
-  <ul class="why">
-    <li>노딧 Wallet Node 글은 노드의 가용성과 동기화 상태를 보고 요청을 보낸다고 씁니다. 503 한 건에서 붙든 "언제 트래픽을 받아도 되는가"가 노드에서는 head lag 문제라고 생각해 이 일을 하고 싶습니다.</li>
-    <li>공고는 노드 업그레이드와 하드포크를 무중단으로 넘기는 구조를 업무로 적습니다. 저는 되돌릴 수 없는 관리형 해지를 복구 리허설과 이벤트 수 대조로 넘겼고, Besu 합의를 바꿀 때는 체인 초기화와 EVM 버전 차이를 직접 겪었습니다.</li>
-    <li>채용 설명회가 꼽은 과제는 데이터를 끊김 없이 수집하고 정합성을 지키는 것입니다. 1.3억 행 이관과 ID 3,907개 대조가 같은 종류의 일입니다.</li>
-  </ul>
-  <ol class="plan" aria-label="90일 계획">
-    <li><p class="day">30일</p><p>EVM 실행 클라이언트와 합의 클라이언트 한 쌍을 테스트넷에서 처음부터 동기화하고, 체인별 Ready 정의 표(헬스 응답, 종료 유예)를 팀 리뷰에 올립니다.</p></li>
-    <li><p class="day">60일</p><p>참조 노드 대비 head lag 알람과 스냅샷 복원 리허설 스크립트 중 팀이 고른 하나를 섀도로 돌려 오탐을 분류한 뒤 붙입니다.</p></li>
-    <li><p class="day">90일</p><p>예정된 네트워크 업그레이드 하나를 테스트넷에서 런북대로 리허설하고(한 대 먼저, 동기화 확인, 롤링) 회고 문서를 씁니다.</p></li>
-  </ol>
-  <p class="src"><span class="k">출처</span><a href="https://www.nodit.io/blog/wallet-node-is-live-simplifying-digital-asset-wallet-infrastructure" target="_blank" rel="noopener">Nodit 블로그, Wallet Node</a><a href="https://lambda256.career.greetinghr.com/ko/o/239269" target="_blank" rel="noopener">람다256 채용 공고</a><a href="https://www.khgames.co.kr/news/articleView.html?idxno=308223" target="_blank" rel="noopener">채용 설명회 기사</a></p>
-</section>
-
-<!-- 06 오픈소스, 글, 수상, 활동 -->
+<!-- 오픈소스, 글, 수상 -->
 <section class="sec" id="records" aria-labelledby="h-rec">
-  <div class="sec-h"><span class="idx">06</span><h2 id="h-rec">오픈소스, 글, 수상, 활동</h2></div>
+  <div class="sec-h"><span class="idx">05</span><h2 id="h-rec">오픈소스, 글, 수상</h2></div>
   <div class="rec">
     <div>
       <h3>오픈소스 (머지)</h3>
       <ul>
-        <li><a href="https://github.com/ignite/cli/pull/4838" target="_blank" rel="noopener">ignite/cli #4838</a>. Go 1.24.0 빌드 실패를 보고하고 최소 Go 버전을 올렸습니다.</li>
-        <li><a href="https://github.com/InjectiveLabs/injective-ts/pull/617" target="_blank" rel="noopener">InjectiveLabs/injective-ts #617</a>. 예외 처리 TypeError 수정.</li>
-        <li><a href="https://github.com/gsd-build/gsd-2/pull/2515" target="_blank" rel="noopener">gsd-build/gsd-2 #2515</a>, <a href="https://github.com/gsd-build/gsd-2/pull/2617" target="_blank" rel="noopener">#2617</a>. 작업 상태 불일치로 인한 중복 배정 수정.</li>
+        <li><a href="https://github.com/ignite/cli/pull/4838" target="_blank" rel="noopener">ignite/cli #4838</a>. Go 1.24 빌드 실패 보고와 최소 버전 수정</li>
+        <li><a href="https://github.com/InjectiveLabs/injective-ts/pull/617" target="_blank" rel="noopener">InjectiveLabs/injective-ts #617</a>. 예외 처리 TypeError 수정</li>
+        <li><a href="https://github.com/gsd-build/gsd-2/pull/2515" target="_blank" rel="noopener">gsd-build/gsd-2 #2515</a>, <a href="https://github.com/gsd-build/gsd-2/pull/2617" target="_blank" rel="noopener">#2617</a>. 작업 상태 불일치로 인한 중복 배정 수정</li>
       </ul>
       <h3>글 (velog 137편 중)</h3>
       <ul>
-        <li><a href="https://velog.io/@ahwlsqja/Kubernetes%EC%97%90%EC%84%9C-Besu-%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EC%82%BD%EC%A7%88%EA%B8%B0" target="_blank" rel="noopener">Kubernetes에서 Besu 프라이빗 네트워크 삽질기</a></li>
         <li><a href="https://velog.io/@ahwlsqja/Besu-%EB%B8%94%EB%A1%9D-%ED%83%80%EC%9E%84-5%EC%B4%88%EB%A1%9C-%EB%AA%BB-%EC%A4%84%EC%9D%B4%EA%B2%A0%EC%96%B4%EC%84%9C-%ED%95%A9%EC%9D%98-%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98%EC%9D%84-%EB%B0%94%EA%BF%94%EB%B2%84%EB%A6%B0-%EC%8A%AC%ED%94%88-%EC%9D%B4%EC%95%BC%EA%B8%B0" target="_blank" rel="noopener">Besu 블록 타임 5초로 못 줄이겠어서 합의 알고리즘을 바꿔버린 슬픈 이야기</a></li>
-        <li><a href="https://velog.io/@ahwlsqja/minikube-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C%EC%9D%98-%ED%95%98%EC%9D%B4%ED%8D%BC%EB%A0%88%EC%A0%80%ED%8C%A8%EB%B8%8C%EB%A6%AD-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EB%B0%B0%ED%8F%AC-%EA%B7%B8%EB%A6%AC%EA%B3%A0-%EC%97%AC%EB%9F%AC%EA%B0%80%EC%A7%80-%EC%9D%B8%EC%A6%9D%EC%84%9C-%EB%AC%B8%EC%A0%9C%EB%93%A4" target="_blank" rel="noopener">minikube 환경에서의 하이퍼레저패브릭 네트워크 배포 그리고 여러가지 인증서 문제들</a></li>
         <li>geth Block 구조체의 atomic.Value</li>
-        <li>Anthropic Web Search에서 400 에러가 터지는 진짜 이유를 찾기까지</li>
       </ul>
     </div>
     <div>
       <h3>수상</h3>
       <ul>
-        <li><span class="when">2026.05</span>상명대학교 창업아이디어경진대회 최우수상(공동, HWP 파싱 엔진)</li>
-        <li><span class="when">2026.01</span>상명대학교 핀테크·빅데이터융합·스마트생산 학술제 최우수상(멍멍포, 위 Besu 네트워크)</li>
-        <li><span class="when">2025.09</span>Sui Suimming Hackathon University Track 수상</li>
-        <li><span class="when">2025.08</span>BLOCKTHON 1st Place. 팀 리더를 맡았으며 팀 내 불화가 있었지만 끝까지 해결해 좋은 결과를 얻었습니다.</li>
+        <li><span class="when">2026.05</span>상명대 창업아이디어경진대회 최우수상(공동)</li>
+        <li><span class="when">2026.01</span>상명대 학술제 최우수상(멍멍포, 위 Besu 네트워크를 쓴 서비스)</li>
+        <li><span class="when">2025.09</span>Sui Suimming Hackathon University Track 수상(K3s agent join에 Sui 스테이킹 검증을 넣은 DAAS-Vader, 로컬 데모까지)</li>
+        <li><span class="when">2025.08</span>BLOCKTHON 1st Place(팀 리더, 팀 내 불화가 있었지만 끝까지 해결해 좋은 결과를 얻었습니다)</li>
         <li><span class="when">2025.08</span>Monad Blitz Seoul Chainlink Special Prize</li>
       </ul>
-      <h3>특허 출원</h3>
+      <h3>특허와 활동</h3>
       <ul>
-        <li><span class="when">2026.03</span>한글(HWP) 바이너리 레코드 해석을 이용한 표 구조 보존 시맨틱 중간 표현 생성 방법(10-2026-0054054, 공동 발명)</li>
-      </ul>
-      <h3>활동</h3>
-      <ul>
-        <li>Blockchain At Yonsei(BAY) 16기 코스모스팀 팀장, 17기 온보딩팀장(6주 이더리움 교재와 Foundry 과제 CI 운영)</li>
+        <li><span class="when">2026.03</span>특허 출원 1건(HWP 표 구조 보존, 공동 발명)</li>
+        <li>Blockchain At Yonsei 16기 코스모스팀 팀장, 17기 온보딩팀장</li>
         <li>Injective Ninja Labs Korea 개발팀장</li>
       </ul>
     </div>
   </div>
 </section>
 
-<!-- 07 연락처 -->
-<section class="sec col" id="contact" aria-labelledby="h-contact">
-  <div class="sec-h"><span class="idx">07</span><h2 id="h-contact">연락처</h2></div>
+<!-- 연락처 -->
+<section class="sec" id="contact" aria-labelledby="h-contact">
+  <div class="sec-h"><span class="idx">06</span><h2 id="h-contact">연락처</h2></div>
   <dl class="contact">
     <div><dt>이름</dt><dd>모진영</dd></div>
     <div><dt>이메일</dt><dd><span class="email" id="email-contact">ahwlsqja1324@gmail.com</span><button type="button" class="copy" data-copy="email-contact" aria-live="polite">복사</button></dd></div>
