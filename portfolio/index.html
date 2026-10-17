@@ -1,0 +1,1244 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="description" content="모진영 인프라·블록체인 노드 운영 포트폴리오">
+<title>모진영 포트폴리오</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* Layout v3: 히어로(근거 3개) → 한 일 2열 → 대표 사례(본문 | 그림) → 장애 노트 카드 → 실험실 카드 → 90일 3칸 → 기록 → 연락처. 섹션 간 여백은 넓게, 본문은 짧게. */
+:root {
+  --bg: #F3F5F7;
+  --surface: #FFFFFF;
+  --ink: #15202B;
+  --muted: #5A6978;
+  --rule: #D8DEE4;
+  --accent: #2D52C4;
+  --ok: #1E7F55;
+  --warn: #9A6412;
+  --bad: #B23A30;
+  --code-bg: #EEF1F4;
+  --shadow: rgba(21, 32, 43, 0.07);
+  --f-display: 'Hahmlet', 'Apple SD Gothic Neo', sans-serif;
+  --f-body: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', sans-serif;
+  --f-mono: 'IBM Plex Mono', 'IBM Plex Sans KR', ui-monospace, monospace;
+  --measure: 46rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E141A;
+    --surface: #151D25;
+    --ink: #E4EBF2;
+    --muted: #95A4B3;
+    --rule: #25303B;
+    --accent: #86A2FF;
+    --ok: #4CC38A;
+    --warn: #E0A84A;
+    --bad: #F2786C;
+    --code-bg: #1A232C;
+    --shadow: rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E141A;
+  --surface: #151D25;
+  --ink: #E4EBF2;
+  --muted: #95A4B3;
+  --rule: #25303B;
+  --accent: #86A2FF;
+  --ok: #4CC38A;
+  --warn: #E0A84A;
+  --bad: #F2786C;
+  --code-bg: #1A232C;
+  --shadow: rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16.5px;
+  line-height: 1.72;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  -webkit-text-size-adjust: 100%;
+}
+
+.page {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 56px 96px;
+}
+.col { max-width: var(--measure); }
+[id] { scroll-margin-top: 24px; }
+
+h1, h2, h3 { text-wrap: balance; }
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 7vw, 3.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+h2 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: clamp(1.4rem, 3.4vw, 1.8rem);
+  line-height: 1.35;
+  margin: 0;
+}
+h3 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 1.2rem;
+  line-height: 1.45;
+  margin: 0;
+}
+p { margin: 0 0 0.9em; }
+ul, ol { margin: 0 0 1em; padding-left: 1.2em; }
+li { margin-bottom: 0.35em; }
+li::marker { color: var(--muted); }
+b, strong { font-weight: 600; }
+
+a {
+  color: var(--accent);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible, button:focus-visible, .fig-scroll:focus-visible, .log:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+code {
+  font-family: var(--f-mono);
+  font-size: 0.86em;
+  background: var(--code-bg);
+  padding: 0.08em 0.35em;
+  border-radius: 3px;
+}
+.mono { font-family: var(--f-mono); }
+.muted { color: var(--muted); }
+
+/* 상태 칩 */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 4px 9px 4px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  white-space: nowrap;
+  vertical-align: 0.1em;
+}
+.chip::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  box-sizing: border-box;
+  border-radius: 50%;
+}
+.chip.ok { color: var(--ok); }
+.chip.ok::before { background: currentColor; }
+.chip.stg { color: var(--warn); }
+.chip.stg::before { border: 1.5px solid currentColor; }
+.chip.shadow { color: var(--warn); border-style: dashed; }
+.chip.shadow::before { border: 1.5px dashed currentColor; }
+.chip.priv { color: var(--muted); border-radius: 3px; }
+.chip.priv::before { background: currentColor; border-radius: 1px; }
+
+/* 히어로 */
+.kicker {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  margin: 0 0 14px;
+}
+.subtitle {
+  font-size: 1.08rem;
+  color: var(--muted);
+  margin: 10px 0 26px;
+}
+.lead {
+  font-size: 1.16rem;
+  line-height: 1.68;
+  max-width: var(--measure);
+  margin-bottom: 0;
+}
+.proof {
+  list-style: none;
+  padding: 0;
+  margin: 40px 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border-top: 3px solid var(--ink);
+}
+.proof > li {
+  min-width: 0;
+  margin: 0;
+  padding: 18px 0 20px;
+  border-bottom: 1px solid var(--rule);
+}
+.proof .n {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(1.45rem, 3.2vw, 1.75rem);
+  line-height: 1.25;
+  margin: 0 0 8px;
+  font-variant-numeric: tabular-nums;
+}
+.proof .d {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0;
+}
+.career {
+  list-style: none;
+  padding: 0;
+  margin: 28px 0 0;
+  display: grid;
+  gap: 6px;
+  font-size: 15px;
+}
+.career li {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  gap: 2px 16px;
+  margin: 0;
+}
+.career .when {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  color: var(--muted);
+  padding-top: 0.15em;
+  font-variant-numeric: tabular-nums;
+}
+.career li > span:last-child { min-width: 0; }
+.links {
+  list-style: none;
+  padding: 0;
+  margin: 22px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  font-size: 15px;
+}
+.links li {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin: 0;
+  min-width: 0;
+}
+.k {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.email {
+  font-family: var(--f-mono);
+  font-size: 0.95em;
+  user-select: all;
+  -webkit-user-select: all;
+}
+.copy {
+  font: 500 12px/1 var(--f-mono);
+  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.copy:hover { border-color: var(--accent); }
+.fine {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: 18px 0 0;
+}
+
+/* 목차 */
+.toc { margin-top: 36px; }
+.toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  border-block: 1px solid var(--rule);
+  font-size: 14.5px;
+}
+.toc li { margin: 0; }
+.toc a { text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+.toc .idx { font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin-right: 6px; }
+
+/* 섹션 */
+.sec { margin-top: 112px; }
+.sec-h {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  border-top: 1px solid var(--rule);
+  padding-top: 22px;
+  margin-bottom: 28px;
+}
+.sec-h .idx {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  color: var(--muted);
+  flex: none;
+}
+.sec-h h2 { min-width: 0; }
+.h2-sub { font-family: var(--f-mono); font-size: 0.5em; font-weight: 400; color: var(--muted); margin-left: 6px; white-space: nowrap; }
+
+/* 한 일 */
+.did {
+  list-style: none;
+  counter-reset: did;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px 44px;
+  font-size: 15.5px;
+  line-height: 1.68;
+}
+.did > li {
+  counter-increment: did;
+  min-width: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 0 6px;
+}
+.did > li::before {
+  content: counter(did, decimal-leading-zero);
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  color: var(--muted);
+  padding-top: 0.2em;
+}
+.did > li > p { margin: 0; min-width: 0; }
+
+/* 사례 */
+.case { margin-top: 72px; }
+.case:first-of-type { margin-top: 0; }
+.case-head {
+  border-top: 3px solid var(--ink);
+  padding-top: 20px;
+  margin-bottom: 22px;
+}
+.case-head h3 { max-width: var(--measure); }
+.stamp {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-family: var(--f-mono);
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 10px;
+  font-variant-numeric: tabular-nums;
+}
+.case-head h3 { font-size: clamp(1.25rem, 2.8vw, 1.5rem); }
+.case-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px 48px;
+  align-items: start;
+}
+.case-body { min-width: 0; font-size: 15.5px; line-height: 1.7; }
+.case-body h4 {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 1.4em 0 0.4em;
+}
+.case-body h4:first-child { margin-top: 0; }
+.case-body ul { padding-left: 1.1em; }
+.call {
+  border-left: 3px solid var(--accent);
+  padding: 2px 0 2px 14px;
+  margin: 1.2em 0;
+}
+.call h4 { margin-top: 0; }
+.call p:last-child { margin-bottom: 0; }
+.case-links {
+  list-style: none;
+  padding: 0;
+  margin: 1em 0 0;
+  font-size: 14px;
+  display: grid;
+  gap: 4px;
+}
+.case-links li { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.case-links .k { margin-right: 6px; }
+
+/* 관측 기록 */
+.obs {
+  background: var(--code-bg);
+  border-radius: 4px;
+  padding: 13px 15px 11px;
+  margin: 1em 0 1.2em;
+  font-family: var(--f-mono);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.obs-h {
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+.obs ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+}
+.obs li {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: 2px 12px;
+  align-items: baseline;
+  margin: 0;
+}
+.obs-k {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.obs-v { min-width: 0; color: var(--ink); }
+.obs-v b { font-weight: 600; }
+.obs-v .ar { color: var(--muted); }
+
+/* 그림 */
+.fig { margin: 0; min-width: 0; }
+.fig-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 14px;
+}
+.fig figcaption {
+  margin: 0.6rem 0 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.dg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 440px;
+  font-family: var(--f-body);
+  font-size: 12.5px;
+}
+.dg text { fill: var(--ink); }
+.dg .tm { fill: var(--muted); }
+.dg .tbad { fill: var(--bad); }
+.dg .tok { fill: var(--ok); }
+.dg .tb { font-weight: 600; }
+.dg .tn { font-weight: 400; }
+.dg .mono { font-family: var(--f-mono); font-size: 11.5px; }
+.dg .sm { font-size: 11.5px; }
+.dg .lb {
+  stroke: var(--surface);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+.dg .b { fill: var(--surface); stroke: var(--ink); stroke-width: 1.25; }
+.dg .b2 { fill: var(--code-bg); stroke: var(--muted); stroke-width: 1; }
+.dg .bk { fill: var(--surface); stroke: var(--ink); stroke-width: 2.75; }
+.dg .g { fill: none; stroke: var(--muted); stroke-width: 1; }
+.dg .z { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 4; }
+.dg .w { fill: none; stroke: var(--ink); stroke-width: 1.25; }
+.dg .wm { fill: none; stroke: var(--muted); stroke-width: 1.25; }
+.dg .wd { fill: none; stroke: var(--muted); stroke-width: 1.25; stroke-dasharray: 5 4; }
+.dg .ll { fill: none; stroke: var(--rule); stroke-width: 1.25; stroke-dasharray: 4 4; }
+.dg .ah { fill: var(--ink); }
+.dg .ahm { fill: var(--muted); }
+.dg .dot { fill: var(--muted); }
+.dg .gapbad { fill: var(--bad); }
+.dg .gapok { fill: var(--ok); }
+
+/* 카드 공통 */
+.cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+.card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px var(--shadow), 0 8px 24px var(--shadow);
+  padding: 20px 22px 18px;
+  font-size: 15px;
+  line-height: 1.68;
+}
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0 0 8px;
+  font-variant-numeric: tabular-nums;
+}
+.card h3 { font-size: 1.1rem; margin-bottom: 10px; }
+.card > p { margin-bottom: 0.8em; }
+.card-foot {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+}
+.card-foot .ar { color: var(--muted); }
+.log {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  background: var(--code-bg);
+  border-radius: 4px;
+  padding: 9px 12px;
+  margin: 0 0 12px;
+  overflow-x: auto;
+  white-space: pre;
+}
+.lab-links {
+  list-style: none;
+  margin: auto 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  display: grid;
+  gap: 4px;
+}
+.lab-links li { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.lab-links .k { margin-right: 6px; }
+.after {
+  font-size: 15px;
+  color: var(--muted);
+  margin: 20px 0 0;
+  max-width: var(--measure);
+}
+
+/* 90일 */
+.why { max-width: var(--measure); padding-left: 1.2em; }
+.plan {
+  list-style: none;
+  padding: 0;
+  margin: 32px 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border-top: 3px solid var(--ink);
+}
+.plan > li {
+  min-width: 0;
+  margin: 0;
+  padding: 16px 0 18px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 15px;
+  line-height: 1.66;
+}
+.plan .day {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  margin: 0 0 6px;
+}
+.plan p:last-child { margin: 0; }
+.src {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: 20px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+/* 기록 */
+.rec {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px 48px;
+}
+.rec > div { min-width: 0; }
+.rec h3 {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+.rec ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  font-size: 15px;
+  line-height: 1.62;
+}
+.rec li { margin: 0 0 8px; min-width: 0; }
+.rec .when {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-right: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.rec p { font-size: 15px; line-height: 1.62; }
+
+/* 연락처 */
+.contact { margin: 0; display: grid; gap: 10px; }
+.contact > div {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: 2px 18px;
+  align-items: baseline;
+}
+.contact dt { font-family: var(--f-mono); font-size: 13px; color: var(--muted); }
+.contact dd {
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+}
+
+@media (min-width: 760px) {
+  .proof { grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--rule); }
+  .proof > li { border-bottom: 0; padding: 20px 24px 22px; border-left: 1px solid var(--rule); }
+  .proof > li:first-child { padding-left: 0; border-left: 0; }
+  .proof > li:last-child { padding-right: 0; }
+  .did { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .plan { grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--rule); }
+  .plan > li { border-bottom: 0; padding: 18px 22px 20px; border-left: 1px solid var(--rule); }
+  .plan > li:first-child { padding-left: 0; border-left: 0; }
+  .plan > li:last-child { padding-right: 0; }
+  .rec { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 980px) {
+  .case-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); }
+  .case-grid > .fig { position: sticky; top: 24px; }
+  .cards.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cards.three > .card.wide { grid-column: span 1; }
+}
+@media (max-width: 600px) {
+  body { font-size: 16px; }
+  .page { padding-block: 32px 72px; }
+  .sec { margin-top: 80px; }
+  .career li, .obs li, .contact > div { grid-template-columns: minmax(0, 1fr); }
+  .card { padding: 18px 16px 16px; }
+  .fig-scroll { padding: 10px; }
+}
+</style>
+</head>
+<body>
+
+
+<div class="page">
+
+<header class="hero" id="top">
+  <p class="kicker">람다256(Nodit) · Blockchain Node Operations Specialist 지원</p>
+  <h1>모진영</h1>
+  <p class="subtitle">상태를 가진 시스템을 띄우고, 멈추면 원인까지 좁힙니다</p>
+  <p class="lead">저는 상태를 가진 시스템을 직접 띄우고, 멈추면 로그와 시스템 테이블로 원인을 좁히는 개발자입니다. 학부 때는 Besu와 Fabric 네트워크를 Kubernetes에 띄워 동기화 실패와 인증서 오류를 풀었고, 지금은 수파리드의 이벤트 저장소 ClickHouse를 GKE 자체 운영 클러스터로 옮겨 관리형 서비스 해지까지 혼자 맡았습니다.</p>
+
+  <ul class="proof" aria-label="핵심 근거">
+    <li>
+      <p class="n">1.3억 행 이관, 실패 0</p>
+      <p class="d">Keeper 3대와 레플리카 2대를 3개 존에 나눠 띄우고, 고객사 10곳의 이벤트 수를 ±0.2% 안으로 맞춘 뒤 전환했습니다.</p>
+    </li>
+    <li>
+      <p class="n">503 한 건 → 315회 연속 200</p>
+      <p class="d">롤아웃 중 503을 NEG 준비 게이트가 로드밸런서보다 먼저 열리는 순서 문제로 좁히고, staging 검증 뒤 46분 만에 운영에 반영했습니다.</p>
+    </li>
+    <li>
+      <p class="n">Besu 블록 15초 → 5초</p>
+      <p class="d">노드 동기화 실패를 겹친 원인 4개로 나눠 풀고 합의를 Clique에서 QBFT로 바꿨습니다(프라이빗 체인).</p>
+    </li>
+  </ul>
+
+  <ul class="career" aria-label="경력">
+    <li><span class="when">2026.04 ~ 재직</span><span><b>수파리드</b> 초기 멤버, 백엔드와 데이터 및 인프라</span></li>
+    <li><span class="when">2026.01 ~ 04</span><span><b>리버벤스(월드랜드)</b> 계약직 인턴, GPU 노드 데몬과 Hub</span></li>
+    <li><span class="when">학력</span><span><b>상명대학교</b> 빅데이터융합 전공 수료</span></li>
+  </ul>
+
+  <ul class="links">
+    <li><span class="k">GitHub</span><a href="https://github.com/ahwlsqja" target="_blank" rel="noopener">github.com/ahwlsqja</a></li>
+    <li><span class="k">velog</span><a href="https://velog.io/@ahwlsqja" target="_blank" rel="noopener">velog.io/@ahwlsqja</a><span class="muted">(글 137편)</span></li>
+    <li><span class="k">이메일</span><span class="email" id="email-hero">ahwlsqja1324@gmail.com</span><button type="button" class="copy" data-copy="email-hero" aria-live="polite">복사</button></li>
+  </ul>
+  <p class="fine">코드 작성에는 AI 코딩 에이전트를 함께 썼고, 설계와 전환 판단, 운영 디버깅은 직접 했습니다.</p>
+
+  <nav class="toc" aria-label="목차">
+    <ul>
+      <li><a href="#work"><span class="idx">01</span>한 일</a></li>
+      <li><a href="#cases"><span class="idx">02</span>대표 사례</a></li>
+      <li><a href="#incidents"><span class="idx">03</span>장애 노트</a></li>
+      <li><a href="#lab"><span class="idx">04</span>노드 실험실</a></li>
+      <li><a href="#plan"><span class="idx">05</span>왜 노딧, 90일</a></li>
+      <li><a href="#records"><span class="idx">06</span>오픈소스와 기록</a></li>
+      <li><a href="#contact"><span class="idx">07</span>연락처</a></li>
+    </ul>
+  </nav>
+</header>
+
+<!-- 01 한 일 -->
+<section class="sec" id="work" aria-labelledby="h-work">
+  <div class="sec-h"><span class="idx">01</span><h2 id="h-work">한 일 <span class="h2-sub">수파리드, 2026.04 ~ 10</span></h2></div>
+  <ol class="did">
+    <li><p><b>수집과 ELT 0→1.</b> SDK → Worker → Queue → ClickHouse 경로를 처음부터 만들어 고객사 10곳의 원본 이벤트를 월 2천만 건 넘게 받았고, 10월에는 Go 수신기 → Kafka → Flink → Go 적재기 경로를 설계해 미러링 뒤 갈아탔습니다.</p></li>
+    <li><p><b>ClickHouse 저장과 조회.</b> EXPLAIN, query_log, part_log로 테이블마다 파티션과 정렬 키를 다시 정해 INSERT p95 약 6배 단축, 저장량 약 1/4, Overview 읽은 행 약 99% 감소를 냈습니다(운영).</p></li>
+    <li><p><b>정합성 전환.</b> 이벤트 논리 키를 (고객, 세션, 이벤트)로 바꾸며 운영 테이블 7개를 교체하고, 파생 집계 19개를 살린 채 세션 조합 1만여 개를 대조해 누락 0을 확인했습니다.</p></li>
+    <li><p><b>광고 연동.</b> Meta와 Google 계정 연결부터 최초 90일 수집까지 9개 경로를 멱등한 상태 전이로 만들고, 운영 Meta 계정 하나로 캠페인부터 광고까지 90일 수집을 끝까지 확인했습니다(화면과 연동 일부는 동료).</p></li>
+    <li><p><b>배포와 시크릿.</b> 검증한 산출물을 다시 빌드하지 않고 승격하는 배포 대기열과 Atlas 스키마 게이트를 만들고, 시크릿 약 40개를 Infisical로 모아 CI는 OIDC로 받게 했습니다. Cloud Run 일 청구는 약 86% 줄였습니다.</p></li>
+    <li><p><b>GKE와 GitOps.</b> Cloud Run을 GKE 블루/그린(5% → 롤백 → 100%)으로 옮기고, 쓰기의 약 90%가 손작업이던 운영 GKE를 객체 63개 역수입과 diff 0 확인 뒤 Argo CD로 넘기고(앱 25/25 Synced), staging은 Kargo 자동 승격과 External Secrets로 돌렸습니다.</p></li>
+    <li><p><b>ClickHouse 자체 운영 이전.</b> 관리형 ClickHouse Cloud를 GKE 위 클러스터로 옮기고 해지했습니다(<a href="#case-ch">사례 1</a>).</p></li>
+    <li><p><b>모니터링.</b> 관리형 Prometheus를 PromQL 28개로 5분마다 읽는 수집기를 올리고, ClickHouse 알림 정책 88개를 Terraform으로 선언해 섀도로 평가 중입니다. heartbeat 경보는 클러스터 밖에 뒀습니다.</p></li>
+  </ol>
+</section>
+
+<!-- 02 대표 사례 -->
+<section class="sec" id="cases" aria-labelledby="h-cases">
+  <div class="sec-h"><span class="idx">02</span><h2 id="h-cases">대표 사례</h2></div>
+
+  <!-- 사례 1 -->
+  <article class="case" id="case-ch" aria-labelledby="h-ch">
+    <div class="case-head">
+      <p class="stamp"><span>사례 1</span><span>2026.09 ~ 10</span><span class="chip ok">운영 반영</span><span>단독 담당</span></p>
+      <h3 id="h-ch">관리형 ClickHouse를 GKE 자체 운영 클러스터로 옮기고 해지까지</h3>
+    </div>
+    <div class="case-grid">
+      <div class="case-body">
+        <h4>문제</h4>
+        <p>관리형 레플리카의 CPU p99가 상한 4 vCPU에 붙어 있었고 복구 리허설은 한 번도 없었습니다. 회사는 GCP 단일화를 이유로 10월 말 이전을 정했습니다.</p>
+        <h4>한 일</h4>
+        <ul>
+          <li>Altinity operator를 namespace 권한으로만 깔고 Keeper 3대를 존 a, b, c에 하나씩 띄웠습니다. Autopilot이 <code>safe-to-evict: false</code> 파드를 한 존에 몰아 넣는 것을 잡아 minDomains를 필수로 바꿨고, Keeper Ready 뒤에 ClickHouse를 올리는 순서로 크래시루프를 없앴습니다.</li>
+          <li>grants를 주지 않은 users.xml 사용자가 전체 권한을 갖는 것을 26.8에서 실측해 <code>REVOKE ALL</code>을 넣고, 읽기 계정의 <code>max_execution_time=0</code> 우회는 constraints min으로 막았습니다.</li>
+          <li>staging에서 3,300만 행 복구 리허설(105초, 표별 해시 일치)을 하고, 레플리카 1대를 0으로 내려 <code>insert_quorum=2</code>가 쓰기를 Code 285로 거부하며 유실 0인 것을 봤습니다.</li>
+          <li>과거 데이터를 (표, 고객, 일) 청크와 dedup 토큰으로 옮기고, 고객사별 24시간 이벤트 수와 Kafka 커밋 위치 12개 파티션을 대조한 뒤 읽기 경로를 설정값 하나로 넘겼습니다.</li>
+        </ul>
+        <div class="obs" role="group" aria-label="결과">
+          <p class="obs-h">결과</p>
+          <ul>
+            <li><span class="obs-k">과거 데이터 <span class="chip ok">prod</span></span><span class="obs-v">청크 2,640개 <span class="ar">→</span> <b>1.3억 행, 실패 0</b></span></li>
+            <li><span class="obs-k">24시간 대조</span><span class="obs-v">고객사 10곳 <span class="ar">→</span> <b>모두 ±0.2% 안</b></span></li>
+            <li><span class="obs-k">복구 리허설 <span class="chip stg">staging</span></span><span class="obs-v">3,300만 행 <span class="ar">→</span> <b>105초</b>, 표별 해시 일치</span></li>
+            <li><span class="obs-k">해지</span><span class="obs-v"><b>10월 16일</b> 관리형 서비스 해지</span></li>
+          </ul>
+        </div>
+        <div class="call">
+          <h4>판단과 대가</h4>
+          <p>7일 관찰은 비용 때문에 생략했습니다. 대신 바깥 기준 두 개(기존 쪽 이벤트 수, Kafka 커밋 위치)를 맞춰 본 뒤 해지했고, 직전 대조에서 새 쪽이 0.1~0.5% 많은 차이는 재전송 중복으로 보고 감수했습니다.</p>
+        </div>
+        <h4>배운 점</h4>
+        <p>레플리카를 직접 내려 봐야 나머지가 무엇을 보장하는지 안다고 생각합니다. 노드도 한 대를 빼 보는 것부터 하겠습니다.</p>
+      </div>
+
+      <figure class="fig">
+        <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 1, 가로로 스크롤할 수 있습니다">
+          <svg class="dg" viewBox="0 0 560 572" role="img" aria-label="그림 1. 위는 전환 사다리입니다. 복구 리허설 105초, 24시간 대조 ±0.2%와 Kafka 12/12, 1.3억 행 복사, 읽기 전환, 해지 순서이고, 읽기 전환은 같은 값과 재시작으로 되돌릴 수 있으며 해지는 되돌릴 수 없습니다. 아래는 GKE 클러스터입니다. 존 a, b, c에 Keeper가 1대씩 있고, 존 a와 b에 백업 사이드카가 붙은 레플리카가 있습니다. Go 적재기는 두 레플리카에 insert_quorum=2로 쓰고, 사이드카는 클러스터 밖 GCS로 일 단위 백업을 보냅니다.">
+            <defs>
+              <marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0 L10 5 L0 10 Z"/></marker>
+              <marker id="m1m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahm" d="M0 0 L10 5 L0 10 Z"/></marker>
+            </defs>
+            <text class="tm mono" x="4" y="14">전환 순서</text>
+
+            <rect class="b" x="4" y="26" width="96" height="64" rx="4"/>
+            <text x="52" y="52" text-anchor="middle">복구 리허설</text>
+            <text class="mono tb" x="52" y="71" text-anchor="middle">105초</text>
+            <path class="w" d="M100 58 H116" marker-end="url(#m1)"/>
+
+            <rect class="b" x="118" y="26" width="96" height="64" rx="4"/>
+            <text x="166" y="46" text-anchor="middle">24시간 대조</text>
+            <text class="mono tb" x="166" y="64" text-anchor="middle">±0.2%</text>
+            <text class="mono tm" x="166" y="81" text-anchor="middle">Kafka 12/12</text>
+            <path class="w" d="M214 58 H230" marker-end="url(#m1)"/>
+
+            <rect class="b" x="232" y="26" width="96" height="64" rx="4"/>
+            <text x="280" y="52" text-anchor="middle">1.3억 행 복사</text>
+            <text class="mono tm" x="280" y="71" text-anchor="middle">실패 0</text>
+            <path class="w" d="M328 58 H344" marker-end="url(#m1)"/>
+
+            <rect class="b" x="346" y="26" width="96" height="64" rx="4"/>
+            <text x="394" y="52" text-anchor="middle">읽기 전환</text>
+            <text class="mono tm" x="394" y="71" text-anchor="middle">설정값 1개</text>
+            <path class="w" d="M442 58 H458" marker-end="url(#m1)"/>
+
+            <rect class="bk" x="460" y="26" width="96" height="64" rx="4"/>
+            <text class="tb" x="508" y="52" text-anchor="middle">해지</text>
+            <text class="mono" x="508" y="71" text-anchor="middle">10.16</text>
+            <text class="tb sm" x="508" y="110" text-anchor="middle">되돌릴 수 없음</text>
+
+            <path class="wd" d="M394 90 V108 H282 V92" marker-end="url(#m1m)"/>
+            <text class="tm sm lb" x="338" y="126" text-anchor="middle">되돌림: 같은 값 + 재시작</text>
+
+            <rect class="b" x="170" y="150" width="220" height="38" rx="4"/>
+            <text x="280" y="174" text-anchor="middle">Go 적재기</text>
+            <path class="w" d="M210 188 V202 H101 V270" marker-end="url(#m1)"/>
+            <path class="w" d="M280 188 V270" marker-end="url(#m1)"/>
+            <text class="mono lb" x="290" y="232">insert_quorum=2</text>
+
+            <rect class="g" x="4" y="212" width="552" height="290" rx="6"/>
+            <text class="tm mono" x="548" y="230" text-anchor="end">GKE Autopilot</text>
+            <rect class="z" x="14" y="244" width="174" height="248" rx="4"/>
+            <rect class="z" x="193" y="244" width="174" height="248" rx="4"/>
+            <rect class="z" x="372" y="244" width="174" height="248" rx="4"/>
+            <text class="tm mono" x="24" y="262">존 a</text>
+            <text class="tm mono" x="203" y="262">존 b</text>
+            <text class="tm mono" x="382" y="262">존 c</text>
+
+            <rect class="b" x="28" y="272" width="146" height="80" rx="4"/>
+            <text class="mono" x="101" y="292" text-anchor="middle">replica 1</text>
+            <rect class="b2" x="40" y="304" width="122" height="32" rx="3"/>
+            <text class="sm" x="101" y="325" text-anchor="middle">백업 사이드카</text>
+            <rect class="b" x="207" y="272" width="146" height="80" rx="4"/>
+            <text class="mono" x="280" y="292" text-anchor="middle">replica 2</text>
+            <rect class="b2" x="219" y="304" width="122" height="32" rx="3"/>
+            <text class="sm" x="280" y="325" text-anchor="middle">백업 사이드카</text>
+            <path class="w" d="M176 286 H205" marker-start="url(#m1)" marker-end="url(#m1)"/>
+
+            <text class="tm mono" x="459" y="306" text-anchor="middle">minDomains 3</text>
+            <text class="tm sm" x="459" y="324" text-anchor="middle">(필수로 변경)</text>
+
+            <path class="wm" d="M101 352 V400"/>
+            <path class="wm" d="M280 352 V400"/>
+            <path class="wm" d="M101 376 H459 V400"/>
+            <circle class="dot" cx="101" cy="376" r="3"/>
+            <circle class="dot" cx="280" cy="376" r="3"/>
+            <text class="tm sm lb" x="370" y="370" text-anchor="middle">메타데이터 합의</text>
+
+            <rect class="b" x="41" y="400" width="120" height="36" rx="4"/>
+            <text class="mono" x="101" y="423" text-anchor="middle">Keeper 1</text>
+            <rect class="b" x="220" y="400" width="120" height="36" rx="4"/>
+            <text class="mono" x="280" y="423" text-anchor="middle">Keeper 2</text>
+            <rect class="b" x="399" y="400" width="120" height="36" rx="4"/>
+            <text class="mono" x="459" y="423" text-anchor="middle">Keeper 3</text>
+            <text class="tm sm lb" x="280" y="468" text-anchor="middle">1대가 죽어도 과반 2대 유지 · Keeper Ready 뒤 ClickHouse</text>
+
+            <path class="wd" d="M40 320 H22 V520" marker-end="url(#m1m)"/>
+            <path class="wd" d="M341 320 H362 V520" marker-end="url(#m1m)"/>
+            <rect class="b" x="4" y="522" width="552" height="40" rx="4"/>
+            <text x="280" y="547" text-anchor="middle">GCS 백업 버킷 <tspan class="tm">(클러스터 밖, 일 단위)</tspan></text>
+          </svg>
+        </div>
+        <figcaption>위는 되돌릴 수 있는 단계와 없는 단계를 나눈 전환 순서, 아래는 새 클러스터입니다. 점선은 되돌림과 백업 경로입니다.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 사례 2 -->
+  <article class="case" id="case-503" aria-labelledby="h-503">
+    <div class="case-head">
+      <p class="stamp"><span>사례 2</span><span>2026.09.29</span><span class="chip stg">staging 검증</span><span class="chip ok">운영 반영</span></p>
+      <h3 id="h-503">롤아웃 중 503 한 건: Ready가 트래픽보다 먼저 왔다</h3>
+    </div>
+    <div class="case-grid">
+      <div class="case-body">
+        <h4>문제</h4>
+        <p>Argo CD로 처음 운영을 동기화한 롤아웃에서 외부 /health에 503이 한 번 찍혔습니다. 보름 전 같은 증상에 종료 쪽(preStop 60초)만 막았는데 다시 났습니다.</p>
+        <h4>한 일</h4>
+        <ul>
+          <li>새 Pod의 <code>status.conditions</code>에서 NEG 준비 게이트가 LoadBalancerNegWithoutHealthCheck 사유로 LB 헬스체크(5초 × 2회)보다 먼저 True가 된 것을 찾았습니다. replica가 1개라 그 틈에 옛 Pod가 빠지며 정상 endpoint가 0이 됐습니다.</li>
+          <li><code>minReadySeconds</code> 30, replica 2, PDB minAvailable 1을 걸었습니다. 늘리기 전에 코드에 리더 선출과 프로세스 내 스케줄러가 없는 것을 확인했습니다.</li>
+          <li>staging 롤아웃 2회 동안 외부 /health를 1초 간격으로 폴링하고, 운영은 <code>argocd app sync --resource</code>로 Deployment와 PDB만 넘겼습니다.</li>
+        </ul>
+        <div class="obs" role="group" aria-label="결과">
+          <p class="obs-h">결과</p>
+          <ul>
+            <li><span class="obs-k"><span class="chip stg">staging</span></span><span class="obs-v">1초 폴링 <span class="ar">→</span> <b>315회 연속 200</b></span></li>
+            <li><span class="obs-k"><span class="chip ok">prod</span></span><span class="obs-v">적용 구간 <span class="ar">→</span> <b>100회 연속 200</b></span></li>
+            <li><span class="obs-k">걸린 시간</span><span class="obs-v">탐지 <span class="ar">→</span> 운영 반영 <b>46분</b></span></li>
+          </ul>
+        </div>
+        <h4>배운 점</h4>
+        <p>Pod가 Ready인 시점과 트래픽을 받는 시점은 다릅니다. 노드라면 HTTP 200 대신 참조 노드 대비 head lag로 readiness를 걸어야 한다고 생각합니다(beacon은 동기화 중 206, CometBFT는 뒤처져도 200).</p>
+      </div>
+
+      <figure class="fig">
+        <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 2, 가로로 스크롤할 수 있습니다">
+          <svg class="dg" viewBox="0 0 540 318" role="img" aria-label="그림 2. 시간축 두 줄. 수정 전 replica 1에서는 새 Pod, NEG 게이트 True, 옛 Pod 제거, LB 통과 순서여서 제거와 통과 사이에 endpoint가 0이 되어 503이 났습니다. 수정 후에는 NEG 게이트 True, 30초 대기, LB 통과, 옛 Pod 제거 순서이고 PDB로 1개가 항상 서빙합니다.">
+            <defs>
+              <marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0 L10 5 L0 10 Z"/></marker>
+              <marker id="m2m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahm" d="M0 0 L10 5 L0 10 Z"/></marker>
+            </defs>
+            <text class="tm sm" x="4" y="18">시간</text>
+            <path class="wm" d="M36 14 H532" marker-end="url(#m2m)"/>
+
+            <text class="tb" x="4" y="50">수정 전 <tspan class="tm mono tn">replica 1</tspan></text>
+            <rect class="b" x="4" y="62" width="118" height="52" rx="4"/>
+            <text x="63" y="85" text-anchor="middle">새 Pod</text>
+            <text class="tm sm" x="63" y="102" text-anchor="middle">시작</text>
+            <path class="w" d="M122 88 H136" marker-end="url(#m2)"/>
+            <rect class="b" x="138" y="62" width="118" height="52" rx="4"/>
+            <text class="mono" x="197" y="85" text-anchor="middle">NEG 게이트</text>
+            <text class="mono" x="197" y="102" text-anchor="middle">True</text>
+            <path class="w" d="M256 88 H270" marker-end="url(#m2)"/>
+            <rect class="b" x="272" y="62" width="118" height="52" rx="4"/>
+            <text x="331" y="85" text-anchor="middle">옛 Pod</text>
+            <text x="331" y="102" text-anchor="middle">제거</text>
+            <path class="w" d="M390 88 H404" marker-end="url(#m2)"/>
+            <rect class="b" x="406" y="62" width="118" height="52" rx="4"/>
+            <text x="465" y="85" text-anchor="middle">LB 통과</text>
+            <text class="tm mono" x="465" y="102" text-anchor="middle">5초 × 2</text>
+            <rect class="gapbad" x="331" y="122" width="134" height="8" rx="2"/>
+            <text class="tbad tb" x="398" y="150" text-anchor="middle">endpoint 0 → 503</text>
+
+            <path class="z" d="M4 172 H536"/>
+
+            <text class="tb" x="4" y="202">수정 후 <tspan class="tm mono tn">replica 2 · minReadySeconds 30</tspan></text>
+            <rect class="b" x="4" y="214" width="118" height="52" rx="4"/>
+            <text class="mono" x="63" y="237" text-anchor="middle">NEG 게이트</text>
+            <text class="mono" x="63" y="254" text-anchor="middle">True</text>
+            <path class="w" d="M122 240 H136" marker-end="url(#m2)"/>
+            <rect class="b" x="138" y="214" width="118" height="52" rx="4"/>
+            <text x="197" y="245" text-anchor="middle">30초 대기</text>
+            <path class="w" d="M256 240 H270" marker-end="url(#m2)"/>
+            <rect class="b" x="272" y="214" width="118" height="52" rx="4"/>
+            <text x="331" y="245" text-anchor="middle">LB 통과</text>
+            <path class="w" d="M390 240 H404" marker-end="url(#m2)"/>
+            <rect class="b" x="406" y="214" width="118" height="52" rx="4"/>
+            <text x="465" y="237" text-anchor="middle">옛 Pod</text>
+            <text x="465" y="254" text-anchor="middle">제거</text>
+            <rect class="gapok" x="4" y="274" width="520" height="6" rx="2"/>
+            <text class="tok tb" x="4" y="304">PDB minAvailable 1: 롤아웃 내내 1개 항상 서빙</text>
+          </svg>
+        </div>
+        <figcaption>수정 전에는 옛 Pod가 LB 통과보다 먼저 빠져 빈틈이 생겼습니다. 수정 후에는 30초 대기가 순서를 뒤집습니다.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 사례 3 -->
+  <article class="case" id="case-node" aria-labelledby="h-node">
+    <div class="case-head">
+      <p class="stamp"><span>사례 3</span><span>리버벤스, 2026.01 ~ 02</span><span class="chip ok">공식 org 반영</span></p>
+      <h3 id="h-node">GPU 머신을 Kubernetes 노드로 붙이는 Go 노드 데몬과 Hub</h3>
+    </div>
+    <div class="case-grid">
+      <div class="case-body">
+        <h4>문제</h4>
+        <p>프로바이더 머신마다 드라이버, containerd, kubeadm 상태가 달라 사람이 붙여야 했고, Hub를 재배포하면 노드가 끊겼습니다.</p>
+        <h4>한 일</h4>
+        <ul>
+          <li><b>노드 데몬.</b> SIWE 인증 → Hub CA의 90일 mTLS 인증서 → 30초 heartbeat, 끊기면 5초에서 60초까지 백오프 재접속, NVML로 GPU 자동 감지.</li>
+          <li><b>V3 설치기.</b> nvidia-smi, containerd, nvidia-ctk 점검 → <code>kubeadm reset -f</code>와 cni0 잔재 정리 → <code>kubeadm join</code> → kubelet 재시작.</li>
+          <li><b>Hub.</b> client-go Informer로 여러 클러스터의 Pod를 감시하고, 지갑마다 Namespace, ResourceQuota, NetworkPolicy로 격리하며, 온체인 receipt가 확인된 렌탈만 GPU Pod로 띄웠습니다.</li>
+          <li>같은 지갑의 두 번째 노드가 pending에 묶이던 문제, GPU 한 장 대여에 노드 전체가 마켓에서 사라지던 쿼리, 초당 단가 1,000배 오류를 커밋마다 원인을 적어 고쳤습니다.</li>
+        </ul>
+        <div class="obs" role="group" aria-label="결과">
+          <p class="obs-h">결과</p>
+          <ul>
+            <li><span class="obs-k">구조</span><span class="obs-v">일주일 동안 V2 <span class="ar">→</span> V3 <span class="ar">→</span> V4, <b>Docker 경로 제거, Kubernetes 전용</b></span></li>
+            <li><span class="obs-k">Hub 테스트</span><span class="obs-v"><b>356개</b> (Kind e2e 포함)</span></li>
+            <li><span class="obs-k">노드 SDK</span><span class="obs-v"><b>월드랜드 공식 GitHub org에 반영</b></span></li>
+          </ul>
+        </div>
+        <h4>배운 점</h4>
+        <p>이벤트 리스너는 끊긴 RPC를 다음 주소로 넘겼지만 뒤처진 노드는 거르지 못했습니다. 다음에 붙일 것은 RPC 간 블록 높이 비교라고 생각합니다.</p>
+        <ul class="case-links">
+          <li><span class="k">GitHub</span><a href="https://github.com/cryptoecc/worldland-sdk" target="_blank" rel="noopener">cryptoecc/worldland-sdk</a></li>
+          <li><span class="k">GitHub</span><a href="https://github.com/ForrestCrew/worldland-sdk/tree/V3" target="_blank" rel="noopener">ForrestCrew/worldland-sdk (V3)</a></li>
+        </ul>
+      </div>
+
+      <figure class="fig">
+        <div class="fig-scroll" tabindex="0" role="region" aria-label="그림 3, 가로로 스크롤할 수 있습니다">
+          <svg class="dg" viewBox="0 0 540 388" role="img" aria-label="그림 3. 노드 온보딩 순서. 1 노드 데몬이 Hub에 SIWE 인증, 2 Hub CA가 노드 데몬에 90일 인증서 발급, 3 노드 데몬과 Hub가 mTLS로 30초 heartbeat, 4 Hub가 노드 데몬에 join 토큰과 CA 해시 전달, 5 노드 데몬이 점검, reset, join으로 control plane에 붙음, 6 control plane을 Hub가 Informer로 감시하며 GPU 용량을 동기화.">
+            <defs>
+              <marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0 L10 5 L0 10 Z"/></marker>
+            </defs>
+            <rect class="bk" x="10" y="8" width="120" height="40" rx="4"/>
+            <text class="tb" x="70" y="33" text-anchor="middle">노드 데몬</text>
+            <rect class="b" x="145" y="8" width="110" height="40" rx="4"/>
+            <text x="200" y="33" text-anchor="middle">Hub CA</text>
+            <rect class="b" x="275" y="8" width="110" height="40" rx="4"/>
+            <text class="tb" x="330" y="33" text-anchor="middle">Hub</text>
+            <rect class="b" x="404" y="8" width="132" height="40" rx="4"/>
+            <text class="mono" x="470" y="33" text-anchor="middle">control plane</text>
+
+            <path class="ll" d="M70 48 V378"/>
+            <path class="ll" d="M200 48 V378"/>
+            <path class="ll" d="M330 48 V378"/>
+            <path class="ll" d="M470 48 V378"/>
+
+            <path class="w" d="M70 92 H328" marker-end="url(#m3)"/>
+            <text class="lb" x="200" y="84" text-anchor="middle">① SIWE 인증</text>
+
+            <path class="w" d="M200 140 H72" marker-end="url(#m3)"/>
+            <text class="lb" x="135" y="132" text-anchor="middle">② 인증서</text>
+            <text class="lb tm mono" x="135" y="158" text-anchor="middle">mTLS, 90일</text>
+
+            <path class="w" d="M72 196 H328" marker-start="url(#m3)" marker-end="url(#m3)"/>
+            <text class="lb" x="200" y="188" text-anchor="middle">③ mTLS heartbeat 30초</text>
+            <text class="lb tm sm" x="200" y="214" text-anchor="middle">끊기면 5초 → 60초 백오프</text>
+
+            <path class="w" d="M330 252 H72" marker-end="url(#m3)"/>
+            <text class="lb" x="200" y="244" text-anchor="middle">④ join 토큰 + CA 해시</text>
+
+            <path class="w" d="M70 302 H468" marker-end="url(#m3)"/>
+            <text class="lb" x="270" y="294" text-anchor="middle">⑤ 점검 → reset → join</text>
+            <text class="lb tm mono" x="270" y="320" text-anchor="middle">nvidia-smi · kubeadm reset -f · join</text>
+
+            <path class="w" d="M470 356 H332" marker-end="url(#m3)"/>
+            <text class="lb" x="400" y="348" text-anchor="middle">⑥ Informer</text>
+            <text class="lb tm sm" x="400" y="374" text-anchor="middle">GPU 용량</text>
+          </svg>
+        </div>
+        <figcaption>위에서 아래로 실제 순서입니다. ⑤가 끝나면 GPU 머신은 클러스터의 워커 노드가 되고, Hub는 ⑥으로 그 용량을 마켓에 올립니다.</figcaption>
+      </figure>
+    </div>
+  </article>
+</section>
+
+<!-- 03 장애 노트 -->
+<section class="sec" id="incidents" aria-labelledby="h-inc">
+  <div class="sec-h"><span class="idx">03</span><h2 id="h-inc">장애 노트</h2></div>
+  <div class="cards three">
+    <article class="card" aria-labelledby="h-i1">
+      <p class="card-meta"><span>01</span><span>2026.10</span><span class="chip ok">운영</span></p>
+      <h3 id="h-i1">INSERT 메모리 초과와 오진 정정</h3>
+      <p>1.3억 행 복사 중 한 청크가 4 GiB 한도(Code 241)에 걸려, 블록을 16,384행으로 쪼갰지만 같은 오류로 다시 멈췄습니다. <code>system.trace_log</code>의 메모리 스택을 집계해 INSERT 하나가 쓰기 스레드 4갈래로 도는 것을 찾고, <code>max_insert_threads</code> 1과 64 MiB 블록으로 같은 청크를 약 0.6 GiB에 넣었습니다. 블록 크기 탓이라던 처음 설명은 기록에서 직접 정정했습니다.</p>
+      <p class="card-foot">4 GiB 초과 <span class="ar">→</span> <b>약 0.6 GiB</b></p>
+    </article>
+    <article class="card" aria-labelledby="h-i2">
+      <p class="card-meta"><span>02</span><span>2026.09</span><span class="chip stg">staging 공유 DB</span></p>
+      <h3 id="h-i2">블루/그린 전환 직전의 DB 연결 고갈</h3>
+      <p>/health는 200인데 권한 확인 API가 OpenFGA 장애로 503을 냈고, SQLSTATE 53300과 실측 max_connections 25로 두 벌 동시 기동이 기본 풀로 슬롯을 다 잡은 것을 확인했습니다. 서비스별 연결 예산(API 4, OpenFGA 2, Zitadel 2)과 중단 조건을 건 뒤 넘겼습니다.</p>
+      <p class="card-foot">5% <span class="ar">→</span> 롤백 12/12 <span class="ar">→</span> <b>100% 12/12</b></p>
+    </article>
+    <article class="card" aria-labelledby="h-i3">
+      <p class="card-meta"><span>03</span><span>2026.06</span><span class="chip ok">운영</span></p>
+      <h3 id="h-i3">적재 약 4시간 정지 뒤 ID 3,907개 대조</h3>
+      <p>큐가 비었다는 것은 큐에 있던 것이 나갔다는 뜻일 뿐이라고 생각해, 장애 구간의 R2 원본 ID와 ClickHouse ID를 양방향으로 대조했습니다.</p>
+      <p class="card-foot">3,907 = 3,907 <span class="ar">→</span> <b>차집합 0</b></p>
+    </article>
+    <article class="card" aria-labelledby="h-i4">
+      <p class="card-meta"><span>04</span><span>2026.10</span><span class="chip ok">운영</span></p>
+      <h3 id="h-i4">새 수집 경로 사본의 조용한 0.2% 누락</h3>
+      <p>크기, 형식, DLQ, 라우팅 가설을 지우고, 빠진 것이 모두 페이지 이탈 이벤트이며 같은 시간 Cloudflare 지표에 클라이언트 끊김이 3천여 건인 것으로 좁혔습니다. Worker가 사본 전송을 waitUntil에 늦게 걸던 순서를 바꿨습니다.</p>
+      <p class="card-foot">누락 0.2% <span class="ar">→</span> <b>0/3,920</b></p>
+    </article>
+    <article class="card" aria-labelledby="h-i5">
+      <p class="card-meta"><span>05</span><span>2026.10.06</span><span class="chip ok">운영</span></p>
+      <h3 id="h-i5">감시기가 장애가 된 날</h3>
+      <p>클러스터 밖 heartbeat 경보로, 매분 도는 Go CronJob이 50초 DB 타임아웃에 연달아 죽는 것을 잡았습니다. 스냅샷 SQL은 0.3초라 기각됐고, 원인은 열린 신호 약 5,600개를 하나씩 닫는 DB 왕복이었습니다. 제한 시간을 임시로 늘려 감시부터 살리고, 집합 쿼리와 heartbeat 우선 시간 예산으로 고친 뒤 임시값을 되돌렸습니다.</p>
+      <p class="card-foot">50초 타임아웃 <span class="ar">→</span> <b>10초 안팎, 실패 0</b></p>
+    </article>
+  </div>
+</section>
+
+<!-- 04 노드 실험실 -->
+<section class="sec" id="lab" aria-labelledby="h-lab">
+  <div class="sec-h"><span class="idx">04</span><h2 id="h-lab">노드 실험실</h2></div>
+  <div class="cards">
+    <article class="card" aria-labelledby="h-l1">
+      <p class="card-meta"><span>프라이빗 체인</span><span>NCP Kubernetes</span><span>2025.09 ~ 12</span></p>
+      <h3 id="h-l1">Besu 3노드</h3>
+      <p>OOMKilled와 동기화 실패를 bootnode Pod IP 하드코딩, 최소 피어 5, 15일치 낡은 데이터, 공통 설정의 miner-enabled로 나눠 풀어 노드 2 메모리를 절반으로 줄였습니다. Clique 블록이 15초 아래로 안 내려가 QBFT로 바꾸고 체인을 초기화했고, PUSH0 실패는 genesis가 London까지라 evmVersion을 맞춰 풀었습니다.</p>
+      <pre class="log" tabindex="0">Unable to find sync target. Waiting for 5 peers minimum
+Invalid opcode: 0x5f</pre>
+      <ul class="lab-links">
+        <li><span class="k">velog</span><a href="https://velog.io/@ahwlsqja/Kubernetes%EC%97%90%EC%84%9C-Besu-%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EC%82%BD%EC%A7%88%EA%B8%B0" target="_blank" rel="noopener">Kubernetes에서 Besu 프라이빗 네트워크 삽질기</a></li>
+      </ul>
+    </article>
+    <article class="card" aria-labelledby="h-l2">
+      <p class="card-meta"><span>허가형 체인</span><span>k3s → minikube</span><span>2025.03 ~ 06</span></p>
+      <h3 id="h-l2">Hyperledger Fabric</h3>
+      <p>오더러 3대(etcdraft), 조직 2개의 peer와 CouchDB, CA 3대, 체인코드 외부 서비스를 올렸습니다. CA 인증서 CN/SAN이 Pod 이름으로 만들어져 enroll이 깨지는 것을 찾아, 서비스 이름을 쓴 설정을 initContainer로 넣었습니다.</p>
+      <pre class="log" tabindex="0">x509: certificate is valid for ca-orderer-549bd75db5-xxg95, localhost, not ca-orderer</pre>
+      <ul class="lab-links">
+        <li><span class="k">velog</span><a href="https://velog.io/@ahwlsqja/minikube-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C%EC%9D%98-%ED%95%98%EC%9D%B4%ED%8D%BC%EB%A0%88%EC%A0%80%ED%8C%A8%EB%B8%8C%EB%A6%AD-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EB%B0%B0%ED%8F%AC-%EA%B7%B8%EB%A6%AC%EA%B3%A0-%EC%97%AC%EB%9F%AC%EA%B0%80%EC%A7%80-%EC%9D%B8%EC%A6%9D%EC%84%9C-%EB%AC%B8%EC%A0%9C%EB%93%A4" target="_blank" rel="noopener">minikube 환경에서의 하이퍼레저패브릭 네트워크 배포 그리고 여러가지 인증서 문제들</a></li>
+        <li><span class="k">GitHub</span><a href="https://github.com/ahwlsqja/Hyperledgerfabric-Capston" target="_blank" rel="noopener">ahwlsqja/Hyperledgerfabric-Capston</a></li>
+      </ul>
+    </article>
+    <article class="card" aria-labelledby="h-l3">
+      <p class="card-meta"><span>로컬 체인</span><span>Cosmos SDK v0.53.4</span><span>CometBFT v0.38.19</span></p>
+      <h3 id="h-l3">Cosmos 밸리데이터</h3>
+      <p>위임, 슬래싱 파라미터, jail과 unjail, 키 3종과 priv_validator_state.json 백업을 명령으로 정리했습니다. 복원 전에는 마지막 서명 높이를 체인 높이와 먼저 비교해야 이중 서명을 막는다고 생각합니다.</p>
+      <pre class="log" tabindex="0">$ curl -s http://127.0.0.1:26657/status | jq '.result.sync_info.latest_block_height'
+"9300"   # 5초 뒤 "9301"</pre>
+      <ul class="lab-links">
+        <li><span class="k">velog</span><a href="https://velog.io/@ahwlsqja/%EC%BD%94%EC%8A%A4%EB%AA%A8%EC%8A%A4-%EB%B2%A8%EB%A6%AC%EB%8D%B0%EC%9D%B4%ED%84%B0-%EB%A1%9C%EC%BB%AC%EC%97%90%EC%84%9C-%EC%9A%B4%EC%98%81%ED%95%B4%EB%B3%B4%EA%B8%B0" target="_blank" rel="noopener">코스모스 벨리데이터 로컬에서 운영해보기</a></li>
+      </ul>
+    </article>
+    <article class="card" aria-labelledby="h-l4">
+      <p class="card-meta"><span>Go net/http</span><span>2026.01</span></p>
+      <h3 id="h-l4">서버를 끄는 시간</h3>
+      <p>종료 제한 시간이 요청 처리보다 짧으면 요청이 끊기고, Keep-Alive를 끄면 처리량이 절반으로 떨어지는 것을 재현했습니다. geth는 종료 중 DB 쓰기 때문에 넉넉한 유예를 권하는데 Kubernetes 기본은 30초라, 노드 업그레이드에서 가장 먼저 볼 값으로 꼽습니다.</p>
+      <pre class="log" tabindex="0">$ ./bin/server -shutdown-timeout=3s
+curl exit 52 (empty reply)</pre>
+      <ul class="lab-links">
+        <li><span class="k">GitHub</span><a href="https://github.com/ahwlsqja/go-server-liveness-lab" target="_blank" rel="noopener">ahwlsqja/go-server-liveness-lab</a></li>
+      </ul>
+    </article>
+  </div>
+  <p class="after">이 밖에 geth, Prysm beacon, validator 데브넷에서 Prysm 송신 경로를 고쳐 attestation을 2-hop 릴레이로 보냈고(<span class="chip priv">비공개 연구</span>), K3s agent join 경로에 Sui 스테이킹 검증을 붙였습니다(해커톤 수상).</p>
+</section>
+
+<!-- 05 왜 노딧, 90일 -->
+<section class="sec" id="plan" aria-labelledby="h-plan">
+  <div class="sec-h"><span class="idx">05</span><h2 id="h-plan">왜 노딧, 그리고 90일</h2></div>
+  <ul class="why">
+    <li>노딧 Wallet Node 글은 노드의 가용성과 동기화 상태를 보고 요청을 보낸다고 씁니다. 503 한 건에서 붙든 "언제 트래픽을 받아도 되는가"가 노드에서는 head lag 문제라고 생각해 이 일을 하고 싶습니다.</li>
+    <li>공고는 노드 업그레이드와 하드포크를 무중단으로 넘기는 구조를 업무로 적습니다. 저는 되돌릴 수 없는 관리형 해지를 복구 리허설과 이벤트 수 대조로 넘겼고, Besu 합의를 바꿀 때는 체인 초기화와 EVM 버전 차이를 직접 겪었습니다.</li>
+    <li>채용 설명회가 꼽은 과제는 데이터를 끊김 없이 수집하고 정합성을 지키는 것입니다. 1.3억 행 이관과 ID 3,907개 대조가 같은 종류의 일입니다.</li>
+  </ul>
+  <ol class="plan" aria-label="90일 계획">
+    <li><p class="day">30일</p><p>EVM 실행 클라이언트와 합의 클라이언트 한 쌍을 테스트넷에서 처음부터 동기화하고, 체인별 Ready 정의 표(헬스 응답, 종료 유예)를 팀 리뷰에 올립니다.</p></li>
+    <li><p class="day">60일</p><p>참조 노드 대비 head lag 알람과 스냅샷 복원 리허설 스크립트 중 팀이 고른 하나를 섀도로 돌려 오탐을 분류한 뒤 붙입니다.</p></li>
+    <li><p class="day">90일</p><p>예정된 네트워크 업그레이드 하나를 테스트넷에서 런북대로 리허설하고(한 대 먼저, 동기화 확인, 롤링) 회고 문서를 씁니다.</p></li>
+  </ol>
+  <p class="src"><span class="k">출처</span><a href="https://www.nodit.io/blog/wallet-node-is-live-simplifying-digital-asset-wallet-infrastructure" target="_blank" rel="noopener">Nodit 블로그, Wallet Node</a><a href="https://lambda256.career.greetinghr.com/ko/o/239269" target="_blank" rel="noopener">람다256 채용 공고</a><a href="https://www.khgames.co.kr/news/articleView.html?idxno=308223" target="_blank" rel="noopener">채용 설명회 기사</a></p>
+</section>
+
+<!-- 06 오픈소스, 글, 수상, 활동 -->
+<section class="sec" id="records" aria-labelledby="h-rec">
+  <div class="sec-h"><span class="idx">06</span><h2 id="h-rec">오픈소스, 글, 수상, 활동</h2></div>
+  <div class="rec">
+    <div>
+      <h3>오픈소스 (머지)</h3>
+      <ul>
+        <li><a href="https://github.com/ignite/cli/pull/4838" target="_blank" rel="noopener">ignite/cli #4838</a>. Go 1.24.0 빌드 실패를 보고하고 최소 Go 버전을 올렸습니다.</li>
+        <li><a href="https://github.com/InjectiveLabs/injective-ts/pull/617" target="_blank" rel="noopener">InjectiveLabs/injective-ts #617</a>. 예외 처리 TypeError 수정.</li>
+        <li><a href="https://github.com/gsd-build/gsd-2/pull/2515" target="_blank" rel="noopener">gsd-build/gsd-2 #2515</a>, <a href="https://github.com/gsd-build/gsd-2/pull/2617" target="_blank" rel="noopener">#2617</a>. 작업 상태 불일치로 인한 중복 배정 수정.</li>
+      </ul>
+      <h3>글 (velog 137편 중)</h3>
+      <ul>
+        <li><a href="https://velog.io/@ahwlsqja/Kubernetes%EC%97%90%EC%84%9C-Besu-%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EC%82%BD%EC%A7%88%EA%B8%B0" target="_blank" rel="noopener">Kubernetes에서 Besu 프라이빗 네트워크 삽질기</a></li>
+        <li><a href="https://velog.io/@ahwlsqja/Besu-%EB%B8%94%EB%A1%9D-%ED%83%80%EC%9E%84-5%EC%B4%88%EB%A1%9C-%EB%AA%BB-%EC%A4%84%EC%9D%B4%EA%B2%A0%EC%96%B4%EC%84%9C-%ED%95%A9%EC%9D%98-%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98%EC%9D%84-%EB%B0%94%EA%BF%94%EB%B2%84%EB%A6%B0-%EC%8A%AC%ED%94%88-%EC%9D%B4%EC%95%BC%EA%B8%B0" target="_blank" rel="noopener">Besu 블록 타임 5초로 못 줄이겠어서 합의 알고리즘을 바꿔버린 슬픈 이야기</a></li>
+        <li><a href="https://velog.io/@ahwlsqja/minikube-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C%EC%9D%98-%ED%95%98%EC%9D%B4%ED%8D%BC%EB%A0%88%EC%A0%80%ED%8C%A8%EB%B8%8C%EB%A6%AD-%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC-%EB%B0%B0%ED%8F%AC-%EA%B7%B8%EB%A6%AC%EA%B3%A0-%EC%97%AC%EB%9F%AC%EA%B0%80%EC%A7%80-%EC%9D%B8%EC%A6%9D%EC%84%9C-%EB%AC%B8%EC%A0%9C%EB%93%A4" target="_blank" rel="noopener">minikube 환경에서의 하이퍼레저패브릭 네트워크 배포 그리고 여러가지 인증서 문제들</a></li>
+        <li>geth Block 구조체의 atomic.Value</li>
+        <li>Anthropic Web Search에서 400 에러가 터지는 진짜 이유를 찾기까지</li>
+      </ul>
+    </div>
+    <div>
+      <h3>수상</h3>
+      <ul>
+        <li><span class="when">2026.05</span>상명대학교 창업아이디어경진대회 최우수상(공동, HWP 파싱 엔진)</li>
+        <li><span class="when">2026.01</span>상명대학교 핀테크·빅데이터융합·스마트생산 학술제 최우수상(멍멍포, 위 Besu 네트워크)</li>
+        <li><span class="when">2025.09</span>Sui Suimming Hackathon University Track 수상</li>
+        <li><span class="when">2025.08</span>BLOCKTHON 1st Place. 팀 리더를 맡았으며 팀 내 불화가 있었지만 끝까지 해결해 좋은 결과를 얻었습니다.</li>
+        <li><span class="when">2025.08</span>Monad Blitz Seoul Chainlink Special Prize</li>
+      </ul>
+      <h3>특허 출원</h3>
+      <ul>
+        <li><span class="when">2026.03</span>한글(HWP) 바이너리 레코드 해석을 이용한 표 구조 보존 시맨틱 중간 표현 생성 방법(10-2026-0054054, 공동 발명)</li>
+      </ul>
+      <h3>활동</h3>
+      <ul>
+        <li>Blockchain At Yonsei(BAY) 16기 코스모스팀 팀장, 17기 온보딩팀장(6주 이더리움 교재와 Foundry 과제 CI 운영)</li>
+        <li>Injective Ninja Labs Korea 개발팀장</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 07 연락처 -->
+<section class="sec col" id="contact" aria-labelledby="h-contact">
+  <div class="sec-h"><span class="idx">07</span><h2 id="h-contact">연락처</h2></div>
+  <dl class="contact">
+    <div><dt>이름</dt><dd>모진영</dd></div>
+    <div><dt>이메일</dt><dd><span class="email" id="email-contact">ahwlsqja1324@gmail.com</span><button type="button" class="copy" data-copy="email-contact" aria-live="polite">복사</button></dd></div>
+    <div><dt>GitHub</dt><dd><a href="https://github.com/ahwlsqja" target="_blank" rel="noopener">github.com/ahwlsqja</a></dd></div>
+    <div><dt>velog</dt><dd><a href="https://velog.io/@ahwlsqja" target="_blank" rel="noopener">velog.io/@ahwlsqja</a></dd></div>
+  </dl>
+</section>
+
+</div>
+<script>
+(function () {
+  function selectText(el) {
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(el);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch (e) {}
+  }
+  var buttons = document.querySelectorAll('button[data-copy]');
+  Array.prototype.forEach.call(buttons, function (btn) {
+    var label = btn.textContent;
+    var timer = null;
+    function show(msg) {
+      btn.textContent = msg;
+      clearTimeout(timer);
+      timer = setTimeout(function () { btn.textContent = label; }, 2400);
+    }
+    btn.addEventListener('click', function () {
+      var target = document.getElementById(btn.getAttribute('data-copy'));
+      if (!target) return;
+      var text = target.textContent.trim();
+      function fallback() {
+        selectText(target);
+        show('선택했습니다');
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () { show('복사했습니다'); }, fallback);
+        } else {
+          fallback();
+        }
+      } catch (e) {
+        fallback();
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
