@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>SRE 에이전트 플랫폼 · 모진영</title>
+<meta name="description" content="수집 경로의 지표를 5분마다 읽어 사건으로 기록하고, AI가 근거를 붙인 1차 진단을 남기는 사내 SRE 서비스입니다. P0가 아니면 사람을 부르지 않고, 복구는 사람이 승인한 뒤 실행합니다.">
+<meta name="color-scheme" content="dark light">
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+
+<header class="topbar">
+  <div class="shell topbar__row">
+    <a class="brand" href="../index.html">mojinyeong<b>/</b>portfolio</a>
+    <nav class="topnav" aria-label="이동">
+      <a href="../index.html#projects"><span class="t">← 포트폴리오</span></a>
+      <a class="ext" href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <button class="icon-btn theme-btn" type="button" aria-label="테마 바꾸기">
+      <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <section class="sec" id="detail" aria-labelledby="detail-h">
+    <div class="doc-head">
+      <div class="shell">
+        <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>sre-agent</span></nav>
+        <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span><span class="badge badge--ok">운영 중</span></div>
+        <h1 class="doc-title" id="detail-h">SRE 에이전트 플랫폼</h1>
+        <p class="doc-lede">수집 경로의 지표를 5분마다 읽어 사건으로 기록하고, AI가 근거를 붙인 1차 진단을 남기는 사내 SRE 서비스입니다. P0가 아니면 사람을 부르지 않고, 복구는 사람이 승인한 뒤 실행합니다.</p>
+        <dl class="spec">
+          <div><dt>기간</dt><dd class="num">2026.09 – 2026.10</dd></div>
+          <div><dt>역할</dt><dd>혼자 맡음. 설계, 알림 등급 정책, 통합과 배포, 운영에 넣는 판단 (구현은 AI 코딩 에이전트와 함께)</dd></div>
+          <div class="wide"><dt>상태</dt><dd>운영 중</dd></div>
+          <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Durable Object (SQLite)</li><li class="chip">Cloudflare Queues</li><li class="chip">Cloud Run Job</li><li class="chip">Cloud Scheduler</li><li class="chip">Managed Prometheus (PromQL)</li><li class="chip">Slack</li><li class="chip">Linear</li></ul></dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="shell">
+      <div class="doc-body">
+        <aside class="toc" aria-label="이 페이지">
+          <ol>
+            <li><a href="#d-situation"><span class="n">01</span>상황과 역할</a></li>
+            <li><a href="#d-process"><span class="n">02</span>해결 과정</a></li>
+            <li><a href="#d-result"><span class="n">03</span>결과</a></li>
+            <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
+            <li><a href="#d-learn"><span class="n">05</span>배운 점</a></li>
+            <li><a href="#d-kw"><span class="n">06</span>핵심 역량</a></li>
+            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
+          </ol>
+        </aside>
+
+        <article class="doc-main">
+          <section id="d-situation" aria-labelledby="d-situation-h">
+            <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황과 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>수집 경로를 Kafka와 Flink로 바꾸자 단계마다 멈춤과 유실을 판단하는 기준이 달라졌습니다. Pod가 Ready인지, Kafka lag가 얼마인지 하나만 봐서는 정상인지 알기 어려웠습니다.</p>
+            <p>신호는 많았지만 사람이 판단할 장애는 드물었습니다. 그래서 지표를 반복해서 보는 일과 1차 진단은 서비스에 맡기고, 사람은 결정만 하게 했습니다.</p>
+            <p>9월에는 모델이 조회만 할 수 있는 조사 에이전트를 시험 삼아 만들었습니다. 10월에 이를 바탕으로 운영 서비스를 새로 설계했습니다.</p>
+            <dl class="scope">
+              <dt>맡은 일</dt><dd>혼자 맡은 프로젝트이고, 회사 한 곳을 대상으로 제가 직접 운영하고 있습니다. 알림 등급 정책과 저장 구조, 권한을 설계했습니다. 통합과 배포, 롤백, 운영에 넣을지 판단하는 일도 제가 했습니다.</dd>
+              <dt>AI 에이전트</dt><dd>기능 구현에는 AI 코딩 에이전트를 함께 썼습니다.</dd>
+            </dl>
+          </section>
+
+          <section id="d-process" aria-labelledby="d-process-h">
+            <h2 class="sechead" id="d-process-h"><span class="sechead__no">02</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+
+<figure class="dg" id="dg-sre" style="--dg-min: 560px" data-step-ms="3600" data-steps='[
+  {"t":"5분마다 PromQL 28개를 읽어 서명해 보내고, 빈 응답은 &#39;값 없음&#39;으로 표시합니다."},
+  {"t":"신호의 중복을 거르고 사건을 갱신한 뒤, 작업과 보낼 메시지를 한 트랜잭션에 남깁니다."},
+  {"t":"작업은 두 번 이상 전달될 수 있고, 두 모델은 저장된 근거와 런북 목록만 보고 진단합니다."},
+  {"t":"작업 번호로 늦게 끝난 응답을 걸러 반영하고, 서버가 다시 계산한 등급대로 Slack과 Linear에 보냅니다."},
+  {"t":"복구는 운영자가 승인한 뒤 직접 실행하며, 모델에서 복구 실행기로 가는 길은 없습니다."},
+  {"t":"10월 12일 배포 직후 28건 중 7건만 받아 롤백했고, 수신 경로의 다시 읽기를 떼어 낸 뒤 연속 2주기 28건을 모두 받았습니다.", "d": 4400}
+]'>
+  <figcaption><span class="n">그림 1</span>지표 수집에서 사람 승인까지</figcaption>
+  <div class="dg__canvas">
+    <svg viewBox="0 0 728 550" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="dg-sre-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
+      </defs>
+
+      <!-- 구역 -->
+      <rect class="zone" x="24" y="28" width="156" height="366" rx="10" fill="none"/>
+      <text class="m" x="36" y="46">GCP</text>
+      <rect class="zone" x="196" y="28" width="346" height="366" rx="10" fill="none"/>
+      <text class="m" x="208" y="46">Cloudflare</text>
+      <rect class="zone" x="196" y="410" width="346" height="116" rx="10" fill="none"/>
+      <text class="m" x="208" y="428">AI 모델</text>
+      <rect class="zone" x="558" y="28" width="144" height="498" rx="10" fill="none"/>
+      <text class="m" x="570" y="46">사람과 협업 도구</text>
+
+      <!-- GCP -->
+      <g data-step="1"><rect class="box" x="34" y="58" width="136" height="60" rx="8"/><text class="t" x="48" y="84">실행 예약</text><text class="s" x="48" y="104">Cloud Scheduler</text></g>
+      <g data-step="1"><rect class="box" x="34" y="186" width="136" height="60" rx="8"/><text class="t" x="48" y="212">지표 수집기</text><text class="s" x="48" y="232">빈 응답은 '값 없음'</text></g>
+      <g data-step="1"><rect class="box" x="34" y="322" width="136" height="60" rx="8"/><text class="t" x="48" y="348">지표 저장소</text><text class="s" x="48" y="368">Prometheus</text></g>
+
+      <!-- Cloudflare -->
+      <g data-step="1,2,6"><rect class="box" x="206" y="58" width="160" height="60" rx="8"/><text class="t" x="220" y="84">수신 Worker</text><text class="s" x="220" y="104">서명 확인</text></g>
+      <g data-step="5"><rect class="box" x="404" y="58" width="128" height="60" rx="8"/><text class="t" x="418" y="84">관리자 화면</text><text class="s" x="418" y="104">결정 기록</text></g>
+      <g data-step="2,4,6">
+        <rect class="box" x="206" y="162" width="160" height="108" rx="8"/>
+        <text class="t" x="220" y="184">사건 저장소</text>
+        <text class="m" x="356" y="184" text-anchor="end">조직당 1개</text>
+        <rect x="216" y="196" width="67" height="18" rx="4" style="fill: var(--surface-3); stroke: var(--line-2)"/>
+        <rect x="289" y="196" width="67" height="18" rx="4" style="fill: var(--surface-3); stroke: var(--line-2)"/>
+        <rect x="216" y="220" width="67" height="18" rx="4" style="fill: var(--surface-3); stroke: var(--line-2)"/>
+        <rect x="289" y="220" width="67" height="18" rx="4" style="fill: var(--surface-3); stroke: var(--line-2)"/>
+        <rect x="216" y="244" width="67" height="18" rx="4" style="fill: var(--surface-3); stroke: var(--line-2)"/>
+        <rect x="289" y="244" width="67" height="18" rx="4" style="fill: var(--surface-3); stroke: var(--line-2)"/>
+      </g>
+      <!-- 2단계: 신호 → 사건 → 작업 → 보낼 메시지 차례로 켜짐 -->
+      <g data-step="2">
+        <rect class="pkt" x="289" y="196" width="67" height="18" rx="4" fill-opacity="0"><animate attributeName="fill-opacity" values="0;0.4" keyTimes="0;0.08" calcMode="discrete" dur="2.8s" repeatCount="indefinite"/></rect>
+        <rect class="pkt" x="216" y="220" width="67" height="18" rx="4" fill-opacity="0"><animate attributeName="fill-opacity" values="0;0.4" keyTimes="0;0.3" calcMode="discrete" dur="2.8s" repeatCount="indefinite"/></rect>
+        <rect class="pkt" x="289" y="220" width="67" height="18" rx="4" fill-opacity="0"><animate attributeName="fill-opacity" values="0;0.4" keyTimes="0;0.52" calcMode="discrete" dur="2.8s" repeatCount="indefinite"/></rect>
+        <rect class="pkt" x="216" y="244" width="67" height="18" rx="4" fill-opacity="0"><animate attributeName="fill-opacity" values="0;0.4" keyTimes="0;0.74" calcMode="discrete" dur="2.8s" repeatCount="indefinite"/></rect>
+      </g>
+      <g data-step="2,4,6">
+        <text class="s" x="249.5" y="209" text-anchor="middle">진행 기록</text>
+        <text class="s" x="322.5" y="209" text-anchor="middle">신호</text>
+        <text class="s" x="249.5" y="233" text-anchor="middle">사건</text>
+        <text class="s" x="322.5" y="233" text-anchor="middle">작업</text>
+        <text class="s" x="249.5" y="257" text-anchor="middle">보낼 메시지</text>
+        <text class="s" x="322.5" y="257" text-anchor="middle">비용 예산</text>
+      </g>
+      <g data-step="3,4"><rect class="box" x="404" y="186" width="128" height="60" rx="8"/><text class="t" x="418" y="212">전송기</text><text class="s" x="418" y="232">알람으로 깨어남</text></g>
+      <g data-step="3"><rect class="box" x="404" y="322" width="128" height="60" rx="8"/><text class="t" x="418" y="348">작업 Queue</text><text class="s" x="418" y="368">실패 큐 따로</text></g>
+      <g data-step="3,4"><rect class="box" x="206" y="322" width="160" height="60" rx="8"/><text class="t" x="220" y="348">진단 Worker</text><text class="s" x="220" y="368">작업을 받아 진단</text></g>
+
+      <!-- AI 모델 -->
+      <g data-step="3"><rect class="box" x="206" y="438" width="160" height="60" rx="8"/><text class="t" x="220" y="464">진단 모델</text><text class="s" x="220" y="484">근거와 런북 목록만</text></g>
+      <g data-step="3"><rect class="box" x="404" y="438" width="128" height="60" rx="8"/><text class="t" x="418" y="464">판정 모델</text><text class="s" x="418" y="484">정해진 형식으로</text></g>
+
+      <!-- 사람과 협업 도구 -->
+      <g data-step="5"><rect class="box" x="568" y="58" width="124" height="60" rx="8"/><text class="t" x="582" y="84">운영자</text><text class="s" x="582" y="104">확인과 승인</text></g>
+      <g data-step="4"><rect class="box" x="568" y="186" width="124" height="60" rx="8"/><text class="t" x="582" y="212">Slack</text><text class="s" x="582" y="232">P1 스레드</text></g>
+      <g data-step="4"><rect class="box" x="568" y="322" width="124" height="60" rx="8"/><text class="t" x="582" y="348">Linear</text><text class="s" x="582" y="368">사건 기록</text></g>
+      <g data-step="5"><rect class="box" x="568" y="438" width="124" height="60" rx="8" style="stroke-dasharray: 4 4"/><text class="t" x="582" y="464" style="fill: var(--text-2)">복구 실행기</text><text class="s" x="582" y="484">꺼 둠</text></g>
+
+      <!-- 10월 12일 배포 문제 -->
+      <g data-step="6">
+        <rect class="box" x="24" y="410" width="156" height="116" rx="8" style="stroke: var(--bad)"/>
+        <text class="t" x="36" y="434">10월 12일 배포 문제</text>
+        <text class="m" x="36" y="456">15분 동안 읽은 행</text>
+        <text class="s" x="36" y="474">약 1.7만 → 약 790만</text>
+        <text class="m" x="36" y="498">join, 28건 받을 때</text>
+        <text class="s" x="36" y="516">342회 → 0회 (수정 뒤)</text>
+      </g>
+
+      <!-- 1. 수집 -->
+      <path id="dg-sre-a1" class="flow" data-step="1" d="M64 118V180" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <path id="dg-sre-a2" class="flow" data-step="1" d="M64 322V252" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <path id="dg-sre-a3" class="flow" data-step="1" d="M170 216H188V88H200" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <text class="m" data-step="1" x="72" y="155">5분마다 실행</text>
+      <text class="m" data-step="1" x="72" y="280">PromQL 28개</text>
+      <text class="m" data-step="1" x="72" y="296">최근 15분</text>
+
+      <!-- 2. 한 번 기록 -->
+      <path id="dg-sre-a4" class="flow" data-step="2" d="M322 118V156" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <text class="m" data-step="2" x="328" y="143">한 트랜잭션</text>
+
+      <!-- 3. 진단 -->
+      <path id="dg-sre-a5a" class="flow" data-step="3,4" d="M366 236H398" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <path id="dg-sre-a5b" class="flow" data-step="3" d="M440 246V316" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <text class="m" data-step="3" x="448" y="284">중복 전달 가능</text>
+      <path id="dg-sre-a6" class="flow" data-step="3" d="M404 352H372" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <path id="dg-sre-a7" class="flow" data-step="3" d="M226 270V316" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <text class="m" data-step="3" x="234" y="292">작업과 번호 받기</text>
+      <path id="dg-sre-a8a" class="flow" data-step="3" d="M286 382V432" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <path id="dg-sre-a8b" class="flow" data-step="3" d="M366 468H398" fill="none" marker-end="url(#dg-sre-ah)"/>
+
+      <!-- 4. 반영과 알림 -->
+      <path id="dg-sre-a9" class="flow" data-step="4" d="M346 322V276" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <text class="m" data-step="4" x="354" y="306">확인 뒤 반영</text>
+      <path id="dg-sre-a10a" class="flow" data-step="4" d="M532 206H562" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <path id="dg-sre-a10b" class="flow" data-step="4" d="M532 230H550V352H562" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <text class="m" data-step="4" x="568" y="276">P2는 평일 17시 요약</text>
+      <text class="m" data-step="4" x="568" y="292">P0는 기존 호출 경로</text>
+
+      <!-- 5. 사람 승인 -->
+      <path id="dg-sre-a11a" class="flow" data-step="5" d="M568 88H538" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <path id="dg-sre-a11b" class="flow" data-step="5" d="M404 100H396V198H372" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <path id="dg-sre-a12" class="edge edge--dash" data-step="5" d="M692 88H714V468H698" fill="none" marker-end="url(#dg-sre-ah)"/>
+      <text class="m" data-step="5" x="568" y="420">사람이 승인한 뒤 실행</text>
+      <path class="edge edge--dash" data-step="5" d="M532 468H562" fill="none"/>
+      <path class="edge" d="M545 463L555 473M555 463L545 473" fill="none" style="stroke: var(--bad)"/>
+      <text class="m" data-step="5" x="532" y="516" text-anchor="end">모델에서 실행으로 가는 길 없음</text>
+
+      <!-- 6. 10월 12일: 수신 경로에서 과거 진행 기록 다시 읽기 (제거됨) -->
+      <path id="dg-sre-a13" class="flow edge--dash" data-step="6" d="M240 118V160" fill="none" style="stroke: var(--bad)"/>
+      <g data-step="6">
+        <path class="edge" d="M235 134L245 144M245 134L235 144" fill="none" style="stroke: var(--bad)"/>
+        <text class="m" x="230" y="143" text-anchor="end" style="fill: var(--bad)">제거</text>
+      </g>
+
+      <!-- 움직이는 점 3개 -->
+      <g data-step="1"><circle class="pkt" r="4"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#dg-sre-a3"/></animateMotion></circle></g>
+      <g data-step="3"><circle class="pkt" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-sre-a5b"/></animateMotion></circle></g>
+      <g data-step="4"><circle class="pkt" r="4"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#dg-sre-a10b"/></animateMotion></circle></g>
+    </svg>
+  </div>
+</figure>
+
+
+            <h3>1. 사건 저장소를 조직별 Durable Object 하나로 둔 이유</h3>
+            <p>Durable Object는 객체 하나를 한 스레드에서 실행합니다. 내장 SQLite 트랜잭션은 중간에 다른 요청이 끼어들지 않고 끝납니다. 그래서 조직마다 객체를 하나 두었습니다. 신호의 중복을 거르고, 사건을 갱신하고, 진단 작업과 보낼 메시지를 남기는 일을 락 없이 한 트랜잭션에서 끝냅니다.</p>
+            <p>D1과 Workflows, Agents SDK를 조합하는 안도 검토했습니다. 실행 계층이 셋으로 나뉘면 재시도와 상태 규칙을 따로 맞춰야 해서 택하지 않았습니다. 같은 조직의 요청이 모두 한 객체를 거치는 비용은 받아들였습니다. 쓰기가 많아지면 실제로 잰 뒤 나누기로 했습니다.</p>
+            <p>Cloudflare Queues는 같은 메시지를 두 번 이상 전달할 수 있습니다. Durable Object 트랜잭션과 한 번에 묶이지도 않습니다. 그래서 트랜잭션 안에서는 보낼 메시지를 outbox 테이블에 적기만 합니다. 실제 전송은 alarm으로 깨어나는 전송기가 맡습니다.</p>
+            <p>진단 작업을 가져가는 쪽은 그때마다 커지는 번호인 fencing token을 받습니다. 결과를 반영할 때 fencing token과 사건 버전을 다시 확인합니다. 그래서 두 번 전달된 작업이나 늦게 끝난 모델 응답이 앞선 결과를 덮지 못합니다.</p>
+            <p>Slack과 Linear 호출이 타임아웃되면 다시 보내지 않습니다. 다음 번에 전송됐는지 조회만 합니다. 같은 알림이 두 번 가지 않게 하려는 선택입니다.</p>
+
+            <h3>2. 지표 수집과 감지 규칙 5가지</h3>
+            <p>Cloud Scheduler가 5분마다 수집기를 실행합니다. 수집기는 Cloud Run Job으로 만들었고, Managed Prometheus에서 미리 정한 PromQL 28개를 최근 15분 범위로 읽습니다. 결과는 Google OIDC 토큰으로 서명해 보냅니다. 받는 쪽은 토큰 발급자와 쿼리 해시가 맞는지 확인합니다.</p>
+            <p>빈 응답은 0으로 채우지 않고 '값 없음'으로 따로 저장했습니다. 0으로 채우면 멈춘 경로가 조용한 경로처럼 보이기 때문입니다.</p>
+            <p>감지 규칙은 5가지입니다.</p>
+            <ul>
+              <li>지표가 들어오지 않을 때</li>
+              <li>Flink 처리가 멈췄을 때</li>
+              <li>적재기(ClickHouse에 쓰는 단계)의 처리가 멈췄을 때</li>
+              <li>적재기에 이상 징후가 보일 때</li>
+              <li>수집 경로 입구(Ingress)에서 오류가 날 때</li>
+            </ul>
+            <p>같은 감지가 반복되면 하나의 사건으로 묶습니다. 그 뒤 15분 동안은 새 사건과 진단 작업을 만들지 않습니다.</p>
+
+            <h3>3. AI 진단과 사람 승인</h3>
+            <p>진단 모델이 먼저 원인을 추정합니다. 이어서 판정 모델이 그 결과를 정해진 형식으로 다시 판정합니다. 모델에는 저장된 근거와 승인된 런북 목록만 줍니다. 주장마다 저장된 근거의 ID만, 최대 8개까지 인용하게 했습니다. 비밀값과 실행 권한은 주지 않았습니다.</p>
+            <p>모델을 부르기 전에 그 호출에 들 수 있는 최대 비용을 예산에서 먼저 잡아 둡니다. 한도는 사건당 3회, 호출 한 번에 60초, 하루 1달러입니다.</p>
+            <p>등급은 들어온 값을 쓰지 않고 서버 규칙으로 다시 계산합니다. 시간에 관계없이 사람을 부르는 등급은 P0뿐입니다. P0는 원래 쓰던 호출 경로를 그대로 두었고, 이 서비스는 사본만 기록합니다. P1은 아무도 부르지 않고 Slack 스레드에 남깁니다. P2는 평일 17시에 모아서 요약으로 보냅니다.</p>
+            <p>두 모델이 합의하면 런북을 자동으로 실행하는 안도 검토했지만 택하지 않았습니다. 모델 합의나 Slack 확인 응답이 실행 권한이 되면 안 된다고 판단했습니다. 복구 실행기는 따로 만들었지만 꺼 두었습니다. 복구는 사람이 승인한 뒤 직접 실행합니다.</p>
+            <p>ClickHouse 알림 정책은 환경마다 44개, 모두 88개를 Terraform으로 선언했습니다. 처음 일괄 적용에서는 28개 중 25개가 API 400으로 실패했습니다. 11개는 정책 하나에 PromQL 조건을 하나만 받는 제약 때문이라 조건 하나씩으로 나눴고, 14개는 지표 수집이 아직 시작되지 않아서라 적용 전 점검 항목으로 남겼습니다. 지표가 아예 사라져도 조용히 넘어가지 않게 <code>or vector(0)</code>를 붙였고, operator 재시작을 ClickHouse 장애로 읽지 않게 컨테이너 셀렉터를 좁혔습니다.</p>
+            <p>이 88개는 아직 알림 채널에 연결하지 않고 발화만 기록하고 있습니다. Slack에 바로 연결하면 P0 정책을 거치지 않는 두 번째 알림 통로가 생기기 때문입니다.</p>
+
+            <h3>4. 테스트와 실제 사건으로 확인</h3>
+            <p>통합 테스트는 SQLite와 Queue를 흉내 낸 구현으로 돌렸습니다. 운영에 배포한 뒤에는 시험용 사건 1건으로 진단부터 사람의 확인 응답까지 이어지는지 확인했습니다.</p>
+            <p>운영에 넣을지는 실제로 발생한 사건으로 판단했습니다. 첫 사건에서는 판정 모델 호출이 요청 전 검사에서 막히는 결함을 찾아 고쳤습니다. 다음 사건에서는 두 모델과 Linear 기록까지 통과했습니다.</p>
+          </section>
+
+          <section id="d-result" aria-labelledby="d-result-h">
+            <h2 class="sechead" id="d-result-h"><span class="sechead__no">03</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ul>
+              <li>5분마다 지표 28개 수집, 수정 배포 뒤 연속 주기 28/28 수신 (빈 응답 4개는 0으로 채우지 않고 따로 기록)</li>
+              <li>실제로 발생한 P2 사건 2건이 사람 손 없이 AI 1차 진단과 Linear 기록까지 이어짐</li>
+              <li>배포 직후 생긴 수신 문제를 롤백해 다음 주기 28/28 회복</li>
+              <li>수신 경로의 무거운 join 342회 → 0회 (관측 28건을 차례로 받는 기준)</li>
+              <li>Go 감시기 실행 시간: 50초 제한에 걸려 연속 실패 → 9~14초 (열린 신호 약 5,600개 상태, 수정 배포 뒤 30분 관측, Job 실패 0)</li>
+            </ul>
+          </section>
+
+          <section id="d-ts" aria-labelledby="d-ts-h">
+            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">04</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">T-01</span><h3>배포 직후 관측 28건 중 7건만 받은 문제</h3></header>
+              <dl class="ts__rows">
+                <div><dt>문제</dt><dd>2026년 10월 12일 새 기능을 배포했습니다. 바로 다음 수집 주기에서 관측 28건 중 7건만 받았고, 나머지 21건은 판정 불가로 끝났습니다. 원천 조회는 평소처럼 성공했습니다.</dd></div>
+                <div><dt>원인</dt><dd>Durable Object 지표에서 15분 동안 읽은 행이 약 1.7만에서 약 790만으로 늘었습니다. CPU와 메모리 한도 오류는 없었습니다. 관측을 받을 때마다 과거 진행 기록을 다시 읽는 join이 수신 경로에 붙어 있었습니다. 같은 조직의 요청은 모두 한 객체에서 처리되므로, 28건이 이 join을 차례로 반복한 것을 가장 유력한 원인으로 봤습니다. 7건만 받은 상황을 그대로 재현하지 못해 확정하지는 못했습니다. 본문을 다 받기 전 시각을 기준으로 판정해서, 그 사이에 도착한 정상 관측을 미래 시각으로 거부하던 결함도 함께 찾았습니다.</dd></div>
+                <div><dt>해결</dt><dd>사건 저장소를 그대로 둔 채 직전 버전으로 롤백했습니다. 다음 주기에는 28건을 모두 받았습니다. 이어서 진행 기록을 맞추는 작업을 수신 경로에서 떼어 냈습니다. 시각 판정 기준은 본문을 다 받은 시점으로 바꿨습니다. 같은 날, 거부 사유를 요청 원문 없이 9가지 코드로 남기게 했습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>관측 28건을 차례로 받는 경우를 기준으로, 무거운 join이 342회에서 0회로 줄었습니다. 본문을 받는 사이에 도착한 정상 관측은 이제 400 대신 202로 받습니다. 실제로 미래 시각인 관측은 그대로 400으로 거부합니다. 수정 배포 뒤 연속 2주기 동안 28건을 모두 받았습니다.</dd></div>
+              </dl>
+            </article>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">T-02</span><h3>감시기가 멈춰 heartbeat 경보가 울린 날</h3></header>
+              <dl class="ts__rows">
+                <div><dt>문제</dt><dd>이 서비스보다 먼저, 9월 말에 클러스터 안에서 도는 Go 감시기(CronJob)를 만들었습니다. 감시기는 돌 때마다 heartbeat를 남기고, heartbeat가 끊겼는지는 클러스터 밖 Cloud Monitoring이 봅니다(주의 300초, 긴급 900초). 클러스터 안에서 보면 클러스터가 멈출 때 경보도 같이 멈추기 때문입니다. 10월 6일 이 긴급 경보가 Slack으로 반복해서 왔습니다.</dd></div>
+                <div><dt>원인</dt><dd>마지막 성공 시각과 Job 기록을 보니 3번 연속 실패했고, 로그에는 50초째 DB 타임아웃이 찍혀 있었습니다. 상태를 읽는 SQL은 0.3초라 병목이 아니었습니다. 열린 신호 약 5,600개를 하나씩 DB에 다녀오며 닫는 구조였습니다. 신호가 쌓일수록 실행 시간이 늘어나 제한 시간을 넘었습니다.</dd></div>
+                <div><dt>해결</dt><dd>먼저 제한 시간을 50초에서 240초로 임시로 늘려 감시를 살렸습니다. 이어서 신호 수와 상관없이 한 번에 닫는 집합 쿼리로 바꾸고, 단계마다 시간 예산을 두어 heartbeat를 가장 먼저 남기게 했습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>배포 뒤 30분 동안 지켜보니 첫 회 55초, 이후 9~14초였고 Job 실패는 0이었습니다. 임시로 늘린 제한 시간은 원래 설정과 똑같이 되돌렸습니다.</dd></div>
+              </dl>
+            </article>
+          </section>
+
+          <section id="d-learn" aria-labelledby="d-learn-h">
+            <h2 class="sechead" id="d-learn-h"><span class="sechead__no">05</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>배포가 성공했는지는 프로세스가 떴는지보다, 다음 수집 주기에 데이터를 모두 받았는지로 판단해야 합니다. 비어 있는 지표는 0이나 정상으로 채우지 말고 따로 다뤄야 합니다.</p>
+          </section>
+
+          <section id="d-kw" aria-labelledby="d-kw-h">
+            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">06</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ol class="keywords">
+              <li><span class="kw__n">01</span><span class="kw__t">알림 등급 설계</span></li>
+              <li><span class="kw__n">02</span><span class="kw__t">중복 없는 반영 (멱등 처리)</span></li>
+              <li><span class="kw__n">03</span><span class="kw__t">배포 검증과 롤백</span></li>
+            </ol>
+          </section>
+
+          <section id="d-links" aria-labelledby="d-links-h">
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>서비스 저장소는 비공개라 링크하지 않습니다.</p>
+            <ul>
+              <li><a href="https://github.com/ahwlsqja/decklog" target="_blank" rel="noopener">Decklog ↗</a> 짧게 실행되고 끝나는 SRE 에이전트들이 사건 맥락을 이어받는 구조를 다룬 연구 노트입니다. 구현 전 단계입니다.</li>
+            </ul>
+          </section>
+
+          <nav class="pager" aria-label="다른 프로젝트">
+            <a class="prev" href="stream.html"><span class="k">이전 프로젝트</span><span class="t">실시간 스트림 파이프라인 (Kafka + Flink)</span></a>
+            <a class="next" href="clickhouse.html"><span class="k">다음 프로젝트</span><span class="t">ClickHouse 저장 구조와 조회 경로 최적화</span></a>
+          </nav>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="shell foot">
+  <span>© 2026 모진영</span>
+  <a href="../index.html#projects">← 포트폴리오</a>
+</footer>
+</body>
+</html>

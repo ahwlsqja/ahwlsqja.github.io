@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>ClickHouse 저장 구조와 조회 경로 최적화 · 모진영</title>
+<meta name="description" content="해시 파티션 64개가 쓰기만 잘게 쪼개던 ClickHouse를, MergeTree 동작을 근거로 테이블마다 파티션과 정렬 키를 다시 정하고 화면별 조회 경로를 설계해 바꾼 프로젝트입니다.">
+<meta name="color-scheme" content="dark light">
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+
+<header class="topbar">
+  <div class="shell topbar__row">
+    <a class="brand" href="../index.html">mojinyeong<b>/</b>portfolio</a>
+    <nav class="topnav" aria-label="이동">
+      <a href="../index.html#projects"><span class="t">← 포트폴리오</span></a>
+      <a class="ext" href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <button class="icon-btn theme-btn" type="button" aria-label="테마 바꾸기">
+      <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <section class="sec" id="detail" aria-labelledby="detail-h">
+    <div class="doc-head">
+      <div class="shell">
+        <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>clickhouse</span></nav>
+        <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span></div>
+        <h1 class="doc-title" id="detail-h">ClickHouse 저장 구조와 조회 경로 최적화</h1>
+        <p class="doc-lede">해시 파티션 64개가 조회는 빠르게 하지 못하면서 쓰기만 잘게 쪼개고 있었습니다. MergeTree 동작을 근거로 테이블마다 파티션과 정렬 키를 다시 정하고, 화면마다 조회 경로를 따로 설계했습니다.</p>
+        <dl class="spec">
+          <div><dt>기간</dt><dd class="num">2026.08 – 2026.09</dd></div>
+          <div><dt>역할</dt><dd>원리 분석, 비교 실험 설계, 운영 테이블 전환, 화면별 조회 경로 설계</dd></div>
+          <div class="wide"><dt>상태</dt><dd>운영 반영</dd></div>
+          <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">ClickHouse</li><li class="chip">ReplacingMergeTree</li><li class="chip">Projection</li><li class="chip">Refreshable MV</li><li class="chip">EXPLAIN</li><li class="chip">system.query_log</li><li class="chip">Cloudflare Workers</li><li class="chip">Go</li></ul></dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="shell">
+      <div class="doc-body">
+        <aside class="toc" aria-label="이 페이지">
+          <ol>
+            <li><a href="#d-situation"><span class="n">01</span>상황과 역할</a></li>
+            <li><a href="#d-process"><span class="n">02</span>해결 과정</a></li>
+            <li><a href="#d-result"><span class="n">03</span>결과</a></li>
+            <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
+            <li><a href="#d-kw"><span class="n">05</span>핵심 역량</a></li>
+            <li><a href="#d-links"><span class="n">06</span>관련 링크</a></li>
+          </ol>
+        </aside>
+
+        <article class="doc-main">
+          <section id="d-situation" aria-labelledby="d-situation-h">
+            <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황과 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>웹사이트 방문 행동을 세션과 유입 채널로 묶어 보여 주는 B2B 분석 제품입니다. 데이터가 늘자 쓰기 지연과 병합 부담이 커졌습니다. 요약 화면은 미리 계산해 두는 갱신 작업이 메모리 부족을 되풀이했습니다. 유입 채널 화면은 읽기 한도를 넘겨 실패했습니다. 실행 시간만 봐서는 읽기가 문제인지 쓰기가 문제인지 나눌 수 없었습니다.</p>
+            <dl class="scope">
+              <dt>맡은 일</dt><dd>원리 분석과 비교 실험 설계, 운영 테이블 전환, 화면별 조회 경로 설계, 측정</dd>
+              <dt>동료</dt><dd>유입 채널 분류의 공용 기반을 함께 만들었고, 화면 개발은 동료가 맡았습니다.</dd>
+            </dl>
+          </section>
+
+          <section id="d-process" aria-labelledby="d-process-h">
+            <h2 class="sechead" id="d-process-h"><span class="sechead__no">02</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+<figure class="dg" id="dg-clickhouse" style="--dg-min: 560px" data-step-ms="3600" data-steps='[
+  {"t":"INSERT 배치 하나가 해시 파티션 64개로 갈라지고, FINAL은 그 part를 모두 읽어 합칩니다."},
+  {"t":"운영 입력을 복제해 비교하고, 로컬에서는 같은 입력을 재생해 결과가 같은지부터 확인했습니다."},
+  {"t":"원본 이벤트 테이블은 파티션을 없애고, 원본 신호 테이블은 월 파티션으로 바꿨습니다."},
+  {"t":"원본은 (고객, 세션, 이벤트) 순서로 정렬하고, 날짜로 읽는 요약 화면에는 날짜순 projection을 붙였습니다."},
+  {"t":"유입 채널 화면은 기간 안의 최신 이벤트를 먼저 고르고, 세션 단위로 줄인 뒤 채널 정보를 붙입니다."},
+  {"t":"AI 유입 화면은 15분마다 갱신되는 조회용 테이블을 읽고, 갱신이 늦으면 원래 조회로 돌아갑니다."}
+]'>
+  <figcaption><span class="n">그림 1</span>part가 생기는 원리와 화면별 조회 경로</figcaption>
+  <div class="dg__canvas">
+    <svg viewBox="0 0 728 890" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="dg-clickhouse-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
+        <marker id="dg-clickhouse-ahs" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" markerUnits="userSpaceOnUse" orient="auto"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
+      </defs>
+
+      <!-- ===== A. 원리 인셋 ===== -->
+      <rect class="zone" x="12" y="12" width="704" height="208" rx="10"/>
+      <text class="m" x="24" y="34">해시 파티션 64개</text>
+      <text class="m" x="352" y="34" text-anchor="end">병합은 파티션 안에서만</text>
+      <text class="m" x="704" y="34" text-anchor="end">원리: part가 생기는 방식</text>
+
+      <!-- A1 -->
+      <g data-step="1">
+        <rect class="box" x="24" y="67" width="136" height="44" rx="8"/>
+        <text class="t" x="38" y="94">INSERT 배치 1개</text>
+      </g>
+      <!-- A2: 파티션 칸 (회색 칸 = 파티션 경계) -->
+      <g data-step="1">
+        <rect class="zone-fill" x="212" y="42" width="140" height="22" rx="4"/>
+        <rect class="zone" x="212" y="42" width="140" height="22" rx="4"/>
+        <rect class="box" x="220" y="45" width="74" height="16" rx="3"/>
+        <text class="m" x="257" y="57" text-anchor="middle">part p0</text>
+        <path class="edge" fill="none" d="M319 47.8A6 6 0 1 0 325 47.8" marker-end="url(#dg-clickhouse-ahs)"/>
+
+        <rect class="zone-fill" x="212" y="70" width="140" height="22" rx="4"/>
+        <rect class="zone" x="212" y="70" width="140" height="22" rx="4"/>
+        <rect class="box" x="220" y="73" width="74" height="16" rx="3"/>
+        <text class="m" x="257" y="85" text-anchor="middle">part p1</text>
+        <path class="edge" fill="none" d="M319 75.8A6 6 0 1 0 325 75.8" marker-end="url(#dg-clickhouse-ahs)"/>
+
+        <text class="m" x="257" y="107" text-anchor="middle">… 최대 64개</text>
+
+        <rect class="zone-fill" x="212" y="114" width="140" height="22" rx="4"/>
+        <rect class="zone" x="212" y="114" width="140" height="22" rx="4"/>
+        <rect class="box" x="220" y="117" width="74" height="16" rx="3"/>
+        <text class="m" x="257" y="129" text-anchor="middle">part p63</text>
+        <path class="edge" fill="none" d="M319 119.8A6 6 0 1 0 325 119.8" marker-end="url(#dg-clickhouse-ahs)"/>
+      </g>
+      <!-- A3 -->
+      <g data-step="1">
+        <rect class="box" x="404" y="59" width="300" height="60" rx="8" style="stroke: var(--bad)"/>
+        <text class="t" x="418" y="85">FINAL</text>
+        <text class="s" x="418" y="105">모든 part를 읽어 같은 키를 합침</text>
+      </g>
+      <!-- A1 → A2 부채꼴, A2 → A3 -->
+      <path class="flow" data-step="1" fill="none" d="M160 89C184 89 182 53 206 53" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="1" fill="none" d="M160 89C184 89 182 81 206 81" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="1" fill="none" d="M160 89C184 89 182 125 206 125" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="1" fill="none" d="M352 53C376 53 374 77 398 77" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="1" fill="none" d="M352 81C376 81 374 89 398 89" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="1" fill="none" d="M352 125C376 125 374 101 398 101" marker-end="url(#dg-clickhouse-ah)"/>
+
+      <!-- 아래 줄: 무파티션 -->
+      <text class="m" x="24" y="154">무파티션</text>
+      <g data-step="3">
+        <rect class="box" x="24" y="162" width="136" height="44" rx="8"/>
+        <text class="t" x="38" y="189">INSERT 배치 1개</text>
+      </g>
+      <g data-step="3">
+        <rect class="zone-fill" x="212" y="173" width="140" height="22" rx="4"/>
+        <rect class="zone" x="212" y="173" width="140" height="22" rx="4"/>
+        <rect class="box" x="220" y="176" width="74" height="16" rx="3"/>
+        <text class="m" x="257" y="188" text-anchor="middle">part 1개</text>
+        <path class="edge" fill="none" d="M319 178.8A6 6 0 1 0 325 178.8" marker-end="url(#dg-clickhouse-ahs)"/>
+      </g>
+      <g data-step="3">
+        <rect class="box" x="404" y="162" width="104" height="44" rx="8" style="stroke: var(--ok)"/>
+        <text class="t" x="418" y="189">FINAL</text>
+      </g>
+      <path class="flow" data-step="3" fill="none" d="M160 184H206" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="3" fill="none" d="M352 184H398" marker-end="url(#dg-clickhouse-ah)"/>
+      <g data-step="3">
+        <rect class="chip-r" x="535" y="172" width="169" height="24" rx="5"/>
+        <text class="chip-t" x="543" y="188">part 454 → 11 (전환 직후)</text>
+      </g>
+
+      <!-- ===== 운영 경로: B 수집, C ClickHouse, D 화면 조회 API ===== -->
+      <text class="m" x="36" y="252">수집</text>
+      <text class="m" x="704" y="252" text-anchor="end">화면 조회 API</text>
+      <rect class="zone" x="206" y="236" width="288" height="514" rx="10"/>
+      <text class="m" x="220" y="254">ClickHouse</text>
+
+      <!-- B -->
+      <g data-step="2,3">
+        <rect class="box" x="36" y="264" width="136" height="60" rx="8"/>
+        <text class="t" x="50" y="290">수집 게이트웨이</text>
+        <text class="s" x="50" y="310">Cloudflare Workers</text>
+      </g>
+      <g data-step="3">
+        <rect class="box" x="36" y="354" width="136" height="60" rx="8"/>
+        <text class="t" x="50" y="380">본 큐</text>
+        <text class="s" x="50" y="400">이벤트를 잠시 모아 둠</text>
+      </g>
+      <g data-step="3">
+        <rect class="box" x="36" y="444" width="136" height="60" rx="8"/>
+        <text class="t" x="50" y="470">적재 컨슈머</text>
+        <text class="s" x="50" y="490">ClickHouse에 씀</text>
+      </g>
+      <path class="flow" data-step="3" fill="none" d="M104 324V348" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="3" fill="none" d="M104 414V438" marker-end="url(#dg-clickhouse-ah)"/>
+      <path id="dg-clickhouse-w1" class="flow" data-step="3" fill="none" d="M172 480H214" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="3" fill="none" d="M172 460H188V294H214" marker-end="url(#dg-clickhouse-ah)"/>
+
+      <!-- C -->
+      <g data-step="3">
+        <rect class="box" x="220" y="264" width="260" height="60" rx="8"/>
+        <text class="t" x="234" y="290">원본 신호 테이블</text>
+        <text class="s" x="234" y="310">월 파티션, 시간 범위 조회와 보존 기간 정리</text>
+      </g>
+      <g data-step="3-6">
+        <rect class="box" x="220" y="344" width="260" height="196" rx="8"/>
+        <text class="t" x="234" y="370">원본 이벤트 테이블</text>
+        <text class="s" x="234" y="390">무파티션, 정렬 (고객, 세션, 이벤트)</text>
+      </g>
+      <g data-step="4">
+        <rect class="chip-r" x="234" y="399" width="166" height="37" rx="5"/>
+        <text class="chip-t" x="242" y="413">세션 하나를 읽는 FINAL 조회</text>
+        <text class="chip-t" x="242" y="429">읽은 행 99.9%↓ (분석 환경)</text>
+      </g>
+      <g data-step="4">
+        <rect class="box" x="304" y="444" width="166" height="60" rx="8"/>
+        <text class="t" x="318" y="470">날짜순 projection</text>
+        <text class="s" x="318" y="490">열 7개, (고객, 시각) 순</text>
+      </g>
+      <g data-step="5,6">
+        <rect class="box" x="220" y="576" width="260" height="60" rx="8"/>
+        <text class="t" x="234" y="602">채널 스냅샷</text>
+        <text class="s" x="234" y="622">주기 갱신, AI 여부 파티션 2개</text>
+      </g>
+      <g data-step="6">
+        <rect class="box" x="220" y="672" width="260" height="60" rx="8"/>
+        <text class="t" x="234" y="698">AI 유입 조회용 테이블</text>
+        <text class="s" x="234" y="718">15분마다 갱신 (Refreshable MV)</text>
+      </g>
+      <path class="flow" data-step="6" fill="none" d="M248 540V570" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="6" fill="none" d="M248 636V666" marker-end="url(#dg-clickhouse-ah)"/>
+      <text class="m" x="260" y="559">주기 갱신</text>
+      <text class="m" x="260" y="655">상위 갱신이 끝나면 이어서</text>
+
+      <!-- D -->
+      <g data-step="4">
+        <rect class="box" x="568" y="344" width="136" height="60" rx="8"/>
+        <text class="t" x="582" y="370">방문 여정 화면</text>
+        <text class="s" x="582" y="390">세션 단위로 바로 찾음</text>
+      </g>
+      <g data-step="4">
+        <rect class="box" x="568" y="444" width="136" height="60" rx="8"/>
+        <text class="t" x="582" y="470">요약 화면</text>
+        <text class="s" x="582" y="490">읽은 행 약 99%↓</text>
+      </g>
+      <g data-step="5">
+        <rect class="box" x="568" y="576" width="136" height="60" rx="8"/>
+        <text class="t" x="582" y="602">유입 채널 화면</text>
+        <text class="s" x="582" y="622">읽은 행 약 80%↓</text>
+      </g>
+      <g data-step="6">
+        <rect class="box" x="568" y="672" width="136" height="60" rx="8"/>
+        <text class="t" x="582" y="698">AI 유입 화면</text>
+        <text class="s" x="582" y="718">집계 쿼리 평균 7ms</text>
+      </g>
+      <path class="flow" data-step="4" fill="none" d="M568 374H486" style="stroke-width: 2.5" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="4" fill="none" d="M568 474H476" style="stroke-width: 2.5" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="5" fill="none" d="M568 614H486" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="5" fill="none" d="M568 592H544V516H486" marker-end="url(#dg-clickhouse-ah)"/>
+      <path id="dg-clickhouse-r4" class="flow" data-step="6" fill="none" d="M568 710H486" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow edge--dash" data-step="6" fill="none" d="M568 688H512V626H486" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow edge--dash" data-step="6" fill="none" d="M568 688H512V530H486" marker-end="url(#dg-clickhouse-ah)"/>
+      <text class="m" x="704" y="750" text-anchor="end">완료 표시가 1시간을 넘으면 원래 조회</text>
+
+      <!-- ===== E. 비교 경로 (실험 기간에만) ===== -->
+      <rect class="zone" x="12" y="522" width="180" height="228" rx="10"/>
+      <text class="m" x="32" y="540">비교 경로 · 실험 기간에만</text>
+      <text class="m" x="32" y="556">본 큐 성공 뒤 같은 배치를</text>
+      <text class="m" x="32" y="571">복제, 실패는 따로 분리</text>
+      <path id="dg-clickhouse-copy" class="flow edge--dash" data-step="2" fill="none" d="M36 294H22V600H34" marker-end="url(#dg-clickhouse-ah)"/>
+      <g data-step="2">
+        <rect class="box" x="40" y="582" width="140" height="36" rx="8" style="stroke-dasharray: 4 3"/>
+        <text class="t" x="54" y="605">복제 큐</text>
+      </g>
+      <g data-step="2">
+        <rect class="box" x="40" y="640" width="140" height="36" rx="8" style="stroke-dasharray: 4 3"/>
+        <text class="t" x="54" y="663">비교용 컨슈머</text>
+      </g>
+      <g data-step="2">
+        <rect class="box" x="40" y="698" width="140" height="36" rx="8" style="stroke-dasharray: 4 3"/>
+        <text class="t" x="54" y="721">비교용 ClickHouse</text>
+      </g>
+      <path class="flow" data-step="2" fill="none" d="M110 618V634" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="2" fill="none" d="M110 676V692" marker-end="url(#dg-clickhouse-ah)"/>
+
+      <rect class="zone" x="12" y="766" width="704" height="100" rx="10"/>
+      <text class="m" x="24" y="784">로컬 재생 · 실험 기간에만</text>
+      <g data-step="2">
+        <rect class="box" x="24" y="794" width="160" height="60" rx="8" style="stroke-dasharray: 4 3"/>
+        <text class="t" x="38" y="820">로컬 재생</text>
+        <text class="s" x="38" y="840">같은 입력 약 3만 행</text>
+      </g>
+      <g data-step="2">
+        <rect class="box" x="224" y="794" width="164" height="28" rx="6" style="stroke-dasharray: 4 3"/>
+        <text class="t" x="238" y="813">테이블 A: 해시 64</text>
+      </g>
+      <g data-step="2">
+        <rect class="box" x="224" y="826" width="164" height="28" rx="6" style="stroke-dasharray: 4 3"/>
+        <text class="t" x="238" y="845">테이블 B: 무파티션</text>
+      </g>
+      <g data-step="2">
+        <rect class="box" x="444" y="794" width="260" height="60" rx="8" style="stroke-dasharray: 4 3"/>
+        <text class="t" x="458" y="820">따로 계산한 기대값과 대조</text>
+        <text class="s" x="458" y="840">불일치 0</text>
+      </g>
+      <path class="flow" data-step="2" fill="none" d="M184 816C200 816 202 808 218 808" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="2" fill="none" d="M184 832C200 832 202 840 218 840" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="2" fill="none" d="M388 808C412 808 414 816 438 816" marker-end="url(#dg-clickhouse-ah)"/>
+      <path class="flow" data-step="2" fill="none" d="M388 840C412 840 414 832 438 832" marker-end="url(#dg-clickhouse-ah)"/>
+
+      <!-- 움직이는 점 3개 -->
+      <circle class="pkt" r="4" data-step="2"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#dg-clickhouse-copy"/></animateMotion></circle>
+      <circle class="pkt" r="4" data-step="3"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-clickhouse-w1"/></animateMotion></circle>
+      <circle class="pkt" r="4" data-step="6"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-clickhouse-r4"/></animateMotion></circle>
+    </svg>
+  </div>
+</figure>
+
+            <ol class="steps">
+              <li>
+                <span class="steps__t">해시 파티션이 쓰기를 무겁게 만드는 이유 확인</span>
+                <p>MergeTree는 INSERT 한 번을 파티션 값별로 나눠 파티션마다 part를 따로 만듭니다. 병합도 파티션 경계를 넘지 않습니다. 그래서 행이 고르게 퍼지는 해시 파티션 64개는 배치 하나를 최대 64개 part로 쪼갰습니다. FINAL은 조회할 때 이 part들을 모두 읽어 같은 키의 행을 합칩니다. part가 많을수록 메모리를 많이 썼습니다.</p>
+                <p><code>EXPLAIN indexes=1</code>로 실제 조회 필터와 파티션 식을 맞춰 봤습니다. 필터가 해시 식과 똑같을 때만 1/64를 읽었습니다. 조회에 쓴 해시 조건이 테이블의 파티션 식과 조금이라도 다르면 건너뛴 파티션이 없었습니다. <code>system.part_log</code>로 새 part 수와 병합 수를, <code>system.query_log</code>로 읽은 행과 메모리를 봤습니다. 둘 다 같은 시간대로 맞춰 비교했습니다.</p>
+              </li>
+              <li>
+                <span class="steps__t">테이블마다 파티션을 반대로 선택</span>
+                <p>원본 이벤트 테이블은 파티션을 없앴습니다. 이 테이블은 같은 이벤트의 여러 버전을 하나로 합칩니다. 그래서 part를 줄이고 FINAL을 가볍게 하는 쪽이 맞다고 판단했습니다.</p>
+                <p>원본 신호 테이블은 반대로 월 파티션과 (고객, 시각, 이벤트) 정렬을 골랐습니다. 이 테이블은 주로 시간 범위로 읽고, 보존 기간이 지나면 지웁니다. 월 파티션이면 시간 범위 밖의 파티션은 읽지 않고 건너뜁니다(pruning). 오래된 데이터도 TTL로 지우기 쉽습니다. 모든 테이블에 같은 해시 파티션을 두는 방식은 쓰지 않았습니다.</p>
+                <p>교체는 운영을 멈추지 않고 진행했습니다. 새 테이블에 실시간으로 이어 쓰면서 빠진 구간을 채웠습니다. 키 단위로 두 테이블을 대조한 뒤 <code>EXCHANGE TABLES</code>로 바꿨습니다. 두 테이블 모두 기존 테이블은 72시간 지켜본 뒤 지웠습니다.</p>
+              </li>
+              <li>
+                <span class="steps__t">이벤트 키로 정렬하고, 화면마다 조회 경로를 따로 설계</span>
+                <p>원본 이벤트 테이블의 정렬 키를 (고객, 이벤트)에서 (고객, 세션, 이벤트)로 바꿨습니다. ReplacingMergeTree에서는 이 정렬 키가 중복을 합치는 기준입니다. 기존 키로는 다른 세션의 행동이 하나로 합쳐질 수 있었습니다. 운영 테이블 7개를 새 키로 바꾸는 동안 연결된 파생 집계 19개가 끊기지 않게 했습니다.</p>
+                <p>요약 화면은 메모리 부족이 이어지던 사전 계산 갱신을 멈추고 원본을 직접 읽게 했습니다. 이 화면은 날짜 범위로 읽는데, 원본은 날짜순이 아닙니다. 결과를 정하는 정렬 키를 조회 속도 때문에 바꿀 수는 없었습니다. 그래서 이 화면이 읽는 열 7개만 (고객, 시각) 순으로 담은 projection을 붙였습니다. <code>optimize_aggregation_in_order</code> 설정만 켜는 방법은 메모리를 약 60% 줄였지만, 읽은 행이 그대로여서 쓰지 않았습니다.</p>
+                <p>DELETE 뒤 원본은 8건인데 projection에는 9건이 남는 경우를 재현했습니다. 그래서 <code>lightweight_mutation_projection_mode='drop'</code>을 걸어, 삭제가 적용된 part는 원본에서 읽게 했습니다. 과거 데이터에는 <code>MATERIALIZE PROJECTION</code>으로 projection을 만들어 전체 기간을 덮게 했습니다.</p>
+                <p>유입 채널 화면은 기간 안의 이벤트를 읽은 뒤에도 고객 전체의 세션 지표와 채널 정보를 붙이고 있었습니다. 기간 안의 최신 이벤트를 먼저 고르고, 세션 단위로 줄인 뒤 채널 정보를 붙이게 바꿨습니다. 같은 고객의 7일 조회에서 읽은 행이 약 80% 줄었습니다(8월 4일 운영, 3회).</p>
+              </li>
+              <li>
+                <span class="steps__t">AI 유입 화면이 조회용 테이블을 읽게 하고, 늘어난 갱신 비용까지 계산</span>
+                <p>AI 유입 화면은 요청마다 원본 이벤트, 세션 지표, 채널 정보를 붙였습니다. 일별 조회는 날짜 조건 때문에 고객 필터가 전달되지 않아 전체를 읽었습니다. 관측한 37회가 모두 실패했습니다.</p>
+                <p>채널 분류를 끝낸 채널 스냅샷이 이미 있었습니다. 여기서 AI 유입 세션만 15분마다 집계해 두는 조회용 테이블을 Refreshable Materialized View로 만들었습니다. 완료 표시가 1시간 안일 때만 이 테이블을 쓰고, 아니면 원래 조회로 돌아가게 했습니다. 권한 오류와 통신 오류는 원래 조회로 넘기지 않고 오류 그대로 돌려줬습니다.</p>
+                <p>전환 뒤 이 갱신의 비용을 계산했습니다. 요청에서 줄어든 읽기를 빼도 하루 약 200GiB를 더 읽는 셈이었습니다(읽기량 추정). 고객과 시각 정렬은 유입 채널 화면이 쓰고 있어 그대로 두었습니다. 채널 스냅샷만 AI 여부 기준 파티션 2개로 나눴습니다. 로컬 실험에서 갱신이 읽는 행이 99% 넘게 줄었습니다. 대신 스냅샷 생성 시간은 약 1.4배로 늘었습니다. 스킵 인덱스는 건너뛸 수 있는 양이 약 8%뿐이어서 쓰지 않았습니다. 파티션 16개는 읽기 감소는 같고 생성 시간만 약 1.8배로 늘어 택하지 않았습니다. 파티션 2개 구성은 9월 11일 운영에 적용했습니다.</p>
+              </li>
+            </ol>
+          </section>
+
+          <section id="d-result" aria-labelledby="d-result-h">
+            <h2 class="sechead" id="d-result-h"><span class="sechead__no">03</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ul>
+              <li>part 수 454 → 11, 대표 FINAL 집계 메모리 약 80% 감소 (무파티션 전환 직후 운영 관측)</li>
+              <li>원본 신호 테이블 INSERT p95 약 1.2초 → 0.2초 (9월 4~5일 교체 시점, 같은 13시간 운영 쓰기 비교)</li>
+              <li>세션 하나를 읽는 FINAL 조회의 읽은 행 99.9% 감소 (키 전환 뒤 운영 데이터를 읽는 분석 환경, 결과가 같은 표본만)</li>
+              <li>요약 화면 하루 조회의 읽은 행 약 99% 감소 (projection을 끄고 켠 비교, 지표 4개 일치)</li>
+              <li>유입 채널 화면 7일 조회의 읽은 행 약 80% 감소 (8월 4일 운영, 같은 고객 3회)</li>
+              <li>AI 유입 집계 쿼리 평균 2.4초 → 7ms, 모두 실패하던 일별 조회는 평균 9ms (전환 직후 각 5회, 짧은 운영 관측)</li>
+            </ul>
+            <p>속도를 재기 전에 두 구조의 결과가 같은지부터 확인해야 합니다. 요청 때 하던 계산을 미리 해 두면, 그 비용이 어디서 생기는지도 함께 재야 합니다.</p>
+          </section>
+
+          <section id="d-ts" aria-labelledby="d-ts-h">
+            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">04</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">T-01</span><h3>비교 직전에 나온 같은 버전, 다른 내용</h3></header>
+              <dl class="ts__rows">
+                <div><dt>문제</dt><dd>무파티션 비교를 시작하기 직전, 24시간 구간을 점검했습니다. 같은 이벤트, 같은 버전인데 내용이 다른 행 묶음이 30개 넘게 나왔습니다.</dd></div>
+                <div><dt>원인</dt><dd>그중 31개 묶음에서 키에 들어 있지 않은 필드 65개를 비교했습니다. 다른 값은 소비 시각 하나였습니다. 재시도마다 바뀌는 값이 이벤트 본문에 섞여 있었습니다. ReplacingMergeTree는 버전이 같으면 병합 순서에 따라 남는 행이 달라집니다. 파티션을 바꾸면 part 구성이 바뀌고, 화면 숫자도 바뀔 수 있었습니다.</dd></div>
+                <div><dt>해결</dt><dd>비교를 멈췄습니다. 이벤트 본문 61개 필드를 같은 이벤트인지 구분하는 기준으로 정했습니다. 같은 버전에 다른 본문이 오면 적재 전에 거절하는 검사를 비교 입력에 추가했습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>로컬에서 파티션만 다른 두 테이블에 같은 입력 약 3만 행을 같은 순서로 재생했습니다. 따로 계산한 기대값과 맞춰 보니 불일치는 0이었습니다.</dd></div>
+              </dl>
+            </article>
+          </section>
+
+          <section id="d-kw" aria-labelledby="d-kw-h">
+            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">05</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ol class="keywords">
+              <li><span class="kw__n">01</span><span class="kw__t">MergeTree 동작 원리 분석</span></li>
+              <li><span class="kw__n">02</span><span class="kw__t">실행 계획과 시스템 테이블 기반 진단</span></li>
+              <li><span class="kw__n">03</span><span class="kw__t">정합성 검증을 거친 무중단 테이블 전환</span></li>
+            </ol>
+          </section>
+
+          <section id="d-links" aria-labelledby="d-links-h">
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">06</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>사내 작업이라 코드와 운영 기록은 공개하지 않았습니다.</p>
+            <ul>
+              <li><a href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a></li>
+              <li><a href="https://clickhouse.com/docs/engines/table-engines/mergetree-family/custom-partitioning-key" target="_blank" rel="noopener">ClickHouse 파티션 키</a></li>
+              <li><a href="https://clickhouse.com/docs/engines/table-engines/mergetree-family/replacingmergetree" target="_blank" rel="noopener">ClickHouse ReplacingMergeTree</a></li>
+              <li><a href="https://clickhouse.com/docs/sql-reference/statements/alter/projection" target="_blank" rel="noopener">ClickHouse Projection</a></li>
+              <li><a href="https://clickhouse.com/docs/materialized-view/refreshable-materialized-view" target="_blank" rel="noopener">ClickHouse Refreshable MV</a></li>
+            </ul>
+          </section>
+
+          <nav class="pager" aria-label="다른 프로젝트">
+            <a class="prev" href="sre.html"><span class="k">이전 프로젝트</span><span class="t">SRE 에이전트 플랫폼</span></a>
+            <a class="next" href="elt.html"><span class="k">다음 프로젝트</span><span class="t">수집과 ELT 파이프라인 0→1</span></a>
+          </nav>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="shell foot">
+  <span>© 2026 모진영</span>
+  <a href="../index.html#projects">← 포트폴리오</a>
+</footer>
+</body>
+</html>

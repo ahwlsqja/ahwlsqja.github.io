@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>수집과 ELT 파이프라인 0→1 · 모진영</title>
+<meta name="description" content="브라우저 이벤트를 받아 ClickHouse 원본부터 조회용 테이블까지 잇는 수집과 ELT 경로를 처음부터 만든 프로젝트입니다.">
+<meta name="color-scheme" content="dark light">
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+
+<header class="topbar">
+  <div class="shell topbar__row">
+    <a class="brand" href="../index.html">mojinyeong<b>/</b>portfolio</a>
+    <nav class="topnav" aria-label="이동">
+      <a href="../index.html#projects"><span class="t">← 포트폴리오</span></a>
+      <a class="ext" href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <button class="icon-btn theme-btn" type="button" aria-label="테마 바꾸기">
+      <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <section class="sec" id="detail" aria-labelledby="detail-h">
+    <div class="doc-head">
+      <div class="shell">
+        <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>elt-pipeline</span></nav>
+        <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span></div>
+        <h1 class="doc-title" id="detail-h">수집과 ELT 파이프라인 0→1</h1>
+        <p class="doc-lede">브라우저 이벤트를 받아 ClickHouse에 원본으로 쌓고, 집계 단위별 테이블로 나눠 대시보드에 보여 주는 경로를 처음부터 만들었습니다. 2026년 6월에는 적재가 4시간 가까이 멈춘 장애가 있었습니다. 복구한 뒤 R2의 원본 기록과 ClickHouse의 이벤트 ID를 양쪽으로 맞춰 봤고, 그 구간 원본 기록의 ID가 하나도 빠지지 않은 것을 확인했습니다.</p>
+        <dl class="spec">
+          <div><dt>기간</dt><dd class="num">2026.04 – 2026.09</dd></div>
+          <div><dt>역할</dt><dd>수집부터 조회용 테이블까지 ELT 전반의 설계와 구현 주도</dd></div>
+          <div class="wide"><dt>상태</dt><dd>2026.10.16 게이트웨이 뒤 구간을 Kafka 경로로 전환했습니다. 수집 게이트웨이는 새 경로 앞단으로 계속 씁니다.</dd></div>
+          <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Cloudflare Queues</li><li class="chip">KV</li><li class="chip">R2</li><li class="chip">ClickHouse</li><li class="chip">PostgreSQL</li></ul></dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="shell">
+      <div class="doc-body">
+        <aside class="toc" aria-label="이 페이지">
+          <ol>
+            <li><a href="#d-situation"><span class="n">01</span>상황과 역할</a></li>
+            <li><a href="#d-process"><span class="n">02</span>해결 과정</a></li>
+            <li><a href="#d-result"><span class="n">03</span>결과</a></li>
+            <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
+            <li><a href="#d-kw"><span class="n">05</span>핵심 역량</a></li>
+            <li><a href="#d-links"><span class="n">06</span>관련 링크</a></li>
+          </ol>
+        </aside>
+
+        <article class="doc-main">
+          <section id="d-situation" aria-labelledby="d-situation-h">
+            <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황과 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>고객사 사이트 방문자의 행동과 광고 유입을 이어서 보여 주는 분석 제품입니다. 입사했을 때는 기존 PostgreSQL에 쌓인 데이터와 새로 받을 브라우저 이벤트를 한 분석 저장소로 모으는 경로가 없었습니다.</p>
+            <p>브라우저 이벤트는 늦게 오고, 같은 것이 다시 오고, 탭마다 따로 옵니다. 들어온 행을 그대로 더하면 같은 방문이 두 번 집계되고, 빠진 행은 아무도 알아채지 못합니다.</p>
+            <dl class="scope">
+              <dt>맡은 일</dt><dd>데이터 모델, 수집과 적재 경로, 원본부터 조회용 테이블까지의 구조, 실패 처리 경로, 장애 뒤 복구 확인</dd>
+              <dt>동료</dt><dd>SDK의 탭 수명 세션을 먼저 구현했고, 고객별 세션 설정과 광고 연동 일부, 화면을 맡았습니다.</dd>
+              <dt>AI 에이전트</dt><dd>코드 작성과 복구 작업에 AI 코딩 에이전트를 함께 썼습니다. 설계와 복구 확인 방법은 직접 정했고, 결과도 직접 검증했습니다.</dd>
+            </dl>
+          </section>
+
+          <section id="d-process" aria-labelledby="d-process-h">
+            <h2 class="sechead" id="d-process-h"><span class="sechead__no">02</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+
+<figure class="dg" id="dg-elt" style="--dg-min: 560px" data-step-ms="3200" data-steps='[
+  {"t":"SDK는 다시 보낼 때도 같은 ID를 쓰고, 수집 게이트웨이가 30분 안에 이미 본 ID를 KV로 거릅니다."},
+  {"t":"수집 게이트웨이가 본 큐에 넣으면, 적재 소비자가 R2에 원본 기록을 남긴 뒤 원본 테이블에 넣습니다."},
+  {"t":"원본 테이블은 그대로 두고, 현재 상태, 세션 Fact, 조회용 뷰 순서로 나눠 읽습니다."},
+  {"t":"적재가 실패하면 3번 재시도하고 DLQ에서 1번 다시 보낸 뒤, 최종 보관 큐에 넣고 나서야 큐에서 뺍니다.", "d": 4200},
+  {"t":"장애가 풀린 뒤 임시 소비자가 최종 보관 큐에서 10건만 먼저 본 큐로 보내 확인하고, 나머지를 보냅니다.", "d": 4200},
+  {"t":"장애 구간의 R2 원본 기록 ID와 원본 테이블 ID를 양쪽으로 맞춰 보고, 한쪽에만 있는 ID가 0인 것을 확인합니다.", "d": 4200}
+]'>
+  <figcaption><span class="n">그림 1</span>수집부터 조회까지, 실패와 복구 경로</figcaption>
+  <div class="dg__canvas">
+    <svg viewBox="0 0 728 590" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="dg-elt-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
+        <marker id="dg-elt-ahb" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" style="fill: var(--bad)" d="M0 0L8 4L0 8z"/></marker>
+        <marker id="dg-elt-ahw" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" style="fill: var(--warn)" d="M0 0L8 4L0 8z"/></marker>
+      </defs>
+
+      <!-- 구역 -->
+      <rect class="zone" fill="none" x="24" y="120" width="124" height="96" rx="10"/>
+      <text class="m" x="34" y="138">브라우저</text>
+      <rect class="zone" fill="none" x="160" y="24" width="402" height="304" rx="10"/>
+      <text class="m" x="174" y="44">엣지 (Cloudflare)</text>
+      <rect class="zone" fill="none" x="582" y="120" width="122" height="366" rx="10"/>
+      <text class="m" x="592" y="138">ClickHouse</text>
+
+      <!-- 2026.10 전환 표시 -->
+      <rect style="fill: var(--surface-3); stroke: var(--line-2)" x="292" y="31" width="128" height="19" rx="9.5"/>
+      <text class="m" x="356" y="44" text-anchor="middle">2026.10 Kafka로 전환</text>
+
+      <!-- 제어 (항상 회색) -->
+      <g style="opacity: .72">
+        <rect class="zone" fill="none" x="24" y="226" width="124" height="200" rx="10"/>
+        <text class="m" x="34" y="244">제어</text>
+        <rect class="box" style="fill: var(--surface)" x="34" y="252" width="104" height="60" rx="8"/>
+        <text class="t" x="48" y="278">outbox</text>
+        <text class="s" x="48" y="298">한 방향 전달</text>
+        <rect class="box" style="fill: var(--surface)" x="34" y="352" width="104" height="60" rx="8"/>
+        <text class="t" x="48" y="378">PostgreSQL</text>
+        <text class="s" x="48" y="398">설정, 권한</text>
+        <path class="edge" fill="none" d="M86 352V318" marker-end="url(#dg-elt-ah)"/>
+        <path class="edge" fill="none" d="M138 282H168" marker-end="url(#dg-elt-ah)"/>
+      </g>
+
+      <!-- 초기 이관 (지금은 돌지 않는 경로) -->
+      <g style="opacity: .5">
+        <rect class="zone" fill="none" x="160" y="436" width="402" height="98" rx="10"/>
+        <text class="m" x="174" y="454">초기 이관 (2026.04)</text>
+        <rect class="box" style="fill: var(--surface); stroke-dasharray: 4 3" x="174" y="462" width="186" height="60" rx="8"/>
+        <text class="t" x="188" y="488">기존 PostgreSQL 데이터</text>
+        <text class="s" x="188" y="508">추출, 마스킹, 변환</text>
+        <rect class="box" style="fill: var(--surface); stroke-dasharray: 4 3" x="396" y="462" width="96" height="60" rx="8"/>
+        <text class="t" x="410" y="488">Parquet</text>
+        <text class="s" x="410" y="508">한 번 적재</text>
+        <path class="edge edge--dash" fill="none" d="M360 492H390" marker-end="url(#dg-elt-ah)"/>
+        <path class="edge edge--dash" fill="none" d="M492 492H572V196H586" marker-end="url(#dg-elt-ah)"/>
+      </g>
+
+      <!-- 노드 -->
+      <g data-step="1"><rect class="box" x="34" y="148" width="104" height="60" rx="8"/><text class="t" x="48" y="174">SDK</text><text class="s" x="48" y="194">같은 ID로 재전송</text></g>
+      <g data-step="1,2"><rect class="box" x="174" y="148" width="116" height="60" rx="8"/><text class="t" x="188" y="174">수집 게이트웨이</text><text class="s" x="188" y="194">Workers</text></g>
+      <g data-step="1"><rect class="box" x="174" y="252" width="116" height="60" rx="8"/><text class="t" x="188" y="278">KV</text><text class="s" x="188" y="298">30분 안 같은 ID</text></g>
+      <g data-step="2,4,5"><rect class="box" x="324" y="148" width="84" height="60" rx="8"/><text class="t" x="338" y="174">본 큐</text><text class="s" x="338" y="194">3번 재시도</text></g>
+      <g data-step="2"><rect class="box" x="442" y="148" width="108" height="60" rx="8"/><text class="t" x="456" y="174">적재 소비자</text><text class="s" x="456" y="194">큐에서 꺼내 적재</text></g>
+      <g data-step="2,6"><rect class="box" x="442" y="52" width="108" height="60" rx="8"/><text class="t" x="456" y="78">R2 원본 기록</text><text class="s" x="456" y="98">적재 직전, 30일</text></g>
+      <g data-step="4"><rect class="box" x="324" y="252" width="84" height="60" rx="8"/><text class="t" x="338" y="278">DLQ</text><text class="s" x="338" y="298">1번 더 보냄</text></g>
+      <g data-step="4,5"><rect class="box" x="442" y="252" width="108" height="60" rx="8"/><text class="t" x="456" y="278">최종 보관 큐</text><text class="s" x="456" y="298">소비자 없음, 14일</text></g>
+      <g data-step="5"><rect class="box" style="stroke-dasharray: 4 3" x="294" y="352" width="120" height="60" rx="8"/><text class="t" x="308" y="378">임시 소비자</text><text class="s" x="308" y="398">10건 먼저 확인</text></g>
+
+      <g data-step="2,3,6"><rect class="box" x="592" y="148" width="102" height="60" rx="8"/><text class="t" x="606" y="174">원본 테이블</text><text class="s" x="606" y="194">그대로 보관</text></g>
+      <g data-step="3"><rect class="box" x="592" y="236" width="102" height="60" rx="8"/><text class="t" x="606" y="262">현재 상태</text><text class="s" x="606" y="282">키마다 최신 값</text></g>
+      <g data-step="3"><rect class="box" x="592" y="324" width="102" height="60" rx="8"/><text class="t" x="606" y="350">세션 Fact</text><text class="s" x="606" y="370">세션 단위</text></g>
+      <g data-step="3"><rect class="box" x="592" y="412" width="102" height="60" rx="8"/><text class="t" x="606" y="438">조회용 뷰</text><text class="s" x="606" y="458">기간, 정렬</text></g>
+      <g data-step="3"><rect class="box" x="592" y="506" width="102" height="60" rx="8"/><text class="t" x="606" y="541">대시보드 API</text></g>
+
+      <!-- 평소 경로 (굵게) -->
+      <path id="dg-elt-e1" class="flow" fill="none" style="stroke-width: 2.25" data-step="1" d="M138 178H168" marker-end="url(#dg-elt-ah)"/>
+      <path id="dg-elt-e3" class="flow edge--dash" fill="none" data-step="1" d="M232 208V246" marker-end="url(#dg-elt-ah)"/>
+      <path id="dg-elt-e4" class="flow" fill="none" style="stroke-width: 2.25" data-step="2" d="M290 178H318" marker-end="url(#dg-elt-ah)"/>
+      <path id="dg-elt-e6a" class="flow" fill="none" style="stroke-width: 2.25" data-step="2" d="M408 178H436" marker-end="url(#dg-elt-ah)"/>
+      <path id="dg-elt-e6b" class="flow" fill="none" style="stroke-width: 2.25" data-step="2" d="M550 178H586" marker-end="url(#dg-elt-ah)"/>
+      <path id="dg-elt-e7" class="flow edge--dash" fill="none" data-step="2" d="M496 148V118" marker-end="url(#dg-elt-ah)"/>
+      <path id="dg-elt-e9a" class="flow" fill="none" style="stroke-width: 2.25" data-step="3" d="M643 208V230" marker-end="url(#dg-elt-ah)"/>
+      <path id="dg-elt-e9b" class="flow" fill="none" style="stroke-width: 2.25" data-step="3" d="M643 296V318" marker-end="url(#dg-elt-ah)"/>
+      <path id="dg-elt-e9c" class="flow" fill="none" style="stroke-width: 2.25" data-step="3" d="M643 384V406" marker-end="url(#dg-elt-ah)"/>
+      <path id="dg-elt-e9d" class="flow" fill="none" style="stroke-width: 2.25" data-step="3" d="M643 472V500" marker-end="url(#dg-elt-ah)"/>
+
+      <!-- 실패 경로 -->
+      <path id="dg-elt-e8a" class="flow edge--dash bad" fill="none" data-step="4" d="M390 208V246" marker-end="url(#dg-elt-ahb)"/>
+      <path id="dg-elt-e8b" class="flow edge--dash bad" fill="none" data-step="4" d="M346 252V214" marker-end="url(#dg-elt-ahb)"/>
+      <path id="dg-elt-e8c" class="flow edge--dash bad" fill="none" data-step="4" d="M408 282H436" marker-end="url(#dg-elt-ahb)"/>
+
+      <!-- 복구와 대조 -->
+      <path id="dg-elt-e12a" class="flow warn" fill="none" data-step="5" d="M472 312V382H420" marker-end="url(#dg-elt-ahw)"/>
+      <path id="dg-elt-e12b" class="flow warn" fill="none" data-step="5" d="M307 352V196H318" marker-end="url(#dg-elt-ahw)"/>
+      <path id="dg-elt-e13" class="flow edge--dash warn" fill="none" style="stroke-width: 2.5" data-step="6" d="M556 82H666V142" marker-start="url(#dg-elt-ahw)" marker-end="url(#dg-elt-ahw)"/>
+      <text class="m" x="704" y="40" text-anchor="end">2026.06 장애 구간</text>
+      <text class="m" style="fill: var(--warn)" x="704" y="55" text-anchor="end">ID 3,900여 개 양쪽 대조</text>
+      <text class="m" style="fill: var(--warn)" x="704" y="70" text-anchor="end">한쪽에만 있는 ID 0</text>
+
+      <!-- 움직이는 점 -->
+      <circle class="pkt" r="4" data-step="1"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-elt-e1"/></animateMotion></circle>
+      <circle class="pkt" r="4" data-step="2"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-elt-e6b"/></animateMotion></circle>
+      <circle class="pkt" r="4" data-step="5"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#dg-elt-e12b"/></animateMotion></circle>
+    </svg>
+  </div>
+</figure>
+
+            <h3>1. 같은 이벤트가 여러 번 온다고 보고 테이블을 네 단계로 나눴습니다</h3>
+            <p>브라우저는 전송에 실패하면 다시 보내고, 큐도 같은 메시지를 다시 전달할 수 있습니다. 둘 다 최소 한 번 전달(at-least-once)이라, 같은 이벤트가 언제든 두 번 이상 올 수 있다고 전제했습니다.</p>
+            <p>ClickHouse의 ReplacingMergeTree는 정렬 키가 같은 행을 백그라운드 병합 때 하나로 줄입니다. 다만 같은 파티션 안의 part(데이터 조각)끼리만 줄입니다. 병합이 언제 일어날지도 정해져 있지 않습니다. INSERT 때 실행되는 Materialized View는 들어온 블록마다 count와 sum을 바로 더합니다. 나중에 병합이 원본의 중복을 지워도, 이미 더해진 값은 줄어들지 않습니다.</p>
+            <p>그래서 중복을 한 곳에서 다 막을 수는 없다고 판단했습니다. 원본은 다시 읽을 수 있게 그대로 두었습니다. 테이블은 원본 테이블, 현재 상태 테이블, 세션 Fact, 조회용 뷰의 네 단계로 나눴고, 단계마다 집계 단위가 다릅니다. 현재 상태 테이블은 논리 키마다 argMax로 최신 값을 읽습니다.</p>
+            <p>모든 조회에서 원본에 FINAL을 거는 방식은 조회마다 넓은 범위를 다시 읽어야 해서 버렸습니다. INSERT 시점 집계에만 기대는 방식도 중복으로 더해진 값을 되돌릴 수 없어서 쓰지 않았습니다.</p>
+
+            <h3>2. 이관 경로와 수집 경로를 따로 만들었습니다</h3>
+            <p>먼저 기존 PostgreSQL 데이터를 ClickHouse로 옮기는 이관 경로와 검사 SQL을 만들었습니다. 순서는 추출, 마스킹, 변환, Parquet, ClickHouse입니다.</p>
+            <p>이어서 수집 경로를 만들었습니다. 브라우저 SDK가 보낸 이벤트는 수집 게이트웨이(Cloudflare Workers)와 Cloudflare Queues를 거쳐, 적재 소비자가 ClickHouse에 씁니다. 테이블 정의(DDL)는 12개를 작성했습니다.</p>
+            <p>PostgreSQL은 고객 설정과 권한, 수집 작업 상태를 맡고, ClickHouse는 행동 데이터와 분석 조회를 맡게 했습니다. 설정은 PostgreSQL에서 outbox를 거쳐 KV로, 한 방향으로만 전달합니다. 결제 카드번호, 주민등록번호, 비밀번호 입력값은 SDK가 브라우저에서 보내기 전에 막았습니다.</p>
+
+            <h3>3. 중복은 세 곳에서 거르고, 실패한 메시지는 보관한 뒤에만 큐에서 뺐습니다</h3>
+            <p>SDK는 이벤트를 다시 보낼 때 event_id와 event_ts를 바꾸지 않습니다. 게이트웨이는 30분 안에 이미 본 ID를 KV로 한 번 거릅니다. ClickHouse에서는 ReplacingMergeTree가 병합 때 마지막으로 정리하고, 정확한 값이 필요한 곳은 FINAL이나 argMax로 읽습니다.</p>
+            <p>당시 Worker에 걸린 하위 요청 한도가 요청당 50개여서, KV 조회 30개와 fetch 20개로 나눠 썼습니다. 세션 시작 이벤트는 SDK가 바로 지우지 않습니다. 게이트웨이가 202 응답에 큐에 실제로 넣은 (세션, 이벤트) 쌍을 담아 돌려주면, 그 쌍만 지웁니다.</p>
+            <p>실패한 메시지는 본 큐에서 3번 재시도한 뒤 DLQ로 갑니다. DLQ에서는 본 큐로 1번만 다시 보냅니다. 그래도 실패하면 소비자가 없는 최종 보관 큐에 14일 동안 둡니다. 최종 보관 큐에 넣는 데 성공한 뒤에만 처리 완료 신호(ack)를 보내, 실패한 메시지가 중간에 사라지지 않게 했습니다.</p>
+            <p>파생 테이블에 INSERT할 때 500, 520 오류가 나면 원본 적재까지 멈추는 문제가 있었습니다. 서킷 브레이커를 테이블마다 따로 두어, 파생 테이블이 실패해도 원본 적재는 이어지게 했습니다. 재시도는 일시 오류에만 하고, 대기 시간에 무작위 값(지터)을 더했습니다. 520은 끊긴 연결을 다시 쓰다 생기는 경쟁 상태로 원인을 좁혔습니다. ClickHouse 지원팀과 함께 서버 keep_alive_timeout을 10초에서 60초로 늘렸습니다.</p>
+          </section>
+
+          <section id="d-result" aria-labelledby="d-result-h">
+            <h2 class="sechead" id="d-result-h"><span class="sechead__no">03</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ul>
+              <li>2026.10.16 Kafka 경로로 주 경로를 넘길 때까지 주 수집 경로로 운영했습니다.</li>
+              <li>장애 구간 이벤트 ID 3,900여 개를 양방향으로 대조했고, 원본 기록 기준 누락 0, 중복 0이었습니다(2026.06, 그 구간 한정).</li>
+              <li>ClickHouse HTTP 520은 하루 150건 안팎에서 이후 40시간 가까이 0건이 됐습니다(여러 변경을 함께 적용한 뒤의 결과).</li>
+              <li>큐 깊이 경보에 90초 안 2번 연속 확인 규칙을 적용했습니다(2026.07). 적용 전 과거 경보 8건에 돌려 보니 장애 6건은 모두 잡고, 지표가 1분 동안 잠깐 튄 2건은 걸렀습니다. 호출은 최대 1분쯤 늦어집니다.</li>
+              <li>9월 말 사람 방문 세션 중 집계된 비율이 사흘 사이 약 60%에서 30%로 떨어져, 10월에 세션 처리를 Kafka와 Flink 경로로 옮겼습니다. 자세한 내용은 <a href="stream.html">실시간 스트림 파이프라인</a>에 있습니다.</li>
+            </ul>
+            <p>다시 읽을 수 있는 원본이 있어야 중복도 정리하고 복구도 확인할 수 있었습니다. 복구는 큐 상태만 보고 끝내면 안 되고, 원본 기록과 ClickHouse의 ID를 맞춰 본 뒤에 끝내야 합니다.</p>
+          </section>
+
+          <section id="d-ts" aria-labelledby="d-ts-h">
+            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">04</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">T-01</span><h3>적재가 4시간 가까이 멈춘 날 (2026.06)</h3></header>
+              <dl class="ts__rows">
+                <div><dt>문제</dt><dd>ClickHouse 인스턴스가 종료되면서 적재가 4시간 가까이 멈췄습니다. 최종 보관 큐에 3천 건 넘게 쌓였고, 적재가 늦어진다는 경보가 울렸습니다. 보관 기간 14일이 지나면 그대로 잃는 상황이었습니다.</dd></div>
+                <div><dt>원인</dt><dd>인스턴스가 종료된 것 하나였습니다. 남은 문제는 복구가 끝났다는 것을 무엇으로 확인하느냐였습니다.</dd></div>
+                <div><dt>해결</dt><dd>최종 보관 큐에는 소비자가 없어서 임시 pull 소비자를 붙였습니다. 먼저 10건만 본 큐로 보내 모두 적재되는 것을 확인하고, 나머지를 같은 방식으로 보냈습니다. 본 큐로 보내는 데 성공한 뒤에만 ack했습니다. 다만 큐가 비었다는 것은 큐에 있던 것이 나갔다는 뜻일 뿐입니다. 그래서 장애 구간의 ClickHouse 이벤트 ID와 R2에 남아 있던 원본 기록(적재 소비자가 INSERT 직전에 쓰고 30일 보관)의 ID를 서로 맞춰 봤습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>양쪽 ID가 3,900여 개로 정확히 같았고, 한쪽에만 있는 ID는 0개였습니다. 행 수와 고유 ID 수도 같아서, 다시 넣으면서 생긴 중복도 없었습니다(그 장애 구간 한정).</dd></div>
+              </dl>
+            </article>
+          </section>
+
+          <section id="d-kw" aria-labelledby="d-kw-h">
+            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">05</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ol class="keywords">
+              <li><span class="kw__n">01</span><span class="kw__t">데이터 정합성 검증</span></li>
+              <li><span class="kw__n">02</span><span class="kw__t">실패 처리 경로 설계</span></li>
+              <li><span class="kw__n">03</span><span class="kw__t">ClickHouse 테이블 설계</span></li>
+            </ol>
+          </section>
+
+          <section id="d-links" aria-labelledby="d-links-h">
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">06</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>사내 작업이라 공개된 코드나 글은 없습니다. 설계 때 참고한 공식 문서만 남깁니다.</p>
+            <ul>
+              <li><a href="https://clickhouse.com/docs/engines/table-engines/mergetree-family/replacingmergetree" target="_blank" rel="noopener">ClickHouse ReplacingMergeTree</a></li>
+              <li><a href="https://developers.cloudflare.com/queues/configuration/dead-letter-queues/" target="_blank" rel="noopener">Cloudflare Queues DLQ</a></li>
+              <li><a href="https://developers.cloudflare.com/workers/platform/limits/" target="_blank" rel="noopener">Cloudflare Workers 요청당 한도</a></li>
+            </ul>
+          </section>
+
+          <nav class="pager" aria-label="다른 프로젝트">
+            <a class="prev" href="clickhouse.html"><span class="k">이전 프로젝트</span><span class="t">ClickHouse 저장 구조와 조회 경로 최적화</span></a>
+            <a class="next" href="cdp.html"><span class="k">다음 프로젝트</span><span class="t">CDP 방문자 신원과 데이터 모델 설계와 개발</span></a>
+          </nav>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="shell foot">
+  <span>© 2026 모진영</span>
+  <a href="../index.html#projects">← 포트폴리오</a>
+</footer>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>인프라 이전: GKE, GitOps, ClickHouse 자체 운영 · 모진영</title>
+<meta name="description" content="Cloud Run의 API와 인증 서비스, 관리형 ClickHouse를 GKE로 옮기고 배포를 GitOps로 바꾼 인프라 이전입니다. 과거 데이터를 청크 2,600여 개로 나눠 모두 검증한 뒤 관리형 서비스를 해지했습니다.">
+<meta name="color-scheme" content="dark light">
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+
+<header class="topbar">
+  <div class="shell topbar__row">
+    <a class="brand" href="../index.html">mojinyeong<b>/</b>portfolio</a>
+    <nav class="topnav" aria-label="이동">
+      <a href="../index.html#projects"><span class="t">← 포트폴리오</span></a>
+      <a class="ext" href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <button class="icon-btn theme-btn" type="button" aria-label="테마 바꾸기">
+      <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <section class="sec" id="detail" aria-labelledby="detail-h">
+    <div class="doc-head">
+      <div class="shell">
+        <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>platform</span></nav>
+        <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span><span class="badge badge--ok">운영 중</span></div>
+        <h1 class="doc-title" id="detail-h">인프라 이전: GKE, GitOps, ClickHouse 자체 운영</h1>
+        <p class="doc-lede">Cloud Run에 있던 API와 인증 서비스, 관리형 ClickHouse를 GKE로 옮기고 배포를 GitOps로 바꿨습니다. 과거 데이터 약 1.3억 행을 청크 2,600여 개로 나눠 모두 검증한 뒤 관리형 서비스를 해지했습니다.</p>
+        <dl class="spec">
+          <div><dt>기간</dt><dd class="num">2026.09 – 2026.10</dd></div>
+          <div><dt>역할</dt><dd>이전 설계와 실행을 이끌었고, ClickHouse 이전은 혼자 맡았습니다.</dd></div>
+          <div class="wide"><dt>상태</dt><dd>운영 중 (2026.10 관리형 ClickHouse 해지)</dd></div>
+          <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">GKE Autopilot</li><li class="chip">Terraform</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">External Secrets Operator</li><li class="chip">ClickHouse Keeper</li><li class="chip">Altinity ClickHouse Operator</li><li class="chip">clickhouse-backup</li><li class="chip">GCS</li></ul></dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="shell">
+      <div class="doc-body">
+        <aside class="toc" aria-label="이 페이지">
+          <ol>
+            <li><a href="#d-situation"><span class="n">01</span>상황과 역할</a></li>
+            <li><a href="#d-process"><span class="n">02</span>해결 과정</a></li>
+            <li><a href="#d-result"><span class="n">03</span>결과</a></li>
+            <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
+            <li><a href="#d-kw"><span class="n">05</span>핵심 역량</a></li>
+            <li><a href="#d-links"><span class="n">06</span>관련 링크</a></li>
+          </ol>
+        </aside>
+
+        <article class="doc-main">
+          <section id="d-situation" aria-labelledby="d-situation-h">
+            <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황과 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>API와 인증(Zitadel), 권한(OpenFGA) 서비스는 Cloud Run에서 돌았습니다. 이벤트 저장소는 관리형 ClickHouse를 썼습니다. 약 한 달 동안 잰 저장소 레플리카의 CPU p99는 상한 4 vCPU의 99%였습니다. 복구 리허설은 한 번도 해 본 적이 없었습니다.</p>
+            <p>ClickHouse를 GKE로 옮기는 것은 회사가 GCP 크레딧 활용과 인프라 단일화를 이유로 정했습니다. 이전 설계부터 관리형 서비스 해지까지 이끌었고, 1인 담당이었습니다. 장애는 kubectl과 ClickHouse system 테이블로 직접 추적했습니다.</p>
+          </section>
+
+          <section id="d-process" aria-labelledby="d-process-h">
+            <h2 class="sechead" id="d-process-h"><span class="sechead__no">02</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+
+            <figure class="dg" id="dg-platform" data-step-ms="3600" style="--dg-min: 560px" data-steps='[
+              {"t":"로드밸런서 가중치로 GKE에 5%를 보내고, Cloud Run으로 롤백되는지 본 뒤 100%로 옮겼습니다."},
+              {"t":"운영 리소스 60여 개를 Git으로 가져와 차이 0을 본 뒤, 배포를 Argo CD에 맡기고 CI의 클러스터 쓰기 권한을 회수했습니다.", "d": 4200},
+              {"t":"Keeper 3대와 레플리카 2대를 존 a, b, c에 나눠, 존 하나가 빠져도 Keeper 2대와 레플리카 1대가 남게 했습니다.", "d": 4200},
+              {"t":"레플리카마다 매일 GCS로 백업하고, 스테이징과 운영에서 복구 리허설을 했습니다."},
+              {"t":"과거 데이터는 다시 돌려도 중복되지 않게 청크마다 토큰을 붙여 옮기고, 다시 읽어 맞은 청크만 완료로 기록했습니다.", "d": 4200},
+              {"t":"읽기 경로를 설정값 하나로 레플리카 쪽으로 옮긴 뒤, 관리형 ClickHouse를 해지했습니다."}
+            ]'>
+              <figcaption><span class="n">그림 1</span>트래픽, 배포, 저장소를 GKE로 옮긴 순서</figcaption>
+              <div class="dg__canvas">
+                <svg viewBox="0 0 728 672" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <marker id="dg-platform-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
+                  </defs>
+
+                  <!-- 구역 -->
+                  <rect class="zone" x="208" y="24" width="496" height="104" rx="10"/>
+                  <text class="m" x="220" y="42">배포 경로</text>
+                  <text class="m" x="692" y="42" text-anchor="end">스테이징은 자동 반영, 운영은 확인 뒤 동기화</text>
+
+                  <rect class="zone-fill" x="208" y="172" width="496" height="386" rx="10"/>
+                  <rect class="zone" x="208" y="172" width="496" height="386" rx="10"/>
+                  <text class="m" x="220" y="190">GKE 리전</text>
+                  <rect class="zone" x="220" y="284" width="152" height="258" rx="8"/>
+                  <rect class="zone" x="380" y="284" width="152" height="258" rx="8"/>
+                  <rect class="zone" x="540" y="284" width="152" height="258" rx="8"/>
+                  <text class="m" x="232" y="301">존 a</text>
+                  <text class="m" x="392" y="301">존 b</text>
+                  <text class="m" x="552" y="301">존 c</text>
+
+                  <rect class="zone" x="24" y="274" width="160" height="178" rx="10"/>
+                  <text class="m" x="36" y="291">옮기기 전</text>
+
+                  <!-- 1. 트래픽 -->
+                  <g data-step="1"><rect class="box" x="36" y="54" width="136" height="60" rx="8"/><text class="t" x="50" y="89">사용자</text></g>
+                  <g data-step="1"><rect class="box" x="36" y="200" width="136" height="60" rx="8"/><text class="t" x="50" y="226">로드밸런서</text><text class="s" x="50" y="246">가중치로 나눔</text></g>
+                  <g data-step="1"><rect class="box" x="36" y="300" width="136" height="60" rx="8"/><text class="t" x="50" y="326">Cloud Run</text><text class="s" x="50" y="346">API, 인증, 권한</text></g>
+                  <g data-step="1,2,6"><rect class="box" x="552" y="200" width="140" height="60" rx="8"/><text class="t" x="566" y="226">API, 인증, 권한</text><text class="s" x="566" y="246">GKE로 옮김</text></g>
+
+                  <path class="flow" data-step="1" fill="none" d="M104 114V194" marker-end="url(#dg-platform-ah)"/>
+                  <path class="flow" data-step="1" fill="none" d="M104 260V294" marker-end="url(#dg-platform-ah)"/>
+                  <path id="dg-platform-p1" class="flow" data-step="1" fill="none" d="M172 230H546" marker-end="url(#dg-platform-ah)"/>
+                  <g data-step="1">
+                    <rect class="chip-r" x="282" y="204" width="28" height="18" rx="4"/><text class="chip-t" x="296" y="217" text-anchor="middle">5%</text>
+                    <text class="m" x="320" y="217" text-anchor="middle">→</text>
+                    <rect class="chip-r" x="330" y="204" width="54" height="18" rx="4"/><text class="chip-t" x="357" y="217" text-anchor="middle">0% 롤백</text>
+                    <text class="m" x="394" y="217" text-anchor="middle">→</text>
+                    <rect class="chip-r" x="404" y="204" width="38" height="18" rx="4"/><text class="chip-t" x="423" y="217" text-anchor="middle">100%</text>
+                  </g>
+                  <text class="m" data-step="1" x="359" y="250" text-anchor="middle">롤백과 100% 때 요청 12건 모두 정상</text>
+
+                  <!-- 2. 배포 경로 -->
+                  <g data-step="2"><rect class="box" x="221" y="54" width="92" height="60" rx="8"/><text class="t" x="235" y="80">CI</text><text class="s" x="235" y="100">이미지 빌드</text></g>
+                  <g data-step="2"><rect class="box" x="347" y="54" width="92" height="60" rx="8"/><text class="t" x="361" y="80">Kargo</text><text class="s" x="361" y="100">버전 갱신</text></g>
+                  <g data-step="2"><rect class="box" x="473" y="54" width="92" height="60" rx="8"/><text class="t" x="487" y="80">Git 저장소</text><text class="s" x="487" y="100">배포 기준</text></g>
+                  <g data-step="2"><rect class="box" x="599" y="54" width="92" height="60" rx="8"/><text class="t" x="613" y="80">Argo CD</text><text class="s" x="613" y="100">Git대로 반영</text></g>
+
+                  <path class="flow" data-step="2" fill="none" d="M313 84H341" marker-end="url(#dg-platform-ah)"/>
+                  <path class="flow" data-step="2" fill="none" d="M439 84H467" marker-end="url(#dg-platform-ah)"/>
+                  <path class="flow" data-step="2" fill="none" d="M565 84H593" marker-end="url(#dg-platform-ah)"/>
+                  <path id="dg-platform-p2" class="flow" data-step="2" fill="none" d="M672 114V194" marker-end="url(#dg-platform-ah)"/>
+                  <path class="flow edge--dash" data-step="2" fill="none" d="M519 172V120" marker-end="url(#dg-platform-ah)"/>
+                  <text class="m" data-step="2" x="527" y="151">60여 개 가져와 차이 0</text>
+                  <g data-step="2">
+                    <path class="edge edge--dash" fill="none" d="M267 114V166" marker-end="url(#dg-platform-ah)"/>
+                    <path class="edge bad" fill="none" stroke-width="2" d="M261 140L273 152M273 140L261 152"/>
+                    <text class="m" x="281" y="151">클러스터 쓰기 권한 회수</text>
+                  </g>
+
+                  <!-- 3. 존 나누기 -->
+                  <g data-step="3"><rect class="box" x="234" y="312" width="100" height="60" rx="8"/><text class="t" x="248" y="338">Keeper 1</text><text class="s" x="248" y="358">복제 기록</text></g>
+                  <g data-step=""><rect class="box" x="394" y="312" width="100" height="60" rx="8"/><text class="t" x="408" y="338">Keeper 2</text><text class="s" x="408" y="358">복제 기록</text></g>
+                  <g data-step="3"><rect class="box" x="554" y="312" width="100" height="60" rx="8"/><text class="t" x="568" y="338">Keeper 3</text><text class="s" x="568" y="358">복제 기록</text></g>
+                  <path class="edge" data-step="3" fill="none" d="M334 342H394"/>
+                  <path class="edge" data-step="3" fill="none" d="M494 342H554"/>
+                  <g data-step="3">
+                    <text class="m" x="234" y="398">Keeper 3대 중 2대가</text>
+                    <text class="m" x="234" y="412">살아 있으면 쓰기를 받음</text>
+                  </g>
+                  <g data-step="3">
+                    <path class="edge bad" fill="none" stroke-width="2" d="M459 292L467 300M467 292L459 300"/>
+                    <text class="m" x="524" y="301" text-anchor="end" style="fill: var(--bad)">장애 가정</text>
+                  </g>
+
+                  <g data-step="3-6"><rect class="box" x="234" y="466" width="120" height="60" rx="8"/><text class="t" x="248" y="492">레플리카 1</text><text class="s" x="248" y="512">ClickHouse</text></g>
+                  <g data-step="4-6"><rect class="box" x="394" y="466" width="120" height="60" rx="8"/><text class="t" x="408" y="492">레플리카 2</text><text class="s" x="408" y="512">ClickHouse</text></g>
+
+                  <!-- 4. 백업 -->
+                  <g data-step="4"><rect class="box" x="234" y="588" width="236" height="60" rx="8"/><text class="t" x="248" y="614">GCS 백업</text><text class="s" x="248" y="634">레플리카마다 매일</text></g>
+                  <g data-step="4"><rect class="box" x="504" y="588" width="188" height="60" rx="8"/><text class="t" x="518" y="614">복구 리허설</text><text class="s" x="518" y="634">스테이징 약 2분, 운영 약 30초</text></g>
+                  <path class="flow" data-step="4" fill="none" d="M294 526V582" marker-end="url(#dg-platform-ah)"/>
+                  <path class="flow" data-step="4" fill="none" d="M454 526V582" marker-end="url(#dg-platform-ah)"/>
+                  <path class="flow edge--dash" data-step="4" fill="none" d="M470 618H498" marker-end="url(#dg-platform-ah)"/>
+                  <text class="m" data-step="4" x="504" y="578">1.95 GiB 기준</text>
+
+                  <!-- 5. 과거 데이터 복사 -->
+                  <g data-step="5"><rect class="box" x="36" y="376" width="136" height="60" rx="8"/><text class="t" x="50" y="402">ClickHouse</text><text class="s" x="50" y="422">관리형 서비스</text></g>
+                  <g data-step="5"><rect class="box" x="36" y="466" width="136" height="60" rx="8"/><text class="t" x="50" y="492">과거 데이터 복사</text><text class="s" x="50" y="512">청크마다 토큰</text></g>
+                  <path class="flow" data-step="5" fill="none" d="M104 436V460" marker-end="url(#dg-platform-ah)"/>
+                  <path id="dg-platform-p3" class="flow" data-step="5" fill="none" d="M172 488H228" marker-end="url(#dg-platform-ah)"/>
+                  <path class="flow edge--dash" data-step="5" fill="none" d="M228 510H178" marker-end="url(#dg-platform-ah)"/>
+                  <text class="m" data-step="5" x="36" y="546">다시 읽어 맞으면 완료</text>
+                  <path class="flow" data-step="5" fill="none" d="M360 496H388" marker-start="url(#dg-platform-ah)" marker-end="url(#dg-platform-ah)"/>
+                  <g data-step="5">
+                    <text class="m" x="394" y="440">서로 복제,</text>
+                    <text class="m" x="394" y="454">둘 다 받아야 성공</text>
+                  </g>
+
+                  <!-- 6. 읽기 전환과 해지 -->
+                  <path class="flow" data-step="6" fill="none" d="M674 260V496H520" marker-end="url(#dg-platform-ah)"/>
+                  <g data-step="6">
+                    <text class="m" x="552" y="466">읽기 경로 전환</text>
+                    <text class="m" x="552" y="480">설정값 하나로</text>
+                  </g>
+                  <g data-step="6"><rect class="chip-r" x="134" y="387" width="30" height="18" rx="4"/><text class="chip-t" x="149" y="400" text-anchor="middle">해지</text></g>
+
+                  <!-- 움직이는 점 3개 -->
+                  <circle class="pkt" r="4" data-step="1"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#dg-platform-p1"/></animateMotion></circle>
+                  <circle class="pkt" r="4" data-step="2"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-platform-p2"/></animateMotion></circle>
+                  <circle class="pkt" r="4" data-step="5"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-platform-p3"/></animateMotion></circle>
+                </svg>
+              </div>
+            </figure>
+
+            <ol class="steps">
+              <li>
+                <span class="steps__t">롤백부터 확인한 트래픽 전환</span>
+                <p>롤백이 되는지 먼저 확인하고 트래픽을 옮겼습니다. Terraform으로 관리하는 외부 로드밸런서의 가중치를 바꿔 GKE로 5%, Cloud Run으로 롤백, GKE로 100% 순서로 옮겼습니다. 롤백과 100% 전환 때 각각 요청 12건을 보냈고 모두 정상 응답이었습니다.</p>
+                <p>전환 당일 새벽에는 Cloud Run의 스테이징 API를 다시 띄우자 OpenFGA가 503을 냈습니다. PostgreSQL에 남은 연결 슬롯이 없었습니다. Cloud Run과 GKE의 서비스가 같은 스테이징 DB(연결 한도 25)에 동시에 붙어 있었기 때문입니다. 5% 전환을 멈추고, 트래픽이 없는 GKE 쪽 Pod를 모두 내려 연결을 돌려받았습니다. DB를 재시작해 연결 한도를 올리는 대신, 서비스별 연결 풀을 API 4, OpenFGA 2, Zitadel 2로 나눴습니다. 연결 사용이 15로 내려온 것을 보고 같은 날 오후에 5%를 보냈습니다.</p>
+              </li>
+              <li>
+                <span class="steps__t">운영 중인 리소스를 그대로 넘긴 GitOps 전환</span>
+                <p>GKE로 옮긴 뒤 9월 말에 배포 경로를 조사했습니다. 기존 배포 도구는 9월 18일 이후 한 번도 성공하지 못했습니다. 운영 클러스터를 바꾼 작업의 약 90%는 사람이 직접 한 것이었습니다.</p>
+                <p>배포 도구를 고쳐 쓰는 대신, 운영 상태를 Git에 선언하고 Argo CD로 배포하게 바꿨습니다. 운영 중인 리소스 60여 개를 Git으로 그대로 가져왔습니다. managedFields를 확인하고 server-side diff로 차이가 0인 것을 본 뒤에 Argo CD에 맡겼습니다.</p>
+                <p>스테이징은 Argo CD가 Git과의 차이를 계속 맞추게 했습니다. Git에서 빠진 리소스는 지우지 않도록 selfHeal은 켜고 prune은 껐습니다. 새 이미지가 빌드되면 Kargo가 Git의 이미지 버전을 바꾸고, Argo CD가 이를 반영합니다. 운영은 Argo CD에서 차이를 확인한 뒤 직접 동기화했습니다.</p>
+                <p>시크릿은 GCP Secret Manager에 두고 External Secrets Operator로 받게 했습니다. DB 마이그레이션은 Argo CD의 PreSync 단계로 옮겼습니다. CI 계정은 읽기 전용으로 바꿨습니다. 권한을 회수한 뒤 감사 로그에서 CI가 클러스터를 바꾼 기록은 0건이었습니다. 같은 조회로 회수 전 구간에서는 3건이 잡혀, 조회 자체가 맞는지도 확인했습니다.</p>
+                <p>운영 API를 Argo CD로 처음 반영한 롤아웃에서 외부 헬스체크에 503이 한 번 찍혔습니다. 원인과 수정은 아래 트러블슈팅 T-02에 적었습니다.</p>
+              </li>
+              <li>
+                <span class="steps__t">존 하나가 빠져도 데이터가 남는 ClickHouse 클러스터</span>
+                <p>Keeper는 Raft로 동작해서 3대 중 2대가 살아 있어야 쓰기를 받습니다. 그래서 Keeper 3대를 존 a, b, c에 한 대씩 뒀습니다. ClickHouse 레플리카 2대는 서로 다른 존에 뒀습니다. 존 하나가 통째로 빠져도 Keeper 과반과 레플리카 하나가 남습니다. 처음 적용했을 때 Pod가 한 존에 몰려서, 존 분산 조건(minDomains 3)을 필수로 바꿨습니다.</p>
+                <p>쓰기는 insert_quorum=2로 두 레플리카가 모두 받아야 성공하게 했습니다. 레플리카 하나가 빠지면 쓰기가 멈춥니다. 그동안 밀린 데이터는 앞단 Kafka가 들고 있습니다. 레플리카 하나에만 조용히 쓰이는 것보다 이쪽이 복구하기 쉽다고 판단했습니다. 레플리카를 하나 내려 본 시험은 <a href="stream.html">실시간 스트림 파이프라인</a> 페이지에 적었습니다.</p>
+                <p>새 클러스터에는 갱신 뷰(Refreshable MV)를 옮기지 않았습니다. 그래서 CPU는 그 부하를 뺀 실측 p95의 약 4배인 6.8 vCPU로 잡았습니다. 메모리는 과거 최대 사용량의 약 1.7배인 24 GiB로 잡았습니다.</p>
+                <p>operator에는 해당 namespace 안의 권한만 줬습니다. 클러스터 전체 권한을 주면 모든 Secret을 읽을 수 있기 때문입니다. 띄워 보니 users.xml에서 권한을 따로 주지 않은 사용자가 전체 권한을 갖고 있었습니다. 그래서 REVOKE ALL을 기본으로 넣었습니다.</p>
+                <p>백업은 clickhouse-backup 사이드카로 매일 GCS에 받습니다. 복구 리허설은 스테이징에서 먼저 했습니다. 첫 시도는 설정 문제(Code 36)로 실패했습니다. 설정을 고쳐 다시 돌렸고, 테이블별 행 수와 해시가 원본과 같았습니다. 운영에서도 같은 크기로 한 번 더 했습니다.</p>
+              </li>
+              <li>
+                <span class="steps__t">다시 돌려도 중복되지 않는 과거 데이터 복사</span>
+                <p>INSERT SELECT 한 번으로 옮기면 중간에 실패했을 때 어디까지 들어갔는지 알 수 없습니다. 그래서 테이블, 고객, 날짜별 청크로 나눠 옮겼습니다.</p>
+                <p>청크마다 insert_deduplication_token을 붙였습니다. ReplicatedMergeTree는 같은 토큰으로 들어온 블록을 다시 쓰지 않습니다. 그래서 실패한 청크를 같은 토큰으로 다시 돌리면 이미 들어간 블록은 건너뜁니다. 다만 블록을 나누는 설정을 바꾼 뒤에는 이 동작에 기대지 않고, 실패한 쿼리가 남긴 데이터부터 확인했습니다(아래 트러블슈팅). 새 클러스터에서 다시 읽어 원본과 맞춰 본 청크만 완료로 기록했습니다.</p>
+                <p>새 클러스터는 10월 7일부터 운영 미러링으로 같은 데이터를 함께 받고 있었습니다. 원래는 읽기를 옮기기 전에 7일 관찰과 추가 복구 리허설을 거칠 계획이었습니다. 비용을 생각해 이 단계를 건너뛰기로 제가 결정했습니다. 판단 근거는 모든 청크의 검증, 24시간 고유 이벤트 수 대조(차이 ±0.2% 안), 적재 이력과 Kafka 오프셋의 일치(12개 파티션)였습니다.</p>
+                <p>해지 직전 대조에서는 이벤트 테이블 하나만 새 클러스터 쪽이 0.1~0.5% 많았습니다. 재전송과 중복 제거 방식의 차이로 보고 진행했습니다. 읽기 경로를 설정값 하나로 옮긴 뒤 관리형 서비스를 해지했습니다.</p>
+              </li>
+            </ol>
+          </section>
+
+          <section id="d-result" aria-labelledby="d-result-h">
+            <h2 class="sechead" id="d-result-h"><span class="sechead__no">03</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ul>
+              <li>과거 데이터 약 1.3억 행, 청크 2,600여 개 모두 검증 통과 (실패로 남은 청크 0)</li>
+              <li>트래픽 전환: 롤백과 100% 전환 때 각 12건 모두 정상 응답</li>
+              <li>롤아웃 503 수정 뒤: 1초 간격 헬스체크가 스테이징 롤아웃 2번 동안 315회, 운영 반영 구간 100회 모두 200</li>
+              <li>GitOps: 앱 25개 모두 Git과 차이 0 (10월 2일), CI가 클러스터를 직접 바꾼 기록 0건</li>
+              <li>복구 리허설 0회 → 2회 성공 (1.95 GiB 기준 스테이징 약 2분, 운영 약 30초)</li>
+              <li>관리형 ClickHouse 해지, Cloud Run 서비스 6개 정리</li>
+            </ul>
+            <p>상태를 가진 시스템을 옮길 때는 복구 시간과 데이터 일치를 먼저 확인한 뒤에 트래픽을 옮겨야 합니다. 검증 단계를 줄일 때는 무엇을 건너뛰었고 무엇으로 대신 확인했는지 함께 남겨야 합니다.</p>
+          </section>
+
+          <section id="d-ts" aria-labelledby="d-ts-h">
+            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">04</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">T-01</span><h3>블록을 쪼갰는데도 4 GiB를 넘던 INSERT</h3></header>
+              <dl class="ts__rows">
+                <div><dt>문제</dt><dd>과거 데이터 복사가 메모리 한도 4 GiB(Code 241)에 여러 번 걸려 멈췄습니다. 처음에는 관리형 ClickHouse에서 읽는 쿼리가 걸렸습니다. 1,270행짜리 청크가 약 37 GiB를 읽고 있어서 정렬 키 조건을 먼저 걸었고, 읽는 양이 약 3 GiB로 줄었습니다. 그다음에는 큰 청크 하나가 새 클러스터 INSERT에서 같은 한도에 계속 걸렸습니다. 블록이 크다고 보고 16,384행으로 쪼갰지만 같은 오류가 났습니다. 이 판단은 틀렸습니다.</dd></div>
+                <div><dt>원인</dt><dd>system.trace_log에서 실패한 쿼리의 메모리 할당 스택을 모았습니다. INSERT 하나가 쓰기 스레드 4개로 동시에 돌고 있었습니다. 서버는 스레드마다 받은 데이터를 min_insert_block_size_bytes(기본 256 MiB)까지 다시 묶어 들고 있었습니다. 클라이언트가 보내는 블록 크기와는 상관이 없었습니다.</dd></div>
+                <div><dt>해결</dt><dd>max_insert_threads를 1로, min_insert_block_size_bytes를 64 MiB로 바꿨습니다. 다시 돌리기 전에는 실패한 쿼리가 남긴 데이터가 있는지 system.part_log로 먼저 확인했습니다. 블록을 나누는 설정이 바뀐 채 같은 토큰을 쓰면, 일부만 들어간 청크에서 블록이 잘못 걸러질 수 있기 때문입니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>같은 청크의 메모리가 4 GiB 초과에서 약 0.6 GiB로 내려갔습니다. 이 설정으로 남은 복사를 마쳤습니다. 처음에 잘못 짚은 원인은 작업 기록에서 고쳐 두었습니다.</dd></div>
+              </dl>
+            </article>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">T-02</span><h3>롤아웃 중 한 번 찍힌 503</h3></header>
+              <dl class="ts__rows">
+                <div><dt>문제</dt><dd>9월 29일 운영 API를 Argo CD로 처음 반영한 롤아웃에서 외부 /health에 503이 한 번 찍혔습니다. 이미지는 그대로이고 설정만 바뀐 롤아웃이었습니다. 보름 전 스테이징에서도 503을 한 번 봤습니다. 그때도 같은 사유를 봤지만 종료 쪽만 고쳤습니다(preStop 60초, 종료 유예 90초). 새 Pod가 트래픽을 받기 시작하는 쪽을 놓친 것이었습니다.</dd></div>
+                <div><dt>원인</dt><dd>로드밸런서는 5초 간격 헬스체크를 2번 연속 통과해야 새 Pod로 트래픽을 보냅니다. 그런데 GKE가 매니페스트와 상관없이 자동으로 넣는 NEG readiness gate는 그보다 먼저 통과했습니다. 운영 새 Pod에도 사유 LoadBalancerNegWithoutHealthCheck가 남아 있었습니다. 레플리카가 1개뿐이라, 새 Pod가 트래픽을 받기 전에 옛 Pod가 빠졌습니다.</dd></div>
+                <div><dt>해결</dt><dd>레플리카를 늘려도 되는지 코드로 먼저 확인했습니다. 프로세스 안에서 도는 스케줄러나 리더 선출이 없었고, 쓰기 경합은 PostgreSQL advisory lock이, 세션은 Redis가 맡고 있었습니다. minReadySeconds 30초, 레플리카 2개, PodDisruptionBudget(PDB)을 Git에 선언하고 스테이징에 먼저 반영했습니다. 운영에는 Deployment와 PDB만 골라 동기화했습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>스테이징 롤아웃 2번 동안 외부 헬스체크를 1초 간격으로 315회 보냈고 모두 200이었습니다. 새 Pod 4개 중 2개에서 readiness gate가 먼저 통과하는 일이 다시 나왔지만, minReadySeconds 동안 새 Pod가 사용 가능으로 잡히지 않아 옛 Pod가 먼저 빠지지 않았습니다. 운영 반영 구간의 100회도 모두 200이었습니다. 탐지부터 운영 반영까지 약 46분이 걸렸습니다.</dd></div>
+              </dl>
+            </article>
+          </section>
+
+          <section id="d-kw" aria-labelledby="d-kw-h">
+            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">05</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ol class="keywords">
+              <li><span class="kw__n">01</span><span class="kw__t">롤백 우선 전환</span></li>
+              <li><span class="kw__n">02</span><span class="kw__t">상태 저장 클러스터 구성과 복구</span></li>
+              <li><span class="kw__n">03</span><span class="kw__t">로그 기반 원인 분석</span></li>
+            </ol>
+          </section>
+
+          <section id="d-links" aria-labelledby="d-links-h">
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">06</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>사내 작업이라 코드와 운영 기록은 공개하지 않았습니다.</p>
+            <ul>
+              <li><a href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a></li>
+              <li><a href="https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/" target="_blank" rel="noopener">Argo CD 자동 동기화</a></li>
+              <li><a href="https://clickhouse.com/docs/operations/settings/settings#insert_deduplication_token" target="_blank" rel="noopener">ClickHouse insert_deduplication_token</a></li>
+            </ul>
+          </section>
+
+          <nav class="pager" aria-label="다른 프로젝트">
+            <a class="prev" href="../index.html#projects"><span class="k">포트폴리오</span><span class="t">프로젝트 목록으로</span></a>
+            <a class="next" href="stream.html"><span class="k">다음 프로젝트</span><span class="t">실시간 스트림 파이프라인 (Kafka + Flink)</span></a>
+          </nav>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="shell foot">
+  <span>© 2026 모진영</span>
+  <a href="../index.html#projects">← 포트폴리오</a>
+</footer>
+</body>
+</html>
