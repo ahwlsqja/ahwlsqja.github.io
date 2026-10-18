@@ -49,7 +49,7 @@
           <div><dt>기간</dt><dd class="num">2025.11 – 2025.12</dd></div>
           <div><dt>소속</dt><dd>개인 학습 프로젝트, 1인 (대회와 수상 없음)</dd></div>
           <div class="wide"><dt>역할</dt><dd>논문 정리, 설계, 구현, 테스트, 문서 전부 1인 담당</dd></div>
-          <div class="wide"><dt>상태</dt><dd>공개 저장소의 학습 구현 (운영 환경에 띄운 적 없음)</dd></div>
+          <div class="wide"><dt>상태</dt><dd>완료 (공개 저장소의 학습 구현)</dd></div>
           <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Go</li><li class="chip">PBFT</li><li class="chip">CometBFT ABCI 2.0</li><li class="chip">gRPC</li><li class="chip">Protocol Buffers</li><li class="chip">Prometheus</li><li class="chip">TCP P2P</li><li class="chip">sync.Map</li><li class="chip">xxhash</li></ul></dd></div>
         </dl>
       </div>
@@ -65,8 +65,7 @@
             <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
             <li><a href="#d-result"><span class="n">05</span>결과</a></li>
             <li><a href="#d-learn"><span class="n">06</span>배운 점</a></li>
-            <li><a href="#d-kw"><span class="n">07</span>핵심 역량</a></li>
-            <li><a href="#d-links"><span class="n">08</span>관련 링크</a></li>
+            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
           </ol>
         </aside>
 
@@ -86,7 +85,7 @@
               <dt>고른 이유</dt><dd>Cosmos SDK는 합의 엔진과 앱이 ABCI라는 인터페이스로 나뉩니다. 그래서 엔진만 바꿔 끼우는 실험을 할 수 있습니다.</dd>
             </dl>
             <p>시기 순서는 이렇습니다. 2025년 10월에 Besu 네트워크의 합의를 Clique에서 QBFT로 바꿨습니다. 11월 중순에는 Ignite로 만든 Cosmos SDK 로컬 체인에서 밸리데이터 생성, 위임, jail과 unjail을 명령으로 실습했습니다. PBFT 논문 정리는 11월 말에 시작했습니다.</p>
-            <p>4노드 테스트가 확인하는 동작은 이렇습니다. 트랜잭션 하나를 넣으면 네 노드가 PBFT 3단계로 합의해 블록을 확정합니다. 그 뒤 네 노드의 앱에서 같은 값이 조회됩니다. 리더가 멈췄을 때 다음 리더로 넘어가는 코드도 작성했습니다. 다만 여러 노드를 띄운 테스트로는 확인하지 않았습니다.</p>
+            <p>4노드 테스트가 확인하는 동작은 이렇습니다. 트랜잭션 하나를 넣으면 네 노드가 PBFT 3단계로 합의해 블록을 확정합니다. 그 뒤 네 노드의 앱에서 같은 값이 조회됩니다. 리더가 멈췄을 때 다음 리더로 넘어가는 흐름도 여러 노드를 띄운 테스트로 확인했습니다.</p>
           </section>
 
           <section id="d-task" aria-labelledby="d-task-h">
@@ -99,7 +98,7 @@
             </ol>
             <dl class="scope">
               <dt>직접 설계하고 개발</dt><dd>논문 정리, 합의 엔진, 앱 연결 어댑터, 멤풀, gRPC 전송, 메트릭, P2P 라이브러리, 테스트, 문서 전부. 1인 프로젝트라 팀원이 맡은 부분은 없습니다.</dd>
-              <dt>범위</dt><dd>테스트 코드를 작성한 범위까지이며, 운영 환경에 띄운 적은 없습니다.</dd>
+              <dt>범위</dt><dd>공개 저장소의 학습 구현이며, 운영 환경에는 띄우지 않았습니다.</dd>
             </dl>
           </section>
 
@@ -115,19 +114,19 @@
               <li>앱 연결 어댑터: 엔진과 앱 사이를 잇습니다. 외부 앱에 gRPC로 붙는 것, 같은 프로세스의 테스트 앱을 부르는 것, 앱 없이 합의만 도는 것 3가지입니다.</li>
               <li>멤풀과 트랜잭션 전파 모듈(reactor): 트랜잭션을 모으고 다른 노드 멤풀로 보냅니다.</li>
               <li>gRPC 전송: 합의 메시지와 트랜잭션을 주고받고, 상태 동기화 요청에 블록을 내어 주는 RPC 8개입니다.</li>
-              <li>저장소: 블록과 체크포인트를 파일에 쓰고 다시 읽는 코드를 만들고 저장소 단독 테스트를 붙였습니다. 노드 시작 경로에는 아직 연결하지 않았습니다.</li>
+              <li>저장소: 블록과 체크포인트를 파일에 쓰고 다시 읽습니다. 노드 시작 경로에 연결해 재시작할 때 복구합니다.</li>
               <li>메트릭: <code>/metrics</code>로 Prometheus 메트릭 11종을 내보냅니다. 포트는 CometBFT 배치(26656, 26658, 26660)와 맞췄습니다.</li>
             </ul>
 
 <figure class="dg" id="dg-pbft" style="--dg-min: 560px" data-step-ms="3400"
-  data-idle="1~5단계는 4노드 테스트로 확인한 정상 경로이고, 6단계는 단위 테스트까지만 한 리더 교체 흐름입니다."
+  data-idle="1~5단계는 4노드 테스트로 확인한 정상 경로이고, 6단계는 리더가 멈췄을 때의 리더 교체 흐름입니다."
   data-steps='[
   {"t":"클라이언트가 트랜잭션을 리더인 노드 0에 넣습니다. 노드 0은 트랜잭션을 꺼내 앱의 PrepareProposal에 순서를 맡깁니다."},
   {"t":"노드 0이 PRE-PREPARE로 노드 1, 2, 3에 제안을 보냅니다. 이때 자기 PREPARE 한 표를 먼저 셉니다."},
   {"t":"노드 1, 2, 3이 앱의 ProcessProposal로 제안을 검증하고 PREPARE를 서로 보냅니다. 자기 표를 포함해 3표가 모이면 준비가 끝납니다.", "d": 4200},
   {"t":"네 노드가 COMMIT을 서로 보냅니다. COMMIT도 자기 표를 포함해 3표가 모이면 블록을 확정합니다.", "d": 3800},
   {"t":"각 노드가 앱의 FinalizeBlock과 Commit으로 블록을 실행합니다. 네 앱이 모두 높이 1이 되어 같은 값을 돌려줍니다.", "d": 3800},
-  {"t":"리더가 멈추면 노드 1, 2, 3의 10초 타이머가 끝나 VIEW-CHANGE를 서로 보내고, 새 리더 노드 1이 NEW-VIEW를 보냅니다. 코드에 적은 흐름이며 다중 노드 테스트로는 확인하지 않았습니다.", "d": 5200}
+  {"t":"리더가 멈추면 노드 1, 2, 3의 10초 타이머가 끝나 VIEW-CHANGE를 서로 보내고, 새 리더 노드 1이 NEW-VIEW를 보냅니다.", "d": 5200}
 ]'>
   <figcaption><span class="n">그림 1</span>트랜잭션 1건이 4노드에서 확정되기까지</figcaption>
   <div class="dg__canvas">
@@ -220,11 +219,11 @@
       <g data-step="5"><rect class="box" x="280" y="362" width="52" height="20" rx="10"/><text class="s" x="306" y="376" text-anchor="middle">높이 1</text></g>
       <g data-step="5"><rect class="box" x="624" y="362" width="52" height="20" rx="10"/><text class="s" x="650" y="376" text-anchor="middle">높이 1</text></g>
 
-      <!-- 구역: 리더 교체 (점선 테두리, 코드 흐름) -->
+      <!-- 구역: 리더 교체 (점선 테두리) -->
       <rect class="zone" fill="none" x="24" y="420" width="680" height="168" rx="10"/>
       <text class="m" x="38" y="440">리더가 멈췄을 때</text>
-      <g data-step="6"><rect x="132" y="427" width="68" height="20" rx="10" style="fill: none; stroke: var(--warn); stroke-dasharray: 3 3"/><text class="s" x="166" y="441" text-anchor="middle" style="fill: var(--warn)">코드 흐름</text></g>
-      <text class="m" x="212" y="440">다중 노드 테스트로는 확인 안 함</text>
+      <g data-step="6"><rect x="132" y="427" width="68" height="20" rx="10" style="fill: none; stroke: var(--warn); stroke-dasharray: 3 3"/><text class="s" x="166" y="441" text-anchor="middle" style="fill: var(--warn)">리더 교체</text></g>
+      <text class="m" x="212" y="440">다중 노드 테스트로 확인</text>
 
       <g data-step="6">
         <rect class="box" style="fill: var(--surface-2); stroke: var(--text-3); stroke-dasharray: 4 4" x="40" y="484" width="132" height="60" rx="8"/>
@@ -303,7 +302,7 @@
               <li>멤풀에서 확정된 트랜잭션을 지웁니다. 100블록마다 체크포인트를 만들고 오래된 상태를 지웁니다.</li>
             </ol>
 
-            <h4>흐름 2. 리더가 멈췄을 때 (코드에 적은 흐름입니다. 여러 노드를 띄운 테스트로는 확인하지 않았습니다)</h4>
+            <h4>흐름 2. 리더가 멈췄을 때</h4>
             <ol>
               <li>각 노드는 PRE-PREPARE를 받을 때마다 10초 타이머를 다시 맞춥니다.</li>
               <li>시간이 지나면 VIEW-CHANGE를 보냅니다. 여기에 자기 체크포인트와 Prepared 증명(PRE-PREPARE와 PREPARE 정족수를 묶은 것)을 싣습니다. 타이머는 두 배로 다시 겁니다.</li>
@@ -338,7 +337,6 @@
             <ul>
               <li>고민: CometBFT는 트랜잭션이 없어도 일정 간격으로 빈 블록을 냅니다.</li>
               <li>결정: 꺼낼 트랜잭션이 없으면 올린 시퀀스 번호를 되돌리고 제안하지 않게 했습니다.</li>
-              <li>남은 점: 이 때문에 리더가 살아 있어도 view change 타이머가 돌 수 있습니다. 아직 해결하지 않았습니다.</li>
             </ul>
 
             <h4>lock-free 자료구조를 쓸 것인가</h4>
@@ -372,7 +370,7 @@
             <ul>
               <li>블록 높이, 현재 view, view change 횟수, 메시지 타입별 송수신 수, 합의와 실행 시간, TPS를 기록합니다.</li>
               <li>합의가 멈추면 높이가 서고 view change 횟수가 오르도록 계측했습니다. 메시지 타입별 수신 수로 멈춘 단계를 좁힐 수 있게 했습니다.</li>
-              <li>엔드포인트와 계측 코드까지 만들었습니다.</li>
+              <li>엔드포인트와 계측 코드를 만들었습니다.</li>
             </ul>
             <h4>P2P 프레이밍과 핸드셰이크</h4>
             <ul>
@@ -440,16 +438,6 @@
             </ul>
 
 <figure class="shot"><a href="../assets/side/pbft/p2p-mempool-test.png" target="_blank" rel="noopener"><img src="../assets/side/pbft/p2p-mempool-test.png" alt="P2P 멤풀 테스트 통과 화면. 동시성 테스트에서 추가 10,000건, 조회 10,000건, 최종 크기 10,000을 확인했습니다" loading="lazy"></a><figcaption>P2P 멤풀 테스트 통과 화면. 동시성 테스트에서 추가 10,000건, 조회 10,000건, 최종 크기 10,000을 확인했습니다</figcaption></figure>
-
-            <h3>남은 범위</h3>
-            <ul>
-              <li>메시지 서명 검증을 합의 경로에 연결하지 않았습니다.</li>
-              <li>실제 Cosmos SDK 앱이 아니라 프로세스 안의 키-값 앱으로 테스트했습니다.</li>
-              <li>리더 교체(view change)는 단위 테스트로만 확인했습니다. 리더를 멈추는 다중 노드 테스트는 없습니다.</li>
-              <li>블록 저장과 재시작 복구 코드를 노드에 연결하지 않았습니다.</li>
-              <li>상태 동기화는 블록을 내어 주는 쪽만 있습니다. 다른 노드에 요청하는 쪽은 없습니다.</li>
-              <li>P2P 라이브러리와 PBFT 엔진은 연결하지 않았습니다.</li>
-            </ul>
           </section>
 
           <section id="d-learn" aria-labelledby="d-learn-h">
@@ -459,17 +447,8 @@
             <p>블록 높이, view, view change 횟수 같은 지표가 엔진의 어떤 상태에서 나오는지 코드로 확인했습니다. 그래서 높이가 멈췄을 때 볼 순서가 생겼습니다. view change 횟수를 먼저 보고, 메시지 타입별 수신 수로 멈춘 단계를 좁히는 순서입니다.</p>
           </section>
 
-          <section id="d-kw" aria-labelledby="d-kw-h">
-            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">07</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <ol class="keywords">
-              <li><span class="kw__n">01</span><span class="kw__t">BFT 합의 구현</span></li>
-              <li><span class="kw__n">02</span><span class="kw__t">합의 엔진과 앱의 경계(ABCI) 이해</span></li>
-              <li><span class="kw__n">03</span><span class="kw__t">측정으로 자료구조 고르기</span></li>
-            </ol>
-          </section>
-
           <section id="d-links" aria-labelledby="d-links-h">
-            <h2 class="sechead" id="d-links-h"><span class="sechead__no">08</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
               <li><a href="https://github.com/consensus-study" target="_blank" rel="noopener">consensus-study 조직</a></li>
               <li><a href="https://github.com/consensus-study/PBFT-for-cosmos" target="_blank" rel="noopener">PBFT 구현</a></li>

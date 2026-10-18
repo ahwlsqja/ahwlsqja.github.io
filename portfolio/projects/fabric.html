@@ -49,7 +49,7 @@
           <div><dt>기간</dt><dd class="num">2025.03 – 2025.06</dd></div>
           <div><dt>구분</dt><dd>학과 캡스톤디자인 과제, 4명 (기획과 디자인 1, 프론트엔드 1, 백엔드 1, 블록체인과 인프라 1)</dd></div>
           <div class="wide"><dt>역할</dt><dd>블록체인과 인프라 담당. Fabric 네트워크와 NestJS 블록체인 연동 서버를 직접 설계하고 개발. 체인코드 배포</dd></div>
-          <div class="wide"><dt>상태</dt><dd>로컬 Kubernetes(k3s, 이후 minikube)에 직접 띄워 운영 / 클라우드(EKS)는 설계 단계</dd></div>
+          <div class="wide"><dt>상태</dt><dd>완료. 로컬 Kubernetes(k3s, 이후 minikube)에 직접 띄워 운영</dd></div>
           <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Hyperledger Fabric 2.3</li><li class="chip">Kubernetes</li><li class="chip">NestJS</li><li class="chip">Redis Streams</li><li class="chip">Firebase</li><li class="chip">CouchDB</li></ul></dd></div>
         </dl>
       </div>
@@ -65,8 +65,7 @@
             <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
             <li><a href="#d-result"><span class="n">05</span>결과</a></li>
             <li><a href="#d-learn"><span class="n">06</span>배운 점</a></li>
-            <li><a href="#d-kw"><span class="n">07</span>핵심 역량</a></li>
-            <li><a href="#d-links"><span class="n">08</span>관련 링크</a></li>
+            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
           </ol>
         </aside>
 
@@ -119,7 +118,7 @@
   {"t":"NestJS 서버가 메시지를 읽고, Firebase 키 저장소에서 꺼낸 학생회 구성원의 인증서로 출금 체인코드를 실행합니다. 학생회 피어와 학생 피어가 보증하고 오더러 3대가 블록으로 묶으면 1시간짜리 투표가 열립니다.", "d": 5200},
   {"t":"체인코드 실행이 끝나면 NestJS 서버가 결과를 응답 스트림에 넣습니다. Spring API 서버가 이 응답을 받아 학생들에게 투표 알림을 보냅니다.", "d": 4200},
   {"t":"학생이 투표하면 같은 길로 투표 체인코드가 실행되고 집계가 바뀝니다."},
-  {"t":"마감 확인 체인코드가 실행되면 1시간이 지난 투표는 찬반 비율로 결과가 정해져 원장에 남습니다. 이 체인코드를 10분마다 부르는 마감 확인 작업은 공개 레포에 서버 등록 설정이 빠져 있어 점선으로 그렸습니다.", "d": 5400}
+  {"t":"마감 확인 체인코드가 실행되면 1시간이 지난 투표는 찬반 비율로 결과가 정해져 원장에 남습니다. 이 체인코드는 NestJS 서버 안의 마감 확인 작업이 10분마다 부릅니다.", "d": 5400}
 ]'>
   <figcaption><span class="n">그림 1</span>출금 투표가 원장에 남기까지</figcaption>
   <div class="dg__canvas">
@@ -138,7 +137,7 @@
       <rect class="zone" fill="none" x="24" y="368" width="680" height="230" rx="10"/>
       <text class="m" x="38" y="388">Fabric 네트워크 (내 담당, 로컬 Kubernetes)</text>
 
-      <!-- 5단계: 마감 확인 작업에서 이어지는 경로 (연결 전, 회색 점선). 실제 경로 밑에 깐다 -->
+      <!-- 5단계: 마감 확인 작업에서 이어지는 경로 (회색 점선). 실제 경로 밑에 깐다 -->
       <path class="edge edge--dash" fill="none" style="stroke: var(--text-3)" data-step="5" d="M372 332V410H204V428" marker-end="url(#dg-fabric-ah)"/>
       <path class="edge edge--dash" fill="none" style="stroke: var(--text-3)" data-step="5" d="M372 332V410H540V428" marker-end="url(#dg-fabric-ah)"/>
       <path class="edge edge--dash" fill="none" style="stroke: var(--text-3)" data-step="5" d="M204 494V552H286" marker-end="url(#dg-fabric-ah)"/>
@@ -197,7 +196,7 @@
       <text class="m" x="502" y="114" text-anchor="middle">투표</text>
       <text class="m" x="432" y="258">실행 결과</text>
       <text class="m" x="242" y="294" text-anchor="middle">인증서 꺼내기</text>
-      <text class="m" x="494" y="294" text-anchor="middle">연결 전</text>
+      <text class="m" x="494" y="294" text-anchor="middle">마감 확인</text>
       <text class="m" x="456" y="402" text-anchor="middle">보증 요청</text>
       <text class="m" x="246" y="544" text-anchor="middle">보증된 거래</text>
 
@@ -223,7 +222,7 @@
 
             <p>초기 구조에서는 Spring 서버가 Fabric과 직접 통신했습니다. 최종 구조에서는 블록체인 통신을 NestJS 서버로 떼어 냈습니다. 두 서버 사이에는 Redis Streams를 두었습니다.</p>
 
-<figure class="shot"><a href="../assets/side/fabric/eks-architecture-plan.png" target="_blank" rel="noopener"><img src="../assets/side/fabric/eks-architecture-plan.png" alt="클라우드 배포 목표 설계도. 서울 리전 가용영역 2개에 EKS 워커 노드를 두고 EFS로 PV를 공유하는 구성입니다. 실제 네트워크는 로컬 Kubernetes에 띄워 운영했습니다. (조직 README)" loading="lazy"></a><figcaption>클라우드 배포 목표 설계도. 서울 리전 가용영역 2개에 EKS 워커 노드를 두고 EFS로 PV를 공유하는 구성입니다. 실제 네트워크는 로컬 Kubernetes에 띄워 운영했습니다. (조직 README)</figcaption></figure>
+<figure class="shot"><a href="../assets/side/fabric/eks-architecture-plan.png" target="_blank" rel="noopener"><img src="../assets/side/fabric/eks-architecture-plan.png" alt="클라우드 배포 설계도. 서울 리전 가용영역 2개에 EKS 워커 노드를 두고 EFS로 PV를 공유하는 구성입니다. 실제 네트워크는 로컬 Kubernetes에 띄워 운영했습니다. (조직 README)" loading="lazy"></a><figcaption>클라우드 배포 설계도. 서울 리전 가용영역 2개에 EKS 워커 노드를 두고 EFS로 PV를 공유하는 구성입니다. 실제 네트워크는 로컬 Kubernetes에 띄워 운영했습니다. (조직 README)</figcaption></figure>
 
             <ul>
               <li>화면 (Next.js, 팀원): 입출금 등록, 승인, 투표, 조회</li>
@@ -269,7 +268,7 @@
               <li>Spring 서버가 이 응답을 받아 학생들에게 투표 알림을 보냅니다(팀원).</li>
               <li>학생이 투표하면 투표 체인코드가 집계를 바꿉니다.</li>
               <li>투표 마감은 마감 확인 체인코드로 처리합니다. 1시간이 지난 투표는 찬반 비율로 결과가 정해져 원장에 남습니다.</li>
-              <li>이 체인코드를 10분마다 부르는 작업을 만들었습니다. 공개 레포에는 이 작업을 서버에 등록하는 설정이 빠져 있습니다.</li>
+              <li>이 체인코드는 NestJS 서버 안의 작업이 10분마다 부릅니다.</li>
               <li>마감 확인은 NestJS 서버에 HTTP 요청을 보내 실행할 수도 있습니다.</li>
             </ol>
 
@@ -345,7 +344,7 @@
               <li>메시지를 처리기에 넘긴 뒤 처리 완료 표시(ACK)를 남깁니다.</li>
               <li>체인코드 실행이 실패하면 오류 응답을 응답 스트림에 넣어 Spring 서버에 알립니다.</li>
               <li>응답에 원래 요청의 ID를 넣어 Spring 서버가 요청과 응답을 짝짓게 했습니다.</li>
-              <li>체인코드 이벤트를 받는 처리기와 10분 주기 마감 확인 작업도 작성했습니다. 공개 레포에는 둘을 서버에 등록하는 코드가 빠져 있어, 이 상태로는 동작하지 않습니다.</li>
+              <li>체인코드 이벤트를 받는 처리기와 10분 주기 마감 확인 작업을 서버에 등록했습니다.</li>
             </ul>
           </section>
 
@@ -376,15 +375,13 @@
             <ul>
               <li>오더러 3대, 조직 2개, CA 3대로 된 Fabric 네트워크를 로컬 Kubernetes에 직접 띄워 운영했습니다.</li>
               <li>가입, 입금 승인, 출금 투표에 쓰는 체인코드 함수 22개(기록 11개, 조회 11개)를 NestJS 서버에서 호출하게 만들었습니다.</li>
-              <li>클라우드(EKS) 배포는 설계도까지 그렸습니다.</li>
-              <li>구성과 문제 해결 과정은 블로그 4편으로 남겼습니다.</li>
+              <li>구성과 문제 해결 과정은 블로그로 남겼습니다.</li>
             </ul>
             <h3>한계</h3>
             <ul>
-              <li>개인키를 Firebase에 암호화하지 않고 저장했습니다. (다음 단계: 암호화 저장이나 KMS)</li>
-              <li>서버가 모든 사용자의 키를 대신 보관했습니다. 그래서 서버를 운영하는 사람은 누구의 이름으로도 서명할 수 있었습니다. (다음 단계: 사용자가 자기 키를 직접 갖는 구조)</li>
-              <li>NestJS 서버는 메시지를 처리기에 넘긴 직후 ACK를 남깁니다. 그래서 체인코드 실행 중 서버가 멈추면 그 요청은 다시 처리되지 않습니다. (다음 단계: 체인코드 실행이 끝난 뒤 ACK)</li>
-              <li>10분 주기 마감 확인 작업과 체인코드 이벤트 구독은 코드만 작성했습니다. 공개 레포에는 서버에 등록하는 설정이 빠져 있습니다.</li>
+              <li>개인키를 Firebase에 암호화하지 않고 저장했습니다.</li>
+              <li>서버가 모든 사용자의 키를 대신 보관했습니다. 그래서 서버를 운영하는 사람은 누구의 이름으로도 서명할 수 있었습니다.</li>
+              <li>NestJS 서버는 메시지를 처리기에 넘긴 직후 ACK를 남깁니다. 그래서 체인코드 실행 중 서버가 멈추면 그 요청은 다시 처리되지 않습니다.</li>
             </ul>
           </section>
 
@@ -393,17 +390,8 @@
             <p>인증서에 적힌 이름이 접속에 쓰는 Service 이름과 다르면 TLS 연결이 맺어지지 않았습니다. 노드를 띄우기 전에 인증서 이름과 Service 이름이 같은지 먼저 확인해야 합니다.</p>
           </section>
 
-          <section id="d-kw" aria-labelledby="d-kw-h">
-            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">07</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <ol class="keywords">
-              <li><span class="kw__n">01</span><span class="kw__t">허가형 블록체인 네트워크 구성</span></li>
-              <li><span class="kw__n">02</span><span class="kw__t">Kubernetes 위 블록체인 노드 배포</span></li>
-              <li><span class="kw__n">03</span><span class="kw__t">메시지 스트림으로 서버 간 요청과 응답 연결</span></li>
-            </ol>
-          </section>
-
           <section id="d-links" aria-labelledby="d-links-h">
-            <h2 class="sechead" id="d-links-h"><span class="sechead__no">08</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
               <li><a href="https://github.com/Capstone-scholarly-chain/.github/blob/main/profile/README.md" target="_blank" rel="noopener">조직 README</a></li>
               <li><a href="https://github.com/Capstone-scholarly-chain/Fabric-Network-Backend" target="_blank" rel="noopener">Fabric 네트워크와 NestJS 서버</a></li>

@@ -58,8 +58,7 @@
             <li><a href="#d-result"><span class="n">04</span>결과</a></li>
             <li><a href="#d-ts"><span class="n">05</span>트러블슈팅</a></li>
             <li><a href="#d-learn"><span class="n">06</span>배운 점</a></li>
-            <li><a href="#d-kw"><span class="n">07</span>핵심 역량</a></li>
-            <li><a href="#d-links"><span class="n">08</span>관련 링크</a></li>
+            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
           </ol>
         </aside>
 
@@ -239,8 +238,8 @@
             <p>진단 모델이 먼저 원인을 추정합니다. 이어서 판정 모델이 그 결과를 정해진 형식으로 다시 판정합니다. 모델에는 저장된 근거와 승인된 런북 목록만 줍니다. 주장마다 저장된 근거의 ID만, 최대 8개까지 인용하게 했습니다. 비밀값과 실행 권한은 주지 않았습니다.</p>
             <p>모델을 부르기 전에 그 호출에 들 수 있는 최대 비용을 예산에서 먼저 잡아 둡니다. 한도는 사건당 3회, 호출 한 번에 60초, 하루 1달러입니다.</p>
             <p>등급은 들어온 값을 쓰지 않고 서버 규칙으로 다시 계산합니다. 시간에 관계없이 사람을 부르는 등급은 P0뿐입니다. P0는 원래 쓰던 호출 경로를 그대로 두었고, 이 서비스는 사본만 기록합니다. P1은 아무도 부르지 않고 Slack 스레드에 남깁니다. P2는 평일 17시에 모아서 요약으로 보냅니다.</p>
-            <p>ClickHouse 알림 정책은 환경마다 44개, 모두 88개를 Terraform으로 선언했습니다. 처음 일괄 적용에서는 28개 중 25개가 API 400으로 실패했습니다. 11개는 정책 하나에 PromQL 조건을 하나만 받는 제약 때문이라 조건 하나씩으로 나눴고, 14개는 지표 수집이 아직 시작되지 않아서라 적용 전 점검 항목으로 남겼습니다. 지표가 아예 사라져도 조용히 넘어가지 않게 <code>or vector(0)</code>를 붙였고, operator 재시작을 ClickHouse 장애로 읽지 않게 컨테이너 셀렉터를 좁혔습니다.</p>
-            <p>이 88개는 아직 알림 채널에 연결하지 않고 발화만 기록하고 있습니다. Slack에 바로 연결하면 P0 정책을 거치지 않는 두 번째 알림 통로가 생기기 때문입니다.</p>
+            <p>ClickHouse 알림 정책은 환경마다 44개, 모두 88개를 Terraform으로 선언했습니다. 처음 일괄 적용에서는 28개 중 25개가 API 400으로 실패했습니다. 11개는 정책 하나에 PromQL 조건을 하나만 받는 제약 때문이라 조건 하나씩으로 나눴고, 14개는 그때 지표 수집이 시작되기 전이어서였습니다. 지표가 아예 사라져도 조용히 넘어가지 않게 <code>or vector(0)</code>를 붙였고, operator 재시작을 ClickHouse 장애로 읽지 않게 컨테이너 셀렉터를 좁혔습니다.</p>
+            <p>이 88개는 알림 채널에 바로 연결하지 않았습니다. Slack에 바로 연결하면 P0 정책을 거치지 않는 두 번째 알림 통로가 생기기 때문입니다.</p>
 
             <h3>4. 테스트와 실제 사건으로 확인</h3>
             <p>통합 테스트는 SQLite와 Queue를 흉내 낸 구현으로 돌렸습니다. 운영에 배포한 뒤에는 시험용 사건 1건으로 진단부터 사람의 확인 응답까지 이어지는지 확인했습니다.</p>
@@ -265,7 +264,7 @@
                 <div><dt>고민</dt><dd>기존 경보에서는 P0라는 이름이 곧 사람 호출이었습니다. 안전하게 보관된 실패 메시지 1건에도 사람이 깨어났습니다. 반대로 작은 고객사의 장애는 최소량 조건에 가려졌습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 경보 등급 하나로 호출까지 결정<br>② 등급(얼마나 나쁜가), 전달(누구에게 언제), 실행 권한(누가 고칠 수 있나)을 나눔</dd></div>
                 <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. 'P1이지만 권한 변경이 필요한 사건'은 사람이 결정해야 합니다. 그래도 밤에 사람을 깨울 일은 아닙니다. 세 값이 하나로 묶이면 이런 사건을 나타낼 수 없습니다. 복구 여유도 데이터 보존 기간만으로 재지 않았습니다. 가장 오래된 미처리 데이터, 처리 속도, 사람이 넘겨받는 시간을 함께 봅니다.</dd></div>
-                <div><dt>대가</dt><dd>지금 집계 쿼리에는 고객사별 입력과 완료 집합이 없습니다. 그래서 '고객사 한 곳의 5분 중단' 같은 P0 근거는 아직 만들지 못합니다.</dd></div>
+                <div><dt>대가</dt><dd>등급, 전달, 실행 권한을 따로 정해야 해서 사건마다 정할 값이 늘었습니다.</dd></div>
               </dl>
             </article>
             <article class="ts">
@@ -292,7 +291,7 @@
                 <div><dt>고민</dt><dd>시험판의 모델은 조사 작업마다 한 번 불리고 끝났습니다. 이전 분석을 기억하지 못했습니다. 사건을 이어서 관리하는 곳도 없었습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 오래 살아 있는 중앙 조율 에이전트 하나<br>② 사건(정체성, 책임, 기억)과 실행(모델 호출, 큐 작업)을 나눔</dd></div>
                 <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. 사건은 오래 남아야 하고, 모델 호출은 짧게 끝나야 합니다. 조직마다 원장 하나가 사건, 신호, 증거, 작업, 보낼 메시지, 예산을 한 트랜잭션으로 기록합니다. 메시지는 두 번 이상 전달될 수 있어서, 한 번만 반영하는 일은 받는 쪽이 맡습니다. 늦게 끝난 응답은 작업 번호로 걸러 냅니다.</dd></div>
-                <div><dt>대가</dt><dd>같은 조직의 요청이 모두 한 객체를 거칩니다. 무거운 조회가 붙으면 전체가 느려집니다. 10월 12일 배포 직후의 수신 문제도 이 경우로 보입니다(T-01). 쓰기가 많아지면 실제로 잰 뒤 나누기로 했습니다.</dd></div>
+                <div><dt>대가</dt><dd>같은 조직의 요청이 모두 한 객체를 거칩니다. 무거운 조회가 붙으면 전체가 느려집니다. 10월 12일 배포 직후의 수신 문제도 이 경우로 보입니다(T-01).</dd></div>
               </dl>
             </article>
           </section>
@@ -335,20 +334,11 @@
             <p>배포가 성공했는지는 프로세스가 떴는지보다, 다음 수집 주기에 데이터를 모두 받았는지로 판단해야 합니다. 비어 있는 지표는 0이나 정상으로 채우지 말고 따로 다뤄야 합니다.</p>
           </section>
 
-          <section id="d-kw" aria-labelledby="d-kw-h">
-            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">07</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <ol class="keywords">
-              <li><span class="kw__n">01</span><span class="kw__t">알림 등급 설계</span></li>
-              <li><span class="kw__n">02</span><span class="kw__t">중복 없는 반영 (멱등 처리)</span></li>
-              <li><span class="kw__n">03</span><span class="kw__t">배포 검증과 롤백</span></li>
-            </ol>
-          </section>
-
           <section id="d-links" aria-labelledby="d-links-h">
-            <h2 class="sechead" id="d-links-h"><span class="sechead__no">08</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p>서비스 저장소는 비공개라 링크하지 않습니다.</p>
             <ul>
-              <li><a href="https://github.com/ahwlsqja/decklog" target="_blank" rel="noopener">Decklog ↗</a> 짧게 실행되고 끝나는 SRE 에이전트들이 사건 맥락을 이어받는 구조를 다룬 연구 노트입니다. 구현 전 단계입니다.</li>
+              <li><a href="https://github.com/ahwlsqja/decklog" target="_blank" rel="noopener">Decklog ↗</a> 짧게 실행되고 끝나는 SRE 에이전트들이 사건 맥락을 이어받는 구조를 다룬 연구 노트입니다.</li>
             </ul>
           </section>
 

@@ -42,7 +42,7 @@
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.08 – 2026.09</dd></div>
           <div><dt>역할</dt><dd>원리 분석, 비교 실험 설계, 운영 테이블 전환, 화면별 조회 경로 설계</dd></div>
-          <div class="wide"><dt>상태</dt><dd>운영 반영</dd></div>
+          <div class="wide"><dt>상태</dt><dd>운영 중</dd></div>
           <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">ClickHouse</li><li class="chip">ReplacingMergeTree</li><li class="chip">Projection</li><li class="chip">Refreshable MV</li><li class="chip">EXPLAIN</li><li class="chip">system.query_log</li><li class="chip">Cloudflare Workers</li><li class="chip">Go</li></ul></dd></div>
         </dl>
       </div>
@@ -57,8 +57,7 @@
             <li><a href="#d-decision"><span class="n">03</span>설계 결정</a></li>
             <li><a href="#d-result"><span class="n">04</span>결과</a></li>
             <li><a href="#d-ts"><span class="n">05</span>트러블슈팅</a></li>
-            <li><a href="#d-kw"><span class="n">06</span>핵심 역량</a></li>
-            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
+            <li><a href="#d-links"><span class="n">06</span>관련 링크</a></li>
           </ol>
         </aside>
 
@@ -379,7 +378,7 @@
                 <div><dt>고민</dt><dd>정렬 키를 세션이 차지하자, 날짜로 읽는 요약 화면은 하루만 조회해도 훨씬 많은 원본 행을 읽었습니다. 데이터가 쌓일수록 같은 요청이 계속 비싸지는 구조였습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 정렬 키를 날짜 우선으로 되돌리기 ② <code>optimize_aggregation_in_order</code> 설정만 켜기 ③ 정렬 키는 두고 날짜순 projection 추가</dd></div>
                 <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 정렬 키는 하나뿐이고, 그 자리는 같은 행동을 가르는 기준이 맡았습니다. 결과를 정하는 키를 조회 속도 때문에 바꿀 수는 없습니다. 설정만 켜는 방법은 메모리를 약 60% 줄였지만 읽은 행은 그대로였습니다. 그래서 같은 데이터를 다른 순서로 한 벌 더 두는 projection이 기간 조회를 맡게 했습니다. 읽는 양이 쌓인 데이터가 아니라 요청한 기간에 비례하게 하려는 선택입니다. 원본 신호 테이블은 같은 원리로 반대 결론을 냈습니다. 지우는 단위와 읽는 단위가 모두 시간이라 월 파티션을 두었습니다.</dd></div>
-                <div><dt>대가</dt><dd>저장량이 약 32% 늘었습니다(로컬 기준). 데이터를 지운 뒤에는 projection을 다시 만들어야 준비 상태 점검을 통과하는 운영 절차가 붙었습니다. 그 대신 메모리 한도 4GiB에서 실패하던 가장 큰 고객의 90일 요약이 약 1.9초에 끝났습니다(전환 전 후보 측정).</dd></div>
+                <div><dt>대가</dt><dd>저장량이 약 32% 늘었습니다(로컬 기준). 데이터를 지운 뒤에는 projection을 다시 만들어야 준비 상태 점검을 통과하는 운영 절차가 붙었습니다. 그 대신 메모리 한도 4GiB에서 실패하던 가장 큰 고객의 90일 요약이 약 1.9초에 끝났습니다(후보 측정).</dd></div>
               </dl>
             </article>
           </section>
@@ -410,17 +409,8 @@
             </article>
           </section>
 
-          <section id="d-kw" aria-labelledby="d-kw-h">
-            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">06</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <ol class="keywords">
-              <li><span class="kw__n">01</span><span class="kw__t">MergeTree 동작 원리 분석</span></li>
-              <li><span class="kw__n">02</span><span class="kw__t">실행 계획과 시스템 테이블 기반 진단</span></li>
-              <li><span class="kw__n">03</span><span class="kw__t">정합성 검증을 거친 무중단 테이블 전환</span></li>
-            </ol>
-          </section>
-
           <section id="d-links" aria-labelledby="d-links-h">
-            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">06</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p>사내 작업이라 코드와 운영 기록은 공개하지 않았습니다.</p>
             <ul>
               <li><a href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a></li>

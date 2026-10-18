@@ -36,13 +36,13 @@
     <div class="doc-head">
       <div class="shell">
         <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>elt-pipeline</span></nav>
-        <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span></div>
+        <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span><span class="badge badge--ok">운영 중</span></div>
         <h1 class="doc-title" id="detail-h">수집과 ELT 파이프라인 0→1</h1>
         <p class="doc-lede">브라우저 이벤트를 받아 ClickHouse에 원본으로 쌓고, 집계 단위별 테이블로 나눠 대시보드에 보여 주는 경로를 처음부터 만들었습니다. 2026년 6월에는 적재가 4시간 가까이 멈춘 장애가 있었습니다. 복구한 뒤 R2의 원본 기록과 ClickHouse의 이벤트 ID를 양쪽으로 맞춰 봤고, 그 구간 원본 기록의 ID가 하나도 빠지지 않은 것을 확인했습니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.04 – 2026.09</dd></div>
           <div><dt>역할</dt><dd>수집부터 조회용 테이블까지 ELT 전반의 설계와 구현 주도</dd></div>
-          <div class="wide"><dt>상태</dt><dd>2026.10.16 게이트웨이 뒤 구간을 Kafka 경로로 전환했습니다. 수집 게이트웨이는 새 경로 앞단으로 계속 씁니다.</dd></div>
+          <div class="wide"><dt>상태</dt><dd>운영 중. 2026.10.16 게이트웨이 뒤 구간을 Kafka 경로로 전환했고, 수집 게이트웨이는 새 경로 앞단으로 운영하고 있습니다.</dd></div>
           <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Cloudflare Queues</li><li class="chip">KV</li><li class="chip">R2</li><li class="chip">ClickHouse</li><li class="chip">PostgreSQL</li></ul></dd></div>
         </dl>
       </div>
@@ -57,8 +57,7 @@
             <li><a href="#d-decisions"><span class="n">03</span>설계 결정</a></li>
             <li><a href="#d-result"><span class="n">04</span>결과</a></li>
             <li><a href="#d-ts"><span class="n">05</span>트러블슈팅</a></li>
-            <li><a href="#d-kw"><span class="n">06</span>핵심 역량</a></li>
-            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
+            <li><a href="#d-links"><span class="n">06</span>관련 링크</a></li>
           </ol>
         </aside>
 
@@ -249,7 +248,7 @@
                 <div><dt>고민</dt><dd>중복 표시를 쓰던 KV는 쓰기가 잦은 용도에 맞지 않았습니다. 최종 일관성이라, 동시에 온 두 건이 모두 "아직 없음"을 볼 수도 있었습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① KV를 그대로 쓴다. ② Durable Object 같은 특정 저장소를 기준으로 삼는다. ③ 지켜야 할 계약과 그 구현을 나눈다.</dd></div>
                 <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 보장 수준은 "행이 물리적으로 정확히 한 번"이 아니라 "결과에 한 번만 반영"으로 정했습니다. 중복 판정을 선점(claim), 임대(lease), 차단(fence), 완료(complete)의 네 상태로 나누고, 완료 전에는 ack하지 않는다는 규칙을 계약에 적었습니다. 중복 판정은 상태 기계라서, 판정 권한은 원자적으로 쓸 수 있는 곳에 있어야 합니다. 구현은 바꿀 수 있어야 합니다. 이후 수집 경로를 Kafka와 Flink로 옮길 때 이 계약이 그대로 기준이 됐습니다.</dd></div>
-                <div><dt>대가</dt><dd>첫 구현체 시험에서 시간 초과와 대조 불일치가 나왔습니다. 그래서 기존 경로에서는 전환을 미뤘습니다.</dd></div>
+                <div><dt>대가</dt><dd>첫 구현체 시험에서 시간 초과와 대조 불일치가 나왔습니다.</dd></div>
               </dl>
             </article>
           </section>
@@ -279,17 +278,8 @@
             </article>
           </section>
 
-          <section id="d-kw" aria-labelledby="d-kw-h">
-            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">06</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <ol class="keywords">
-              <li><span class="kw__n">01</span><span class="kw__t">데이터 정합성 검증</span></li>
-              <li><span class="kw__n">02</span><span class="kw__t">실패 처리 경로 설계</span></li>
-              <li><span class="kw__n">03</span><span class="kw__t">ClickHouse 테이블 설계</span></li>
-            </ol>
-          </section>
-
           <section id="d-links" aria-labelledby="d-links-h">
-            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">06</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p>사내 작업이라 공개된 코드나 글은 없습니다. 설계 때 참고한 공식 문서만 남깁니다.</p>
             <ul>
               <li><a href="https://clickhouse.com/docs/engines/table-engines/mergetree-family/replacingmergetree" target="_blank" rel="noopener">ClickHouse ReplacingMergeTree</a></li>

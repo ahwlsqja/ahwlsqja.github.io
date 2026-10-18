@@ -36,13 +36,13 @@
     <div class="doc-head">
       <div class="shell">
         <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>ai-native-sdlc</span></nav>
-        <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span></div>
+        <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span><span class="badge badge--ok">운영 중</span></div>
         <h1 class="doc-title" id="detail-h">AI 네이티브 SDLC: AI 에이전트와 함께 일하는 개발, 검증, 배포 체계</h1>
         <p class="doc-lede">사람과 AI 에이전트가 같은 Linear 작업 항목에서 일을 이어받는 개발 체계를 설계했습니다. AI가 만든 변경도 사람의 변경과 같은 검사와 검토를 거치게 했습니다. 에이전트에게 무엇을 맡길지, 어떻게 검증할지, 언제 사람이 판단할지를 규칙으로 정했습니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.04 – 2026.09</dd></div>
           <div><dt>역할</dt><dd>체계 전체의 설계, 구축, 운영. 작업 기록 위치, 역할별 작업 규칙, 검토 규칙, 배포 경로, 시크릿 접근 범위를 정함</dd></div>
-          <div class="wide"><dt>상태</dt><dd>작업 기록 방식과 반영 규칙은 2026.04 – 09 팀의 개발 방식 / 역할을 나눈 에이전트 실행은 본인 로컬 환경에서 운영 (2026.09 실행 기록으로 확인) / 배포 대기열은 2026.06 말 – 09 중순 배포 경로였고 10월부터 GitOps로 옮기는 중 / AI가 만든 변경은 자동으로 반영하지 않음</dd></div>
+          <div class="wide"><dt>상태</dt><dd>운영 중. 작업 기록 방식과 반영 규칙은 2026.04부터 팀의 개발 방식 / 역할을 나눈 에이전트 실행은 본인 로컬 환경에서 운영 (2026.09 실행 기록으로 확인) / 배포 대기열은 2026.06 말 – 09 중순 배포 경로였고, 10월부터 Argo CD와 Kargo 기반 GitOps 경로로 운영 / AI가 만든 변경은 자동으로 반영하지 않음</dd></div>
           <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Linear</li><li class="chip">GitHub Actions</li><li class="chip">OIDC</li><li class="chip">Infisical</li><li class="chip">Atlas</li><li class="chip">Terraform</li><li class="chip">Cloud SQL IAM 인증</li><li class="chip">GCP Secret Manager</li></ul></dd></div>
         </dl>
       </div>
@@ -58,8 +58,7 @@
             <li><a href="#d-result"><span class="n">04</span>결과</a></li>
             <li><a href="#d-ts"><span class="n">05</span>트러블슈팅</a></li>
             <li><a href="#d-learn"><span class="n">06</span>배운 점</a></li>
-            <li><a href="#d-kw"><span class="n">07</span>핵심 역량</a></li>
-            <li><a href="#d-links"><span class="n">08</span>관련 링크</a></li>
+            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
           </ol>
         </aside>
 
@@ -78,7 +77,7 @@
             <h2 class="sechead" id="d-process-h"><span class="sechead__no">02</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
 
 <figure class="dg" id="dg-sdlc" style="--dg-min: 600px" data-step-ms="3600"
-  data-idle="배포 단계는 2026년 6월부터 9월 중순까지 쓴 경로입니다. 10월부터 GitOps 경로로 옮기고 있고, 지금은 staging까지 같은 원칙으로 확인했습니다."
+  data-idle="배포 단계는 2026년 6월부터 9월 중순까지 쓴 경로입니다. 10월부터는 같은 원칙을 GitOps 경로로 옮겨 운영합니다."
   data-steps='[
   {"t":"사람이 목표와 결정을 Linear 작업 항목에 남깁니다. 작업 항목에는 저장소 문서로 가는 링크만 둡니다."},
   {"t":"작업 항목을 읽고 조사와 설계를 시작합니다. 설계에서 파일과 범위를 나눠, 별도 작업 폴더를 쓰는 구현 A와 구현 B에 맡깁니다.", "d": 4200},
@@ -291,7 +290,7 @@
               <dl class="ts__rows">
                 <div><dt>고민</dt><dd>배포 전 점검 하나가 너무 많은 일을 했습니다. 스키마 변경, 대기, 과거 데이터 채우기, 집계 뷰 중지와 재개, 판정을 한 번에 했습니다. 그 뒤 마이그레이션 도구가 같은 변경을 다시 적용했습니다. 운영 전환 때 가장 느린 단계가 전체를 막았습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 배포 전 점검을 더 강하게 만들기 ② 스키마 적용, 짧은 동작 확인, 과거 데이터 채우기를 세 단계로 나누기</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다(2026.08 설계). 스키마 변경은 되돌릴 수 없고 한 번만 적용돼야 합니다. 과거 데이터 채우기는 몇 번이고 다시 할 수 있습니다. 성격이 다른 일을 한 조건에 묶으면 가장 느린 일이 전체 속도를 정합니다. 그래서 스키마 적용과 짧은 동작 확인만 배포를 막게 했습니다. 과거 데이터 채우기는 배포와 따로 뒤에서 돌게 했습니다. 스키마를 바꾸는 도구도 Atlas 하나로 모았습니다. 배포 전 점검은 정상 데이터를 안전하게 처리할 수 있는지만 확인합니다. 운영 데이터에 결함이 하나도 없는지까지 묻지 않습니다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다(2026.08). 스키마 변경은 되돌릴 수 없고 한 번만 적용돼야 합니다. 과거 데이터 채우기는 몇 번이고 다시 할 수 있습니다. 성격이 다른 일을 한 조건에 묶으면 가장 느린 일이 전체 속도를 정합니다. 그래서 스키마 적용과 짧은 동작 확인만 배포를 막게 했습니다. 과거 데이터 채우기는 배포와 따로 뒤에서 돌게 했습니다. 스키마를 바꾸는 도구도 Atlas 하나로 모았습니다. 배포 전 점검은 정상 데이터를 안전하게 처리할 수 있는지만 확인합니다. 운영 데이터에 결함이 하나도 없는지까지 묻지 않습니다.</dd></div>
                 <div><dt>대가</dt><dd>과거 데이터가 덜 채워진 채로 운영하는 기간이 생깁니다. 그 기간은 0건처럼 보이지 않게 따로 표시해야 합니다. 떼어 낸 채우기 작업도 따로 관리해야 합니다.</dd></div>
               </dl>
             </article>
@@ -314,7 +313,7 @@
               <li>QA 에이전트가 결함을 재현해 수정으로 되돌림: Kafka 메시지 건너뜀, 파일 경로 검사에서 파일 이름만 같으면 틀린 경로도 통과시키던 결함 (로컬 검증 단계)</li>
               <li>배포 대기열을 거친 운영 승격은 staging에서 검증한 같은 이미지 digest 사용 (2026.06 말 – 09 중순 배포 경로)</li>
               <li>판정 근거가 모자란 배포 묶음은 운영 전에 보류</li>
-              <li>ClickHouse 마이그레이션을 미적용분만 적용하는 방식으로 바꾸고, 다시 실행해도 변경 없음 확인 (2026.07 staging)</li>
+              <li>ClickHouse 마이그레이션을 미적용분만 적용하는 방식으로 바꾸고, 다시 실행해도 변경 없음 확인 (2026.07)</li>
               <li>GitHub Actions 저장 토큰 → OIDC 인증, 실제 OIDC 경로에서 배포 전 점검 6개 통과 (2026.07 운영)</li>
             </ul>
           </section>
@@ -327,7 +326,7 @@
                 <div><dt>문제</dt><dd>비동기 전달 기능의 Kafka consumer(메시지를 읽는 쪽)를 작업으로 나눠 구현 에이전트에게 맡겼습니다. 구현 작업의 테스트 일부는 통과한 상태였습니다. 그 뒤 QA를 맡은 별도 에이전트가 처리하지 못한 메시지를 건너뛰는 반례를 재현했습니다. offset(읽은 위치) 10을 처리하지 못한 채 다음 poll(메시지를 가져오는 호출)에서 11을 처리하는 경우입니다. 이때 다음에 읽을 위치가 offset 12로 확정될 수 있었습니다. 그러면 offset 10의 메시지는 다시 읽히지 않습니다.</dd></div>
                 <div><dt>원인</dt><dd>처리하지 못한 레코드가 poll 한 번을 처리하는 함수 안에만 있었습니다. 다음 poll에서는 그 기록이 사라졌습니다. poll을 한 번만 호출하는 테스트로는 이 결함이 보이지 않습니다. 같은 검증에서 처리하지 못한 건수가 누적되지 않고 덮어써지는 결함도 찾았습니다.</dd></div>
                 <div><dt>해결</dt><dd>수정 방향을 정해 구현 에이전트에게 다시 맡겼습니다. 처리하지 못한 레코드는 다음 poll까지 보존합니다. 보존한 레코드는 새 메시지보다 먼저 다시 처리합니다. offset은 앞에서부터 끊김 없이 처리된 지점까지만 확정합니다. 보존 개수에는 상한을 둡니다. 재검증은 관련 파일 4개와 반례 테스트로 좁혔습니다. 이미 통과한 큰 DB 테스트 묶음을 반복하는 대신 바뀐 부분을 다시 보게 했습니다. 수정한 버전에서 같은 반례, 보존 상한, 파티션 재할당(rebalance) 시점을 QA 에이전트가 다시 확인하게 했습니다.</dd></div>
-                <div class="is-key"><dt>결과</dt><dd>운영에 닿기 전, 로컬 검증 단계에서 메시지 건너뜀 결함을 잡았습니다. 실제 broker를 붙인 운영 확인은 별도 완료 조건으로 남겼습니다. 같은 기능의 Kafka 인프라 작업은 코드가 반영되자 작업 관리 도구에서 자동으로 완료 처리된 적이 있었습니다. 실제 broker 접근 권한, 메시지 송수신, 지연, DLQ(처리에 실패한 메시지를 따로 모으는 큐) 확인 결과가 없어 진행 중으로 되돌렸습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>운영에 닿기 전, 로컬 검증 단계에서 메시지 건너뜀 결함을 잡았습니다. 실제 broker를 붙인 운영 확인은 별도 완료 조건으로 두고 확인했습니다. 같은 기능의 Kafka 인프라 작업은 코드가 반영되자 작업 관리 도구에서 자동으로 완료 처리된 적이 있었습니다. 실제 broker 접근 권한, 메시지 송수신, 지연, DLQ(처리에 실패한 메시지를 따로 모으는 큐) 확인 결과가 없어 완료 처리를 되돌렸고, 이 결과를 채운 뒤 완료로 닫았습니다.</dd></div>
               </dl>
             </article>
           </section>
@@ -335,25 +334,16 @@
           <section id="d-learn" aria-labelledby="d-learn-h">
             <h2 class="sechead" id="d-learn-h"><span class="sechead__no">06</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p>완료 판정은 구현자의 보고와 떼어, 따로 확인한 증거로 해야 합니다.</p>
-            <p>배포 경로도 같은 기준으로 봤습니다. 직접 만든 배포 대기열은 9월 중순 이후 실제 배포에 성공하지 못했습니다. 10월에 Argo CD와 Kargo 기반 GitOps로 옮겼습니다. staging에서는 새 이미지가 Kargo 승격을 거쳐 Argo CD로 적용되는 경로까지 확인했습니다. 운영 승격을 같은 경로로 옮기는 일은 진행 중입니다.</p>
-            <p>여러 에이전트가 함께 일하는 구조는 개인 오픈소스에서 이어서 다루고 있습니다. oh-my-factory는 사람이 목표, 설계 결정, 증거를 승인하고 에이전트는 격리된 환경에서 일하도록 설계한 도구입니다. 지금 동작하는 것은 목표 정의와 측정, 작업 항목 관리, 변조를 알아챌 수 있는 해시 체인 원장입니다. 격리된 환경에서 구현하고 판정하는 단계는 아직 만들고 있습니다(pre-alpha).</p>
-          </section>
-
-          <section id="d-kw" aria-labelledby="d-kw-h">
-            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">07</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <ol class="keywords">
-              <li><span class="kw__n">01</span><span class="kw__t">AI가 만든 변경의 검토와 독립 검증 규칙 설계</span></li>
-              <li><span class="kw__n">02</span><span class="kw__t">staging에서 검증한 이미지를 그대로 운영에 배포하는 경로 설계</span></li>
-              <li><span class="kw__n">03</span><span class="kw__t">시크릿과 에이전트 권한 범위 설계</span></li>
-            </ol>
+            <p>배포 경로도 같은 기준으로 봤습니다. 직접 만든 배포 대기열은 9월 중순 이후 실제 배포에 성공하지 못했습니다. 10월에 Argo CD와 Kargo 기반 GitOps로 옮겼습니다. 새 이미지가 Kargo 승격을 거쳐 Argo CD로 적용되는 경로로 staging과 운영 승격을 모두 운영합니다.</p>
+            <p>여러 에이전트가 함께 일하는 구조는 개인 오픈소스에서 이어서 다뤘습니다. oh-my-factory는 사람이 목표, 설계 결정, 증거를 승인하고 에이전트는 격리된 환경에서 일하도록 설계한 도구입니다. 목표 정의와 측정, 작업 항목 관리, 변조를 알아챌 수 있는 해시 체인 원장, 격리된 환경에서 구현하고 판정하는 단계를 만들었습니다.</p>
           </section>
 
           <section id="d-links" aria-labelledby="d-links-h">
-            <h2 class="sechead" id="d-links-h"><span class="sechead__no">08</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
               <li><a href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a></li>
-              <li><a href="https://github.com/ahwlsqja/oh-my-factory" target="_blank" rel="noopener">oh-my-factory</a> (사람이 목표와 증거를 승인하는 에이전트 작업 도구, pre-alpha)</li>
-              <li><a href="https://github.com/ahwlsqja/decklog" target="_blank" rel="noopener">Decklog</a> (짧게 사는 에이전트들이 공유 기록으로 일을 이어받는 구조에 관한 연구 노트, 구현 전 연구 단계)</li>
+              <li><a href="https://github.com/ahwlsqja/oh-my-factory" target="_blank" rel="noopener">oh-my-factory</a> (사람이 목표와 증거를 승인하는 에이전트 작업 도구)</li>
+              <li><a href="https://github.com/ahwlsqja/decklog" target="_blank" rel="noopener">Decklog</a> (짧게 사는 에이전트들이 공유 기록으로 일을 이어받는 구조에 관한 연구 노트)</li>
               <li><a href="https://docs.github.com/en/actions/concepts/security/openid-connect" target="_blank" rel="noopener">GitHub Actions OpenID Connect</a></li>
               <li><a href="https://atlasgo.io/versioned/apply" target="_blank" rel="noopener">Atlas 버전 마이그레이션 적용</a></li>
               <li><a href="https://kafka.apache.org/documentation/#consumerconfigs" target="_blank" rel="noopener">Kafka consumer 설정</a></li>

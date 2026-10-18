@@ -126,28 +126,14 @@
         </div>
       </div>
 
-      <div class="twocol about-block">
-        <div>
-          <h3 class="label">핵심 역량</h3>
-          <ol class="caps">
-            <li>ClickHouse 저장과 조회 원리에 근거한 테이블, 조회 경로 최적화</li>
-            <li>방문자 신원과 CDP 데이터 모델 설계</li>
-            <li>상태 계산은 Flink, ClickHouse는 적재와 조회로 나눈 실시간 아키텍처 설계와 전환</li>
-            <li>AI 에이전트와 함께 일하는 개발, 검증, 배포 체계</li>
-            <li>Blue/Green 설계와 되돌리는 길을 먼저 확인한 안전한 이관</li>
-          </ol>
-          <h3 class="label sublabel">설계 원칙</h3>
-          <ol class="caps">
-            <li>의미와 단위를 먼저 정하고, 물리 구조는 그 뒤에 고릅니다<small>— 해시 파티션을 걷어낸 이유</small></li>
-            <li>상태 계산은 저장소가 아니라 상태를 다루는 곳에 둡니다<small>— 세션 집계를 Flink로 옮긴 이유</small></li>
-            <li>중복은 정상으로 보고, 되돌릴 수 없는 계산 앞에서 한 번만 반영합니다<small>— 같은 입력이면 같은 결과가 나오게 적재를 설계한 이유</small></li>
-            <li>되돌리는 길을 먼저 만들고, 검증 강도는 되돌릴 수 있는지에 맞춥니다<small>— 같은 문장으로 되돌릴 수 있는 테이블 교체를 고른 이유</small></li>
-            <li>원본은 지우지 않고, 해석은 나중에 합니다<small>— 방문자 신원을 조회 시점에 해석한 이유</small></li>
-            <li>다음 단계가 받았다는 증거가 있을 때만 받았다고 말합니다<small>— Kafka가 받은 뒤에만 성공을 돌려준 이유</small></li>
-            <li>검증은 대상과 다른 눈으로 합니다<small>— 기존 경로를 정답지로 쓰지 않은 이유</small></li>
-          </ol>
-        </div>
-        <div>
+      <div class="about-block intro">
+        <h3 class="label">소개</h3>
+        <p>처음 개발을 배운 건 백엔드였지만, 오래 붙잡게 된 질문은 "서로 믿지 않는 여러 컴퓨터가 어떻게 같은 상태에 합의하는가"였습니다. 이 질문이 재미있어서 블록체인을 공부하기 시작했습니다. 학회 BAY에서 PBFT부터 Mysticeti까지 합의 알고리즘을 따라가며 발표했고, 관심이 생길 때마다 Besu와 Hyperledger Fabric 네트워크를 Kubernetes에 직접 띄워 보며 노드가 블록을 주고받고 합의하는 과정을 공부했습니다.</p>
+        <p>공부하다 보니 직접 만들어 보고 싶은 것이 생겼습니다. 남는 컴퓨터를 스테이킹만으로 클러스터에 보탤 수 있다면 어떨까 하는 생각에서 DAAS-Vader를 기획했고, Sui에 스테이킹하면 그 머신이 Kubernetes 워커로 들어오는 구조를 아이디어부터 개발까지 직접 만들었습니다. 이 관심은 월드랜드로 이어져, GPU 머신을 네트워크에 붙이고 쓴 만큼 정산하는 GPU 렌탈 마켓의 노드 SDK를 만들었습니다.</p>
+        <p>지금은 수파리드에서 데이터 수집부터 저장, 인프라까지 맡고 있습니다. 분야는 달라졌지만 질문은 비슷했습니다. 늦게 오거나 두 번 오는 이벤트를 어떻게 한 번만 반영할지, 장애가 나면 어디서부터 다시 계산할지를 고민했습니다. 원리를 파고들어 이런 문제를 실제 제품에서 풀어낼 때 가장 큰 보람을 느낍니다.</p>
+      </div>
+
+      <div class="about-block">
           <h3 class="label">사용 기술</h3>
           <dl class="stack">
             <div><dt>인프라/운영</dt><dd><ul class="chips"><li class="chip">Kubernetes</li><li class="chip">GKE</li><li class="chip">Docker</li><li class="chip">Terraform</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">Managed Prometheus (PromQL)</li><li class="chip">Cloudflare Workers</li><li class="chip">Linux</li></ul></dd></div>
@@ -156,14 +142,8 @@
             <div><dt>블록체인</dt><dd><ul class="chips"><li class="chip">Besu</li><li class="chip">go-ethereum</li><li class="chip">Prysm</li><li class="chip">Cosmos SDK</li><li class="chip">Hyperledger Fabric</li><li class="chip">Sui</li></ul></dd></div>
             <div><dt>도구</dt><dd><ul class="chips"><li class="chip">GitHub Actions</li><li class="chip">Infisical</li><li class="chip">Sentry</li><li class="chip">Delve</li><li class="chip">Linear</li></ul></dd></div>
           </dl>
-        </div>
       </div>
 
-      <div class="about-block intro">
-        <h3 class="label">소개</h3>
-        <p>저는 대규모 데이터 처리와 분산 시스템에 관심이 많습니다. 학부 때는 Besu와 Hyperledger Fabric 노드를 Kubernetes에 띄우며 동기화와 인증서 문제를 풀었고, BAY에서 합의 알고리즘을 발표했습니다. 월드랜드에서는 GPU 머신을 Kubernetes 워커로 붙이는 Go 노드 SDK를 만들었습니다.</p>
-        <p>수파리드에서는 방문자 신원과 이벤트를 한 사람의 여정으로 잇는 CDP 데이터 모델을 설계했습니다. ClickHouse는 MergeTree가 데이터를 저장하고 읽는 방식을 먼저 확인한 뒤 파티션과 정렬 키를 다시 정했습니다. 세션 집계 같은 상태 계산은 ClickHouse에서 꺼내 Flink로 옮겼습니다. Kafka를 원본 로그로 두는 구조로 다시 설계해 주 경로로 전환했습니다. 여러 AI 에이전트가 함께 일하는 개발 환경에서도 상태를 어디에 둘지, 누가 무엇을 바꿀지, 틀렸을 때 어떻게 멈출지를 정해 작업 방식과 검사 규칙을 만들었습니다.</p>
-      </div>
     </section>
 
     <!-- §02 Work Experience -->
