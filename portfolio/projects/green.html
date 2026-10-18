@@ -38,7 +38,7 @@
         <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>v3-architecture</span></nav>
         <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span><span class="badge badge--ok">운영 중</span></div>
         <h1 class="doc-title" id="detail-h">V3 실시간 아키텍처: 상태 계산은 Flink, ClickHouse는 적재와 조회</h1>
-        <p class="doc-lede">브라우저 행동 이벤트로 세션을 만드는 분석 플랫폼입니다. late event와 재전송 이벤트를 다루는 stateful 계산을 ClickHouse에서 꺼내 Flink로 옮겼습니다. Kafka를 원본 로그로 두어, 같은 입력이면 같은 결과가 나오는 구조로 다시 설계했습니다. 운영 트래픽을 끊지 않고 새 경로로 전환했습니다.</p>
+        <p class="doc-lede">수파리드는 광고 클릭부터 자사몰, 매장, 외부몰 구매까지 고객 여정을 하나의 어트리뷰션으로 잇는 옴니채널 고객 인텔리전스 플랫폼입니다. 이 프로젝트는 브라우저 행동 이벤트로 방문 세션과 여정을 실시간으로 계산하는 경로를 다룹니다. late event와 재전송 이벤트를 다루는 stateful 계산을 ClickHouse에서 꺼내 Flink로 옮겼습니다. Kafka를 원본 로그로 두어, 같은 입력이면 같은 결과가 나오는 구조로 다시 설계했습니다. 운영 트래픽을 끊지 않고 새 경로로 전환했습니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.08 – 2026.10</dd></div>
           <div><dt>역할</dt><dd>데이터 경로 전체를 설계하고 cutover 시점을 판단했습니다. 세션 정의, partition key, dedup 위치를 정하는 일부터 수신, Flink state 처리, idempotent 적재, cutover 절차까지 맡았습니다.</dd></div>

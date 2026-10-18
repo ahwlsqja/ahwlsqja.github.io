@@ -156,10 +156,10 @@
       <div class="career">
         <div class="career__head">
           <span class="career__org">수파리드 주식회사</span>
-          <span class="career__role">초기 멤버, 백엔드와 데이터, 인프라</span>
+          <span class="career__role">Product Data Engineer · 초기 멤버, 백엔드·데이터·인프라</span>
           <span class="career__when">2026.04 – 재직 중</span>
         </div>
-        <p class="career__desc">웹사이트 방문 행동과 광고 데이터를 연결해 방문 여정과 채널 성과를 보여 주는 B2B 분석 제품입니다.</p>
+        <p class="career__desc">광고 클릭부터 자사몰, 매장, 외부몰 구매까지 흩어진 고객 데이터를 하나의 어트리뷰션으로 잇는 옴니채널 고객 인텔리전스 플랫폼입니다.</p>
         <ol class="rows" id="projects">
           <li><a class="row" href="projects/green.html">
             <span class="row__no">01</span>
@@ -189,36 +189,43 @@
               <ul class="chips"><li class="chip">GKE</li><li class="chip">Terraform</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">External Secrets</li><li class="chip">ClickHouse Keeper</li><li class="chip">clickhouse-backup</li></ul></span>
             <span class="row__when">2026.09 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
-          <li><a class="row" href="projects/clickhouse.html">
+          <li><a class="row" href="projects/qr-relay.html">
             <span class="row__no">05</span>
+            <span class="row__main"><span class="row__title">QR Relay Module: 매장 QR과 문자 링크의 브라우저 식별과 이동</span>
+              <span class="row__sum">SDK를 심을 수 없는 매장 QR과 문자 링크에서, 스캔한 사람이 짧은 relay 페이지를 지나는 1.5초 안에 브라우저를 식별하고 원래 목적지로 보내는 엣지 모듈 설계와 구축</span>
+              <ul class="chips"><li class="chip">Cloudflare Workers</li><li class="chip">TypeScript</li><li class="chip">Workers KV</li><li class="chip">Fingerprint</li><li class="chip">Go</li><li class="chip">PostgreSQL</li><li class="chip">Hyperdrive</li><li class="chip">ClickHouse</li></ul></span>
+            <span class="row__when">2026.10</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
+          <li><a class="row" href="projects/clickhouse.html">
+            <span class="row__no">06</span>
             <span class="row__main"><span class="row__title">ClickHouse 저장 구조와 조회 경로 최적화</span>
               <span class="row__sum">MergeTree 동작을 근거로 테이블마다 partition과 sort key를 다시 정하고, 화면별 조회 경로 설계</span>
               <ul class="chips"><li class="chip">ClickHouse</li><li class="chip">ReplacingMergeTree</li><li class="chip">Projection</li><li class="chip">Refreshable MV</li><li class="chip">EXPLAIN</li><li class="chip">system.query_log</li></ul></span>
             <span class="row__when">2026.08 – 2026.09</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/elt.html">
-            <span class="row__no">06</span>
+            <span class="row__no">07</span>
             <span class="row__main"><span class="row__title">수집과 ELT 파이프라인 0→1</span>
               <span class="row__sum">브라우저 이벤트를 Cloudflare Workers와 Queues로 받아 ClickHouse raw 테이블에 적재하고, 조회용 테이블까지 나누는 수집과 ELT 경로 신규 구축</span>
               <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Cloudflare Queues</li><li class="chip">ClickHouse</li><li class="chip">PostgreSQL</li><li class="chip">R2</li></ul></span>
             <span class="row__when">2026.04 – 2026.09</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/sdlc.html">
-            <span class="row__no">07</span>
+            <span class="row__no">08</span>
             <span class="row__main"><span class="row__title">AI 네이티브 SDLC: AI 에이전트와 함께 일하는 개발, 검증, 배포 체계</span>
               <span class="row__sum">AI 에이전트의 변경도 사람의 변경과 같은 검사를 거치게 한 개발, 검증, 배포 체계</span>
               <ul class="chips"><li class="chip">Linear</li><li class="chip">GitHub Actions</li><li class="chip">OIDC</li><li class="chip">Infisical</li><li class="chip">Atlas</li><li class="chip">Terraform</li></ul></span>
             <span class="row__when">2026.04 – 2026.09</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/deploy.html">
-            <span class="row__no">08</span>
+            <span class="row__no">09</span>
             <span class="row__main"><span class="row__title">AI 네이티브 개발을 위한 배포 파이프라인 설계와 GitOps 전환</span>
               <span class="row__sum">한 번 빌드한 이미지를 staging에서 검증한 뒤 같은 digest 그대로 production으로 promotion하는 파이프라인을 만들고, Argo CD와 Kargo 기반 GitOps로 옮긴 배포 체계</span>
               <ul class="chips"><li class="chip">GitHub Actions</li><li class="chip">Terraform</li><li class="chip">Infisical</li><li class="chip">GKE Autopilot</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">External Secrets Operator</li></ul></span>
             <span class="row__when">2026.05 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/sre.html">
-            <span class="row__no">09</span>
+            <span class="row__no">10</span>
             <span class="row__main"><span class="row__title">SRE 에이전트 플랫폼</span>
               <span class="row__sum">지표를 5분마다 읽어 incident를 기록하고 AI 1차 진단을 남기며, P0일 때만 담당자를 호출하는 사내 SRE 서비스</span>
               <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Durable Object</li><li class="chip">Cloudflare Queues</li><li class="chip">Cloud Run Job</li><li class="chip">Managed Prometheus</li><li class="chip">Slack</li></ul></span>
@@ -240,12 +247,12 @@
       <div class="career">
         <div class="career__head">
           <span class="career__org">리버밴스 (월드랜드)</span>
-          <span class="career__role">계약직 인턴, 블록체인 백엔드</span>
+          <span class="career__role">프리랜서(용역), 블록체인 백엔드</span>
           <span class="career__when">2026.01 – 2026.04</span>
         </div>
         <ol class="rows">
           <li><a class="row" href="projects/worldland.html">
-            <span class="row__no">10</span>
+            <span class="row__no">11</span>
             <span class="row__main"><span class="row__title">월드랜드 GPU 렌탈 마켓</span>
               <span class="row__sum">공급자 GPU 머신을 명령 한 줄로 붙이고 결제가 확인된 렌탈에만 GPU를 내주는 마켓 개발</span>
               <ul class="chips"><li class="chip">Go</li><li class="chip">client-go</li><li class="chip">kubeadm</li><li class="chip">containerd</li><li class="chip">mTLS</li><li class="chip">go-ethereum</li><li class="chip">Solidity</li></ul></span>
