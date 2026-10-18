@@ -41,7 +41,7 @@
         <p class="doc-lede">수집 경로의 지표를 5분마다 읽어 사건으로 기록하고, AI가 근거를 붙인 1차 진단을 남기는 사내 SRE 서비스입니다. P0가 아니면 사람을 부르지 않고, 복구는 사람이 승인한 뒤 실행합니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.09 – 2026.10</dd></div>
-          <div><dt>역할</dt><dd>혼자 맡음. 설계, 알림 등급 정책, 통합과 배포, 운영에 넣는 판단 (구현은 AI 코딩 에이전트와 함께)</dd></div>
+          <div><dt>역할</dt><dd>혼자 맡음. 설계, 알림 등급 정책, 구축과 배포, 운영에 넣는 판단</dd></div>
           <div class="wide"><dt>상태</dt><dd>운영 중</dd></div>
           <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Durable Object (SQLite)</li><li class="chip">Cloudflare Queues</li><li class="chip">Cloud Run Job</li><li class="chip">Cloud Scheduler</li><li class="chip">Managed Prometheus (PromQL)</li><li class="chip">Slack</li><li class="chip">Linear</li></ul></dd></div>
         </dl>
@@ -54,11 +54,12 @@
           <ol>
             <li><a href="#d-situation"><span class="n">01</span>상황과 역할</a></li>
             <li><a href="#d-process"><span class="n">02</span>해결 과정</a></li>
-            <li><a href="#d-result"><span class="n">03</span>결과</a></li>
-            <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
-            <li><a href="#d-learn"><span class="n">05</span>배운 점</a></li>
-            <li><a href="#d-kw"><span class="n">06</span>핵심 역량</a></li>
-            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
+            <li><a href="#d-design"><span class="n">03</span>설계 결정</a></li>
+            <li><a href="#d-result"><span class="n">04</span>결과</a></li>
+            <li><a href="#d-ts"><span class="n">05</span>트러블슈팅</a></li>
+            <li><a href="#d-learn"><span class="n">06</span>배운 점</a></li>
+            <li><a href="#d-kw"><span class="n">07</span>핵심 역량</a></li>
+            <li><a href="#d-links"><span class="n">08</span>관련 링크</a></li>
           </ol>
         </aside>
 
@@ -69,8 +70,7 @@
             <p>신호는 많았지만 사람이 판단할 장애는 드물었습니다. 그래서 지표를 반복해서 보는 일과 1차 진단은 서비스에 맡기고, 사람은 결정만 하게 했습니다.</p>
             <p>9월에는 모델이 조회만 할 수 있는 조사 에이전트를 시험 삼아 만들었습니다. 10월에 이를 바탕으로 운영 서비스를 새로 설계했습니다.</p>
             <dl class="scope">
-              <dt>맡은 일</dt><dd>혼자 맡은 프로젝트이고, 회사 한 곳을 대상으로 제가 직접 운영하고 있습니다. 알림 등급 정책과 저장 구조, 권한을 설계했습니다. 통합과 배포, 롤백, 운영에 넣을지 판단하는 일도 제가 했습니다.</dd>
-              <dt>AI 에이전트</dt><dd>기능 구현에는 AI 코딩 에이전트를 함께 썼습니다.</dd>
+              <dt>맡은 일</dt><dd>혼자 맡은 프로젝트이고, 사내 서비스로 제가 직접 운영하고 있습니다. 알림 등급 정책과 저장 구조, 권한을 설계했습니다. 구축과 배포, 롤백, 운영에 넣을지 판단하는 일도 제가 했습니다.</dd>
             </dl>
           </section>
 
@@ -217,7 +217,7 @@
 
             <h3>1. 사건 저장소를 조직별 Durable Object 하나로 둔 이유</h3>
             <p>Durable Object는 객체 하나를 한 스레드에서 실행합니다. 내장 SQLite 트랜잭션은 중간에 다른 요청이 끼어들지 않고 끝납니다. 그래서 조직마다 객체를 하나 두었습니다. 신호의 중복을 거르고, 사건을 갱신하고, 진단 작업과 보낼 메시지를 남기는 일을 락 없이 한 트랜잭션에서 끝냅니다.</p>
-            <p>D1과 Workflows, Agents SDK를 조합하는 안도 검토했습니다. 실행 계층이 셋으로 나뉘면 재시도와 상태 규칙을 따로 맞춰야 해서 택하지 않았습니다. 같은 조직의 요청이 모두 한 객체를 거치는 비용은 받아들였습니다. 쓰기가 많아지면 실제로 잰 뒤 나누기로 했습니다.</p>
+            <p>D1과 Workflows, Agents SDK를 조합하는 안도 검토했습니다. 실행 계층이 셋으로 나뉘면 재시도와 상태 규칙을 따로 맞춰야 해서 택하지 않았습니다.</p>
             <p>Cloudflare Queues는 같은 메시지를 두 번 이상 전달할 수 있습니다. Durable Object 트랜잭션과 한 번에 묶이지도 않습니다. 그래서 트랜잭션 안에서는 보낼 메시지를 outbox 테이블에 적기만 합니다. 실제 전송은 alarm으로 깨어나는 전송기가 맡습니다.</p>
             <p>진단 작업을 가져가는 쪽은 그때마다 커지는 번호인 fencing token을 받습니다. 결과를 반영할 때 fencing token과 사건 버전을 다시 확인합니다. 그래서 두 번 전달된 작업이나 늦게 끝난 모델 응답이 앞선 결과를 덮지 못합니다.</p>
             <p>Slack과 Linear 호출이 타임아웃되면 다시 보내지 않습니다. 다음 번에 전송됐는지 조회만 합니다. 같은 알림이 두 번 가지 않게 하려는 선택입니다.</p>
@@ -239,7 +239,6 @@
             <p>진단 모델이 먼저 원인을 추정합니다. 이어서 판정 모델이 그 결과를 정해진 형식으로 다시 판정합니다. 모델에는 저장된 근거와 승인된 런북 목록만 줍니다. 주장마다 저장된 근거의 ID만, 최대 8개까지 인용하게 했습니다. 비밀값과 실행 권한은 주지 않았습니다.</p>
             <p>모델을 부르기 전에 그 호출에 들 수 있는 최대 비용을 예산에서 먼저 잡아 둡니다. 한도는 사건당 3회, 호출 한 번에 60초, 하루 1달러입니다.</p>
             <p>등급은 들어온 값을 쓰지 않고 서버 규칙으로 다시 계산합니다. 시간에 관계없이 사람을 부르는 등급은 P0뿐입니다. P0는 원래 쓰던 호출 경로를 그대로 두었고, 이 서비스는 사본만 기록합니다. P1은 아무도 부르지 않고 Slack 스레드에 남깁니다. P2는 평일 17시에 모아서 요약으로 보냅니다.</p>
-            <p>두 모델이 합의하면 런북을 자동으로 실행하는 안도 검토했지만 택하지 않았습니다. 모델 합의나 Slack 확인 응답이 실행 권한이 되면 안 된다고 판단했습니다. 복구 실행기는 따로 만들었지만 꺼 두었습니다. 복구는 사람이 승인한 뒤 직접 실행합니다.</p>
             <p>ClickHouse 알림 정책은 환경마다 44개, 모두 88개를 Terraform으로 선언했습니다. 처음 일괄 적용에서는 28개 중 25개가 API 400으로 실패했습니다. 11개는 정책 하나에 PromQL 조건을 하나만 받는 제약 때문이라 조건 하나씩으로 나눴고, 14개는 지표 수집이 아직 시작되지 않아서라 적용 전 점검 항목으로 남겼습니다. 지표가 아예 사라져도 조용히 넘어가지 않게 <code>or vector(0)</code>를 붙였고, operator 재시작을 ClickHouse 장애로 읽지 않게 컨테이너 셀렉터를 좁혔습니다.</p>
             <p>이 88개는 아직 알림 채널에 연결하지 않고 발화만 기록하고 있습니다. Slack에 바로 연결하면 P0 정책을 거치지 않는 두 번째 알림 통로가 생기기 때문입니다.</p>
 
@@ -248,8 +247,58 @@
             <p>운영에 넣을지는 실제로 발생한 사건으로 판단했습니다. 첫 사건에서는 판정 모델 호출이 요청 전 검사에서 막히는 결함을 찾아 고쳤습니다. 다음 사건에서는 두 모델과 Linear 기록까지 통과했습니다.</p>
           </section>
 
+          <section id="d-design" aria-labelledby="d-design-h">
+            <h2 class="sechead" id="d-design-h"><span class="sechead__no">03</span><span class="sechead__title">설계 결정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>운영 서비스를 만들며 내린 결정 다섯 가지입니다. 결정마다 고민, 선택지, 결정과 이유, 대가를 적었습니다.</p>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-01</span><h3>조사 에이전트는 조회만, 권한은 코드로</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>장애를 조사하려면 저장소, 오류 추적, 클라우드 로그, 코드, 작업 관리 도구 5곳을 함께 봐야 했습니다. 모델이 SQL이나 셸 명령을 직접 만들면 조회 범위가 커집니다. 변경이 실행될 수도 있습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 오픈소스 SRE 에이전트를 가져와 운영<br>② 도구를 하나만 두고, 미리 등록한 원천과 쿼리 쌍만 실행</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. 프롬프트에 '실행 금지'를 적어도 모델은 어길 수 있습니다. 권한은 코드로 막아야 지켜집니다. 오픈소스를 가져오면 권한 경계와 증거 형식을 직접 정하기 어려웠습니다. 쿼리마다 시간 범위와 읽는 양의 상한을 고정했습니다. 결과는 원천, 쿼리 해시, 시간 범위, 요약 값을 묶은 증거로 저장했습니다. 결론에서 원천 쿼리까지 거꾸로 따라갈 수 있어야 진단이 맞는지 나중에 따질 수 있습니다.</dd></div>
+                <div><dt>대가</dt><dd>등록한 쿼리 밖의 장애는 볼 수 없습니다. 시험 단계의 6시간 연속 심사는 통과하지 못했습니다. 실행 구성이 빠진 것을 뒤늦게 찾아 결과로 쓰지 않았습니다.</dd></div>
+              </dl>
+            </article>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-02</span><h3>등급, 전달, 실행 권한을 다른 값으로</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>기존 경보에서는 P0라는 이름이 곧 사람 호출이었습니다. 안전하게 보관된 실패 메시지 1건에도 사람이 깨어났습니다. 반대로 작은 고객사의 장애는 최소량 조건에 가려졌습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 경보 등급 하나로 호출까지 결정<br>② 등급(얼마나 나쁜가), 전달(누구에게 언제), 실행 권한(누가 고칠 수 있나)을 나눔</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. 'P1이지만 권한 변경이 필요한 사건'은 사람이 결정해야 합니다. 그래도 밤에 사람을 깨울 일은 아닙니다. 세 값이 하나로 묶이면 이런 사건을 나타낼 수 없습니다. 복구 여유도 데이터 보존 기간만으로 재지 않았습니다. 가장 오래된 미처리 데이터, 처리 속도, 사람이 넘겨받는 시간을 함께 봅니다.</dd></div>
+                <div><dt>대가</dt><dd>지금 집계 쿼리에는 고객사별 입력과 완료 집합이 없습니다. 그래서 '고객사 한 곳의 5분 중단' 같은 P0 근거는 아직 만들지 못합니다.</dd></div>
+              </dl>
+            </article>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-03</span><h3>자동 복구를 끄고, 복구는 사람 승인 뒤에</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>처음에는 미리 검증한 좁은 범위의 복구까지 자동으로 실행하려 했습니다. 운영 배포 직전에 이 선택을 다시 검토했습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 좁은 범위의 복구는 자동 실행<br>② 두 모델이 합의하면 실행<br>③ 진단과 기록까지만 자동, 복구는 사람 승인 뒤 직접 실행</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③으로 바꿨습니다. 무엇을 할지 아는 것과 해도 되는 것은 다릅니다. 진단 지식, Slack 확인 응답, 모델의 동의 어느 것도 실행 권한이 되지 않습니다. 같은 입력을 본 두 모델의 합의는 독립된 증거가 아닙니다. 복구는 되돌리기 어려운 일이라 사람 승인 뒤에 두었습니다. 복구 실행기는 만들었지만 꺼 두었습니다. 런북은 계속 쌓되, 런북이 늘어도 권한은 늘지 않습니다.</dd></div>
+                <div><dt>대가</dt><dd>밤에 난 장애의 복구가 업무 시간까지 기다릴 수 있습니다. 그래서 '자동 복구'는 성과로 내세우지 않습니다.</dd></div>
+              </dl>
+            </article>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-04</span><h3>감시자는 감시 대상 밖에</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>광고 데이터 수집은 멈춰도 오류가 나지 않고 숫자만 갱신되지 않았습니다. 새 수집 경로에는 알림 정책과 알림 채널이 하나도 없었습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 감시를 처리 계층 안에 둠<br>② 감시기의 정상 신호(heartbeat)를 클러스터 밖 모니터링에서 평가</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. 감시자와 대상이 같은 장애 영역에 있으면 같은 원인으로 함께 멈춥니다. 가장 급한 경보는 거치는 부품을 줄여 모니터링에서 Slack으로 바로 보냅니다. 주의 등급만 전달기를 거쳐 업무 시간 규칙을 적용합니다. 경보 원천이 여럿이어도 사람에게 가는 길은 하나로 모았습니다.</dd></div>
+                <div><dt>대가</dt><dd>긴급 경로와 주의 경로가 따로라 설정할 곳이 늘었습니다.</dd></div>
+              </dl>
+            </article>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-05</span><h3>에이전트는 짧게 살고, 사건 기억은 원장에</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>시험판의 모델은 조사 작업마다 한 번 불리고 끝났습니다. 이전 분석을 기억하지 못했습니다. 사건을 이어서 관리하는 곳도 없었습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 오래 살아 있는 중앙 조율 에이전트 하나<br>② 사건(정체성, 책임, 기억)과 실행(모델 호출, 큐 작업)을 나눔</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. 사건은 오래 남아야 하고, 모델 호출은 짧게 끝나야 합니다. 조직마다 원장 하나가 사건, 신호, 증거, 작업, 보낼 메시지, 예산을 한 트랜잭션으로 기록합니다. 메시지는 두 번 이상 전달될 수 있어서, 한 번만 반영하는 일은 받는 쪽이 맡습니다. 늦게 끝난 응답은 작업 번호로 걸러 냅니다.</dd></div>
+                <div><dt>대가</dt><dd>같은 조직의 요청이 모두 한 객체를 거칩니다. 무거운 조회가 붙으면 전체가 느려집니다. 10월 12일 배포 직후의 수신 문제도 이 경우로 보입니다(T-01). 쓰기가 많아지면 실제로 잰 뒤 나누기로 했습니다.</dd></div>
+              </dl>
+            </article>
+          </section>
+
           <section id="d-result" aria-labelledby="d-result-h">
-            <h2 class="sechead" id="d-result-h"><span class="sechead__no">03</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-result-h"><span class="sechead__no">04</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
               <li>5분마다 지표 28개 수집, 수정 배포 뒤 연속 주기 28/28 수신 (빈 응답 4개는 0으로 채우지 않고 따로 기록)</li>
               <li>실제로 발생한 P2 사건 2건이 사람 손 없이 AI 1차 진단과 Linear 기록까지 이어짐</li>
@@ -260,7 +309,7 @@
           </section>
 
           <section id="d-ts" aria-labelledby="d-ts-h">
-            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">04</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">05</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <article class="ts">
               <header class="ts__head"><span class="ts__id">T-01</span><h3>배포 직후 관측 28건 중 7건만 받은 문제</h3></header>
               <dl class="ts__rows">
@@ -273,7 +322,7 @@
             <article class="ts">
               <header class="ts__head"><span class="ts__id">T-02</span><h3>감시기가 멈춰 heartbeat 경보가 울린 날</h3></header>
               <dl class="ts__rows">
-                <div><dt>문제</dt><dd>이 서비스보다 먼저, 9월 말에 클러스터 안에서 도는 Go 감시기(CronJob)를 만들었습니다. 감시기는 돌 때마다 heartbeat를 남기고, heartbeat가 끊겼는지는 클러스터 밖 Cloud Monitoring이 봅니다(주의 300초, 긴급 900초). 클러스터 안에서 보면 클러스터가 멈출 때 경보도 같이 멈추기 때문입니다. 10월 6일 이 긴급 경보가 Slack으로 반복해서 왔습니다.</dd></div>
+                <div><dt>문제</dt><dd>이 서비스보다 먼저, 9월 말에 클러스터 안에서 도는 Go 감시기(CronJob)를 만들었습니다. 감시기는 돌 때마다 heartbeat를 남기고, heartbeat가 끊겼는지는 클러스터 밖 Cloud Monitoring이 봅니다(주의 300초, 긴급 900초). 10월 6일 이 긴급 경보가 Slack으로 반복해서 왔습니다.</dd></div>
                 <div><dt>원인</dt><dd>마지막 성공 시각과 Job 기록을 보니 3번 연속 실패했고, 로그에는 50초째 DB 타임아웃이 찍혀 있었습니다. 상태를 읽는 SQL은 0.3초라 병목이 아니었습니다. 열린 신호 약 5,600개를 하나씩 DB에 다녀오며 닫는 구조였습니다. 신호가 쌓일수록 실행 시간이 늘어나 제한 시간을 넘었습니다.</dd></div>
                 <div><dt>해결</dt><dd>먼저 제한 시간을 50초에서 240초로 임시로 늘려 감시를 살렸습니다. 이어서 신호 수와 상관없이 한 번에 닫는 집합 쿼리로 바꾸고, 단계마다 시간 예산을 두어 heartbeat를 가장 먼저 남기게 했습니다.</dd></div>
                 <div class="is-key"><dt>결과</dt><dd>배포 뒤 30분 동안 지켜보니 첫 회 55초, 이후 9~14초였고 Job 실패는 0이었습니다. 임시로 늘린 제한 시간은 원래 설정과 똑같이 되돌렸습니다.</dd></div>
@@ -282,12 +331,12 @@
           </section>
 
           <section id="d-learn" aria-labelledby="d-learn-h">
-            <h2 class="sechead" id="d-learn-h"><span class="sechead__no">05</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-learn-h"><span class="sechead__no">06</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p>배포가 성공했는지는 프로세스가 떴는지보다, 다음 수집 주기에 데이터를 모두 받았는지로 판단해야 합니다. 비어 있는 지표는 0이나 정상으로 채우지 말고 따로 다뤄야 합니다.</p>
           </section>
 
           <section id="d-kw" aria-labelledby="d-kw-h">
-            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">06</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">07</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ol class="keywords">
               <li><span class="kw__n">01</span><span class="kw__t">알림 등급 설계</span></li>
               <li><span class="kw__n">02</span><span class="kw__t">중복 없는 반영 (멱등 처리)</span></li>
@@ -296,7 +345,7 @@
           </section>
 
           <section id="d-links" aria-labelledby="d-links-h">
-            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">08</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p>서비스 저장소는 비공개라 링크하지 않습니다.</p>
             <ul>
               <li><a href="https://github.com/ahwlsqja/decklog" target="_blank" rel="noopener">Decklog ↗</a> 짧게 실행되고 끝나는 SRE 에이전트들이 사건 맥락을 이어받는 구조를 다룬 연구 노트입니다. 구현 전 단계입니다.</li>

@@ -132,9 +132,19 @@
           <ol class="caps">
             <li>ClickHouse 저장과 조회 원리에 근거한 테이블, 조회 경로 최적화</li>
             <li>방문자 신원과 CDP 데이터 모델 설계</li>
-            <li>Kafka와 Flink 기반 실시간 수집 경로 설계와 전환</li>
+            <li>상태 계산은 Flink, ClickHouse는 적재와 조회로 나눈 실시간 아키텍처 설계와 전환</li>
             <li>AI 에이전트와 함께 일하는 개발, 검증, 배포 체계</li>
             <li>Blue/Green 설계와 되돌리는 길을 먼저 확인한 안전한 이관</li>
+          </ol>
+          <h3 class="label sublabel">설계 원칙</h3>
+          <ol class="caps">
+            <li>의미와 단위를 먼저 정하고, 물리 구조는 그 뒤에 고릅니다<small>— 해시 파티션을 걷어낸 이유</small></li>
+            <li>상태 계산은 저장소가 아니라 상태를 다루는 곳에 둡니다<small>— 세션 집계를 Flink로 옮긴 이유</small></li>
+            <li>중복은 정상으로 보고, 되돌릴 수 없는 계산 앞에서 한 번만 반영합니다<small>— 같은 입력이면 같은 결과가 나오게 적재를 설계한 이유</small></li>
+            <li>되돌리는 길을 먼저 만들고, 검증 강도는 되돌릴 수 있는지에 맞춥니다<small>— 같은 문장으로 되돌릴 수 있는 테이블 교체를 고른 이유</small></li>
+            <li>원본은 지우지 않고, 해석은 나중에 합니다<small>— 방문자 신원을 조회 시점에 해석한 이유</small></li>
+            <li>다음 단계가 받았다는 증거가 있을 때만 받았다고 말합니다<small>— Kafka가 받은 뒤에만 성공을 돌려준 이유</small></li>
+            <li>검증은 대상과 다른 눈으로 합니다<small>— 기존 경로를 정답지로 쓰지 않은 이유</small></li>
           </ol>
         </div>
         <div>
@@ -152,7 +162,7 @@
       <div class="about-block intro">
         <h3 class="label">소개</h3>
         <p>저는 대규모 데이터 처리와 분산 시스템에 관심이 많습니다. 학부 때는 Besu와 Hyperledger Fabric 노드를 Kubernetes에 띄우며 동기화와 인증서 문제를 풀었고, BAY에서 합의 알고리즘을 발표했습니다. 월드랜드에서는 GPU 머신을 Kubernetes 워커로 붙이는 Go 노드 SDK를 만들었습니다.</p>
-        <p>수파리드에서는 방문자 신원과 이벤트를 한 사람의 여정으로 잇는 CDP 데이터 모델을 설계했습니다. ClickHouse는 MergeTree가 데이터를 저장하고 읽는 방식을 먼저 확인한 뒤 파티션과 정렬 키를 다시 정했습니다. 수집 경로는 이벤트를 순서대로 쌓아 두는 Kafka와 Flink 구조로 다시 설계해 주 경로로 전환했습니다. 여러 AI 에이전트가 함께 일하는 개발 환경에서도 상태를 어디에 둘지, 누가 무엇을 바꿀지, 틀렸을 때 어떻게 멈출지를 정해 작업 방식과 검사 규칙을 만들었습니다. 코드 작성에는 AI 코딩 에이전트를 함께 쓰고, 설계와 검증, 장애 판단은 직접 합니다.</p>
+        <p>수파리드에서는 방문자 신원과 이벤트를 한 사람의 여정으로 잇는 CDP 데이터 모델을 설계했습니다. ClickHouse는 MergeTree가 데이터를 저장하고 읽는 방식을 먼저 확인한 뒤 파티션과 정렬 키를 다시 정했습니다. 세션 집계 같은 상태 계산은 ClickHouse에서 꺼내 Flink로 옮겼습니다. Kafka를 원본 로그로 두는 구조로 다시 설계해 주 경로로 전환했습니다. 여러 AI 에이전트가 함께 일하는 개발 환경에서도 상태를 어디에 둘지, 누가 무엇을 바꿀지, 틀렸을 때 어떻게 멈출지를 정해 작업 방식과 검사 규칙을 만들었습니다.</p>
       </div>
     </section>
 
@@ -171,26 +181,26 @@
         </div>
         <p class="career__desc">웹사이트 방문 행동과 광고 데이터를 연결해 방문 여정과 채널 성과를 보여 주는 B2B 분석 제품입니다.</p>
         <ol class="rows" id="projects">
-          <li><a class="row" href="projects/cdp.html">
+          <li><a class="row" href="projects/green.html">
             <span class="row__no">01</span>
+            <span class="row__main"><span class="row__title">V3 실시간 아키텍처: 상태 계산은 Flink, ClickHouse는 적재와 조회</span>
+              <span class="row__sum">늦게 오고 다시 오는 이벤트를 다루는 세션 집계를 ClickHouse에서 꺼내 Flink로 옮기고, Kafka를 원본 로그로 둔 구조로 다시 설계해 운영 트래픽을 끊지 않고 전환</span>
+              <ul class="chips"><li class="chip">Go</li><li class="chip">Kafka (GCP 관리형)</li><li class="chip">Flink 2.2</li><li class="chip">ClickHouse (자체 운영)</li><li class="chip">GKE</li><li class="chip">Cloudflare Workers</li><li class="chip">Terraform</li><li class="chip">Argo CD</li></ul></span>
+            <span class="row__when">2026.08 – 2026.10</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
+          <li><a class="row" href="projects/cdp.html">
+            <span class="row__no">02</span>
             <span class="row__main"><span class="row__title">CDP 방문자 신원과 데이터 모델 설계와 개발</span>
               <span class="row__sum">익명 방문과 재방문, 여러 탭을 한 사람의 여정으로 잇는 방문자 신원 모델 설계와 개발</span>
               <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Go</li><li class="chip">ClickHouse</li><li class="chip">IndexedDB</li><li class="chip">Kafka</li><li class="chip">Flink</li></ul></span>
             <span class="row__when">2026.04 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/clickhouse.html">
-            <span class="row__no">02</span>
+            <span class="row__no">03</span>
             <span class="row__main"><span class="row__title">ClickHouse 저장 구조와 조회 경로 최적화</span>
               <span class="row__sum">MergeTree 동작을 근거로 테이블마다 파티션과 정렬 키를 다시 정하고, 화면별 조회 경로 설계</span>
               <ul class="chips"><li class="chip">ClickHouse</li><li class="chip">ReplacingMergeTree</li><li class="chip">Projection</li><li class="chip">Refreshable MV</li><li class="chip">EXPLAIN</li><li class="chip">system.query_log</li></ul></span>
             <span class="row__when">2026.08 – 2026.09</span>
-            <span class="row__go" aria-hidden="true">→</span></a></li>
-          <li><a class="row" href="projects/stream.html">
-            <span class="row__no">03</span>
-            <span class="row__main"><span class="row__title">실시간 스트림 파이프라인 (Kafka + Flink)</span>
-              <span class="row__sum">브라우저 이벤트 수집 경로를 Kafka와 Flink 구조로 새로 설계하고, 운영 트래픽 미러링으로 두 경로를 대조한 뒤 주 경로로 전환</span>
-              <ul class="chips"><li class="chip">Go</li><li class="chip">Kafka</li><li class="chip">Flink</li><li class="chip">ClickHouse</li><li class="chip">GKE</li><li class="chip">Cloudflare Workers</li><li class="chip">Terraform</li></ul></span>
-            <span class="row__when">2026.09 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/elt.html">
             <span class="row__no">04</span>
@@ -227,7 +237,7 @@
           <li><div class="row row--static">
             <span class="row__no">—</span>
             <span class="row__main"><span class="row__title">광고 데이터 연동</span>
-              <span class="row__sum">Meta와 Google 광고 계정 연결부터 90일 최초 수집, 시간 단위 재수집까지의 상태 전이와 수집 백엔드 개발 (광고 연동 일부와 화면은 동료)</span></span>
+              <span class="row__sum">Meta와 Google 광고 계정 연결부터 90일 최초 수집, 시간 단위 재수집까지의 상태 전이와 수집 백엔드 개발</span></span>
             <span class="row__when">2026.08 – 2026.09</span>
             <span class="row__go" aria-hidden="true"></span></div></li>
           <li><div class="row row--static">

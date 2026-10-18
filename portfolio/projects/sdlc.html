@@ -38,10 +38,10 @@
         <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>ai-native-sdlc</span></nav>
         <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span></div>
         <h1 class="doc-title" id="detail-h">AI 네이티브 SDLC: AI 에이전트와 함께 일하는 개발, 검증, 배포 체계</h1>
-        <p class="doc-lede">사람과 AI 에이전트가 같은 Linear 작업 항목에서 일을 이어받는 개발 체계를 설계했습니다. AI가 만든 변경도 사람의 변경과 같은 검사와 검토를 거치게 했습니다. 코드 작성은 에이전트와 나눴습니다. 무엇을 맡길지, 어떻게 검증할지, 언제 사람이 판단할지는 직접 정했습니다.</p>
+        <p class="doc-lede">사람과 AI 에이전트가 같은 Linear 작업 항목에서 일을 이어받는 개발 체계를 설계했습니다. AI가 만든 변경도 사람의 변경과 같은 검사와 검토를 거치게 했습니다. 에이전트에게 무엇을 맡길지, 어떻게 검증할지, 언제 사람이 판단할지를 규칙으로 정했습니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.04 – 2026.09</dd></div>
-          <div><dt>역할</dt><dd>체계 전체의 설계, 구축, 운영. 작업 기록 위치, 역할별 작업 규칙, 검토 규칙, 배포 경로, 시크릿 접근 범위를 정함. 배포 대기열에 배포 전 점검을 연결하는 일 일부는 동료와 함께 함</dd></div>
+          <div><dt>역할</dt><dd>체계 전체의 설계, 구축, 운영. 작업 기록 위치, 역할별 작업 규칙, 검토 규칙, 배포 경로, 시크릿 접근 범위를 정함</dd></div>
           <div class="wide"><dt>상태</dt><dd>작업 기록 방식과 반영 규칙은 2026.04 – 09 팀의 개발 방식 / 역할을 나눈 에이전트 실행은 본인 로컬 환경에서 운영 (2026.09 실행 기록으로 확인) / 배포 대기열은 2026.06 말 – 09 중순 배포 경로였고 10월부터 GitOps로 옮기는 중 / AI가 만든 변경은 자동으로 반영하지 않음</dd></div>
           <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Linear</li><li class="chip">GitHub Actions</li><li class="chip">OIDC</li><li class="chip">Infisical</li><li class="chip">Atlas</li><li class="chip">Terraform</li><li class="chip">Cloud SQL IAM 인증</li><li class="chip">GCP Secret Manager</li></ul></dd></div>
         </dl>
@@ -54,23 +54,23 @@
           <ol>
             <li><a href="#d-situation"><span class="n">01</span>상황과 역할</a></li>
             <li><a href="#d-process"><span class="n">02</span>해결 과정</a></li>
-            <li><a href="#d-result"><span class="n">03</span>결과</a></li>
-            <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
-            <li><a href="#d-learn"><span class="n">05</span>배운 점</a></li>
-            <li><a href="#d-kw"><span class="n">06</span>핵심 역량</a></li>
-            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
+            <li><a href="#d-decisions"><span class="n">03</span>설계 결정</a></li>
+            <li><a href="#d-result"><span class="n">04</span>결과</a></li>
+            <li><a href="#d-ts"><span class="n">05</span>트러블슈팅</a></li>
+            <li><a href="#d-learn"><span class="n">06</span>배운 점</a></li>
+            <li><a href="#d-kw"><span class="n">07</span>핵심 역량</a></li>
+            <li><a href="#d-links"><span class="n">08</span>관련 링크</a></li>
           </ol>
         </aside>
 
         <article class="doc-main">
           <section id="d-situation" aria-labelledby="d-situation-h">
             <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황과 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <p>수파리드는 적은 인원이 수집 SDK, 데이터 파이프라인, API, 인프라를 함께 바꾸는 팀이었습니다. 코드 작성에 AI 코딩 에이전트를 쓰면서 여러 변경이 동시에 진행됐습니다.</p>
+            <p>수파리드는 적은 인원이 수집 SDK, 데이터 파이프라인, API, 인프라를 함께 바꾸는 팀이었습니다. 여러 에이전트에게 일을 나눠 맡기면서 변경 여러 개가 동시에 진행됐습니다.</p>
             <p>에이전트는 대화가 바뀌면 이전 결정을 모릅니다. 그래서 같은 조사를 반복하거나, 이미 바뀐 규칙으로 작업하는 일이 생겼습니다. 구현한 에이전트가 테스트까지 맡으면 자기 코드에 맞춰 테스트를 고칠 수 있었습니다. 배포 쪽에서는 staging에서 확인한 것과 운영에 배포되는 것이 같다고 보장할 수 없었습니다. 배포마다 빌드 결과와 스키마 상태가 달라질 수 있었기 때문입니다.</p>
             <p>여러 에이전트가 한 저장소를 동시에 바꾸는 구조에는 분산 시스템과 비슷한 문제가 있었습니다. 상태를 어디에 둘지, 누가 무엇을 바꿀지 정해야 했습니다. 한 참여자가 틀렸을 때 어떻게 멈출지도 정해야 했습니다.</p>
             <dl class="scope">
-              <dt>맡은 일</dt><dd>이 체계 전체의 설계, 구축, 운영이었습니다. 작업 분해, 통과 여부 판단, 운영 검증은 직접 했습니다.</dd>
-              <dt>동료</dt><dd>배포 대기열에 배포 전 점검을 연결하는 일 일부를 함께 했습니다.</dd>
+              <dt>맡은 일</dt><dd>이 체계 전체의 설계, 구축, 운영을 맡았습니다. 작업을 나누고 통과 여부를 판단하는 일, 운영 검증까지 했습니다.</dd>
             </dl>
           </section>
 
@@ -210,11 +210,6 @@
             </ol>
             <p>실패와 보류도 같은 자리에 남겼습니다. 다음 사람이나 에이전트는 이전 대화를 몰라도 작업 항목에서 이어받습니다.</p>
             <p>작업 항목에는 사람 책임자와 실행하는 에이전트를 따로 적게 했습니다. 사람의 결정을 기다리는 작업은 바로 실행할 수 있는 작업과 구분했습니다. 에이전트가 작업 항목을 저장하기 전에는 분류, 책임자, 착수 가능 여부를 lint로 검사합니다. 이 검사는 에이전트가 도구를 호출하기 직전에 자동으로 실행되는 hook에 걸었습니다. 검사기가 없으면 저장을 막습니다.</p>
-            <p>버린 대안은 두 가지입니다.</p>
-            <ul>
-              <li>작업 항목마다 설계와 인프라 정보를 복사해 두는 방식입니다. 원문이 바뀌면 복사본만 낡은 채 남습니다. 그래서 내용은 복사하지 않고 저장소 문서로 가는 링크만 남겼습니다.</li>
-              <li>이전 에이전트의 대화 기록을 다음 에이전트에게 넘기는 방식입니다. 기록이 길고 결정과 시행착오가 섞여 있습니다. 다음 작업자가 결정만 읽을 수 있도록 작업 항목에 정리해 남기게 했습니다.</li>
-            </ul>
 
             <h3>2. 역할을 나누고, 완료 보고는 검증의 입력으로만 쓰기</h3>
             <p>큰 목표를 여러 에이전트에 그대로 보내면 구현이 겹치거나, 서로 다른 가정으로 코드를 만듭니다. 그래서 목표와 데이터 불변 조건을 먼저 정했습니다. 그다음 작업을 조사, 설계, 구현, 검토, 독립 QA로 나눠 각각 다른 에이전트에게 맡겼습니다. 검토와 QA는 구현하지 않은 에이전트가 맡았습니다. 서로 의존하지 않는 부분만 병렬로 돌렸습니다.</p>
@@ -248,18 +243,72 @@
             </ul>
 
             <h3>4. 시크릿과 에이전트 권한의 범위 정하기</h3>
-            <p>에이전트는 셸과 배포 도구를 쓸 수 있습니다. 그래서 시크릿 값이 로그에 찍히거나, 로컬 명령이 검증된 배포 경로를 건너뛸 수 있었습니다. 에이전트도 사람처럼 시크릿을 꺼내 쓴다고 보고 Infisical을 도입했습니다. 환경과 서비스별로 경로를 나눴습니다.</p>
+            <p>Infisical을 도입해 시크릿 경로를 환경과 서비스별로 나눴습니다.</p>
             <ul>
               <li>GCP Secret Manager에 있던 시크릿 약 40개를 실제로 누가 쓰는지 조사했습니다(2026년 6월 이관 기준). 쓰는 곳이 확인된 값은 Infisical로 옮기거나 기존 값과 대조했습니다. 이 과정에서 운영 경로에 staging 계정이 들어 있던 설정 오류를 찾아 바로잡았습니다.</li>
               <li>GitHub Actions는 저장해 둔 토큰 대신 OIDC로 인증하게 바꿨습니다. 인증한 뒤 Infisical에서 배포에 필요한 값만 받습니다.</li>
-              <li>에이전트와 CI는 등록된 범위의 키만 받습니다. 키는 실행하는 프로세스에만 주입합니다. 값은 출력하지 않습니다.</li>
               <li>에이전트가 배포 명령을 직접 실행하면 hook에서 막습니다.</li>
             </ul>
             <p>버린 대안은 Infisical 기본 동기화를 그대로 쓰는 방식입니다. 이름 변환 규칙이 기존 GCP 이름과 맞지 않았습니다. 그래서 (환경, 폴더, 키)를 GCP 대상에 직접 연결하는 매핑을 만들었습니다. 허용 목록과 dry-run도 함께 두었습니다.</p>
           </section>
 
+          <section id="d-decisions" aria-labelledby="d-decisions-h">
+            <h2 class="sechead" id="d-decisions-h"><span class="sechead__no">03</span><span class="sechead__title">설계 결정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>위 체계를 만들며 내린 결정 다섯 가지입니다. 고민, 선택지, 결정과 이유, 대가 순서로 적었습니다.</p>
+
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-01</span><h3>기준 문서는 저장소에, 작업 맥락은 Linear에</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>에이전트는 대화가 길어지면 새 대화로 바뀝니다. 처음에는 다음 대화에 긴 인계 요약을 넘겼습니다. 요약을 거칠 때마다 이전 대화의 추측이 사실처럼 굳었습니다. 설계 계획서도 쓴 시점에 멈춰 있었습니다. 표본으로 본 설계 문서는 10개 중 9개꼴로 코드와 어긋나 있었습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 인계 요약을 더 꼼꼼하게 쓰기 ② 작업 항목마다 설계 정보를 복사해 두기 ③ 정보를 바뀌는 주기에 따라 나누고, 작업 항목에는 링크만 두기</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 추측이 굳는 것은 요약을 거듭하며 정보가 조금씩 빠지기 때문입니다. 요약 대신 원래 자료로 가는 링크를 주면 다음 작업자는 매번 원래 자료에서 다시 읽습니다. 복사본은 원문이 바뀌면 낡은 채 남습니다. 설계 계획서는 쓴 시점의 기록으로만 읽게 했습니다.</dd></div>
+                <div><dt>대가</dt><dd>외부 작업 관리 도구 하나에 기대게 됩니다. 링크의 뜻(관련인지, 먼저 끝내야 하는 일인지)이 흐려질 수 있습니다. 링크를 따라가는 시간도 듭니다.</dd></div>
+              </dl>
+            </article>
+
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-02</span><h3>완료 보고는 검증의 입력, 완료 단위는 끝까지 흐른 한 건</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>보고가 많아질수록 확인하지 않은 것이 완료로 적혔습니다. 하위 작업 하나가 끝나자 상위 작업이 자동으로 완료 처리된 적이 있습니다. 결과 0행을 정상으로 보고 성공 처리한 작업도 있었습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 완료 표시와 자동 검사 통과를 완료로 보기 ② 보고 형식을 정하고, 완료 판정은 따로 확인한 증거로 하기</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. 보고에는 실행한 검증과 실행하지 않은 검증을 빈칸 없이 적게 했습니다. 완료 표시는 목표 상태를 대신 보여 주는 지표입니다. 이 표시를 목표로 삼으면 실제 상태와 벌어집니다. 그래서 배포 경로 전환의 완료 단위를 정했습니다. 새 이미지 한 건이 빌드, 승격, Git 변경, Pod 반영을 거쳐 실제 화면 조회까지 이어지는 것입니다. 운영 감시에서도 확인하지 못한 것을 정상이나 0으로 바꿔 적지 않게 했습니다.</dd></div>
+                <div><dt>대가</dt><dd>보고를 쓰는 데 시간이 더 듭니다. 작업 상태가 실제보다 늦게 바뀝니다.</dd></div>
+              </dl>
+            </article>
+
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-03</span><h3>검증 강도는 되돌릴 수 있는가에 맞추기</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>되돌릴 수 있는 내부 시험에서도 에이전트가 빡빡한 사전 검증을 요구했습니다. 이미 끝난 과거 데이터 채우기를 다시 하려 한 적도 있습니다. 이런 일이 병목이 됐습니다. 반대로 운영 변경을 가볍게 넘기면 데이터가 조용히 틀어집니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 모든 변경을 똑같이 엄격하게 보기 ② 모든 변경을 똑같이 가볍게 보기 ③ 되돌릴 수 있는 정도에 맞춰 검증 강도를 다르게 하기</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 사람이 판단할 수 있는 시간은 한정돼 있습니다. 그래서 되돌릴 수 없는 지점에 판단을 모았습니다. 내부 시험과 비교 측정은 동작하는지만 확인합니다. 되돌릴 수 없는 운영 변경은 엄격하게 봅니다. 급한 병목을 우회로 푼 뒤의 후속 설계는 작은 결정이라도 멈추고 사람에게 묻게 했습니다.</dd></div>
+                <div><dt>대가</dt><dd>어디까지 가볍게 보고 어디부터 엄격하게 볼지 매번 판단해야 합니다.</dd></div>
+              </dl>
+            </article>
+
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-04</span><h3>되돌릴 수 없는 스키마 변경만 막고, 데이터 채우기는 배포에서 떼어 내기</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>배포 전 점검 하나가 너무 많은 일을 했습니다. 스키마 변경, 대기, 과거 데이터 채우기, 집계 뷰 중지와 재개, 판정을 한 번에 했습니다. 그 뒤 마이그레이션 도구가 같은 변경을 다시 적용했습니다. 운영 전환 때 가장 느린 단계가 전체를 막았습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 배포 전 점검을 더 강하게 만들기 ② 스키마 적용, 짧은 동작 확인, 과거 데이터 채우기를 세 단계로 나누기</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다(2026.08 설계). 스키마 변경은 되돌릴 수 없고 한 번만 적용돼야 합니다. 과거 데이터 채우기는 몇 번이고 다시 할 수 있습니다. 성격이 다른 일을 한 조건에 묶으면 가장 느린 일이 전체 속도를 정합니다. 그래서 스키마 적용과 짧은 동작 확인만 배포를 막게 했습니다. 과거 데이터 채우기는 배포와 따로 뒤에서 돌게 했습니다. 스키마를 바꾸는 도구도 Atlas 하나로 모았습니다. 배포 전 점검은 정상 데이터를 안전하게 처리할 수 있는지만 확인합니다. 운영 데이터에 결함이 하나도 없는지까지 묻지 않습니다.</dd></div>
+                <div><dt>대가</dt><dd>과거 데이터가 덜 채워진 채로 운영하는 기간이 생깁니다. 그 기간은 0건처럼 보이지 않게 따로 표시해야 합니다. 떼어 낸 채우기 작업도 따로 관리해야 합니다.</dd></div>
+              </dl>
+            </article>
+
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-05</span><h3>에이전트도 시크릿을 쓰는 주체로 보고, 값은 주입만 하기</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>에이전트에게 코드 작성, 배포, 조회를 맡겼습니다. 에이전트는 셸과 배포 도구를 씁니다. 시크릿 값이 로그에 찍히거나, 로컬 명령이 검증된 배포 경로를 건너뛸 수 있었습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 에이전트가 필요한 값을 직접 조회하기 ② 정해진 실행 스크립트로만 조회하고, 값은 실행할 프로세스에 주입만 하기</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. 에이전트에게도 사람처럼 신원을 주고, 신원마다 볼 수 있는 범위를 정했습니다. 실행 스크립트는 등록된 범위의 키만 꺼냅니다. 값을 보는 일과 쓰는 일을 나누면 값이 대화 기록에 남지 않습니다. Infisical에서 실행이 실패해도 GCP Secret Manager로 자동으로 다시 실행하지 않습니다. 실패하기 전에 명령이 이미 실행됐을 수 있기 때문입니다.</dd></div>
+                <div><dt>대가</dt><dd>권한을 바꿀 때마다 범위와 시간을 좁힌 임시 권한 절차를 거쳐서 느립니다.</dd></div>
+              </dl>
+            </article>
+          </section>
+
           <section id="d-result" aria-labelledby="d-result-h">
-            <h2 class="sechead" id="d-result-h"><span class="sechead__no">03</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-result-h"><span class="sechead__no">04</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
               <li>AI가 구현한 변경도 사람이 최종 반영 (자동 반영은 의존성 업데이트 봇에만 허용, 2026.04 – 09 팀 개발 방식)</li>
               <li>QA 에이전트가 결함을 재현해 수정으로 되돌림: Kafka 메시지 건너뜀, 파일 경로 검사에서 파일 이름만 같으면 틀린 경로도 통과시키던 결함 (로컬 검증 단계)</li>
@@ -271,7 +320,7 @@
           </section>
 
           <section id="d-ts" aria-labelledby="d-ts-h">
-            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">04</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">05</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <article class="ts">
               <header class="ts__head"><span class="ts__id">T-01</span><h3>QA 에이전트가 재현한 Kafka 메시지 건너뜀</h3></header>
               <dl class="ts__rows">
@@ -284,14 +333,14 @@
           </section>
 
           <section id="d-learn" aria-labelledby="d-learn-h">
-            <h2 class="sechead" id="d-learn-h"><span class="sechead__no">05</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <p>완료 보고가 많아질수록 확인하지 않은 것을 완료로 적을 위험도 커집니다. 완료 판정은 구현자의 보고와 떼어 독립 검증 결과로 해야 합니다.</p>
+            <h2 class="sechead" id="d-learn-h"><span class="sechead__no">06</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>완료 판정은 구현자의 보고와 떼어, 따로 확인한 증거로 해야 합니다.</p>
             <p>배포 경로도 같은 기준으로 봤습니다. 직접 만든 배포 대기열은 9월 중순 이후 실제 배포에 성공하지 못했습니다. 10월에 Argo CD와 Kargo 기반 GitOps로 옮겼습니다. staging에서는 새 이미지가 Kargo 승격을 거쳐 Argo CD로 적용되는 경로까지 확인했습니다. 운영 승격을 같은 경로로 옮기는 일은 진행 중입니다.</p>
             <p>여러 에이전트가 함께 일하는 구조는 개인 오픈소스에서 이어서 다루고 있습니다. oh-my-factory는 사람이 목표, 설계 결정, 증거를 승인하고 에이전트는 격리된 환경에서 일하도록 설계한 도구입니다. 지금 동작하는 것은 목표 정의와 측정, 작업 항목 관리, 변조를 알아챌 수 있는 해시 체인 원장입니다. 격리된 환경에서 구현하고 판정하는 단계는 아직 만들고 있습니다(pre-alpha).</p>
           </section>
 
           <section id="d-kw" aria-labelledby="d-kw-h">
-            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">06</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">07</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ol class="keywords">
               <li><span class="kw__n">01</span><span class="kw__t">AI가 만든 변경의 검토와 독립 검증 규칙 설계</span></li>
               <li><span class="kw__n">02</span><span class="kw__t">staging에서 검증한 이미지를 그대로 운영에 배포하는 경로 설계</span></li>
@@ -300,7 +349,7 @@
           </section>
 
           <section id="d-links" aria-labelledby="d-links-h">
-            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">08</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
               <li><a href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a></li>
               <li><a href="https://github.com/ahwlsqja/oh-my-factory" target="_blank" rel="noopener">oh-my-factory</a> (사람이 목표와 증거를 승인하는 에이전트 작업 도구, pre-alpha)</li>

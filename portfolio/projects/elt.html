@@ -54,10 +54,11 @@
           <ol>
             <li><a href="#d-situation"><span class="n">01</span>상황과 역할</a></li>
             <li><a href="#d-process"><span class="n">02</span>해결 과정</a></li>
-            <li><a href="#d-result"><span class="n">03</span>결과</a></li>
-            <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
-            <li><a href="#d-kw"><span class="n">05</span>핵심 역량</a></li>
-            <li><a href="#d-links"><span class="n">06</span>관련 링크</a></li>
+            <li><a href="#d-decisions"><span class="n">03</span>설계 결정</a></li>
+            <li><a href="#d-result"><span class="n">04</span>결과</a></li>
+            <li><a href="#d-ts"><span class="n">05</span>트러블슈팅</a></li>
+            <li><a href="#d-kw"><span class="n">06</span>핵심 역량</a></li>
+            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
           </ol>
         </aside>
 
@@ -68,8 +69,6 @@
             <p>브라우저 이벤트는 늦게 오고, 같은 것이 다시 오고, 탭마다 따로 옵니다. 들어온 행을 그대로 더하면 같은 방문이 두 번 집계되고, 빠진 행은 아무도 알아채지 못합니다.</p>
             <dl class="scope">
               <dt>맡은 일</dt><dd>데이터 모델, 수집과 적재 경로, 원본부터 조회용 테이블까지의 구조, 실패 처리 경로, 장애 뒤 복구 확인</dd>
-              <dt>동료</dt><dd>SDK의 탭 수명 세션을 먼저 구현했고, 고객별 세션 설정과 광고 연동 일부, 화면을 맡았습니다.</dd>
-              <dt>AI 에이전트</dt><dd>코드 작성과 복구 작업에 AI 코딩 에이전트를 함께 썼습니다. 설계와 복구 확인 방법은 직접 정했고, 결과도 직접 검증했습니다.</dd>
             </dl>
           </section>
 
@@ -197,24 +196,78 @@
             <h3>3. 중복은 세 곳에서 거르고, 실패한 메시지는 보관한 뒤에만 큐에서 뺐습니다</h3>
             <p>SDK는 이벤트를 다시 보낼 때 event_id와 event_ts를 바꾸지 않습니다. 게이트웨이는 30분 안에 이미 본 ID를 KV로 한 번 거릅니다. ClickHouse에서는 ReplacingMergeTree가 병합 때 마지막으로 정리하고, 정확한 값이 필요한 곳은 FINAL이나 argMax로 읽습니다.</p>
             <p>당시 Worker에 걸린 하위 요청 한도가 요청당 50개여서, KV 조회 30개와 fetch 20개로 나눠 썼습니다. 세션 시작 이벤트는 SDK가 바로 지우지 않습니다. 게이트웨이가 202 응답에 큐에 실제로 넣은 (세션, 이벤트) 쌍을 담아 돌려주면, 그 쌍만 지웁니다.</p>
-            <p>실패한 메시지는 본 큐에서 3번 재시도한 뒤 DLQ로 갑니다. DLQ에서는 본 큐로 1번만 다시 보냅니다. 그래도 실패하면 소비자가 없는 최종 보관 큐에 14일 동안 둡니다. 최종 보관 큐에 넣는 데 성공한 뒤에만 처리 완료 신호(ack)를 보내, 실패한 메시지가 중간에 사라지지 않게 했습니다.</p>
-            <p>파생 테이블에 INSERT할 때 500, 520 오류가 나면 원본 적재까지 멈추는 문제가 있었습니다. 서킷 브레이커를 테이블마다 따로 두어, 파생 테이블이 실패해도 원본 적재는 이어지게 했습니다. 재시도는 일시 오류에만 하고, 대기 시간에 무작위 값(지터)을 더했습니다. 520은 끊긴 연결을 다시 쓰다 생기는 경쟁 상태로 원인을 좁혔습니다. ClickHouse 지원팀과 함께 서버 keep_alive_timeout을 10초에서 60초로 늘렸습니다.</p>
+            <p>실패한 메시지는 본 큐에서 3번 재시도한 뒤 DLQ로 갑니다. DLQ에서는 본 큐로 1번만 다시 보내고, 그래도 실패하면 소비자가 없는 최종 보관 큐에 14일 동안 둡니다. 처리 완료 신호(ack)를 언제 보낼지, 실패 회로를 어떻게 나눌지는 아래 설계 결정에 적었습니다.</p>
+          </section>
+
+          <section id="d-decisions" aria-labelledby="d-decisions-h">
+            <h2 class="sechead" id="d-decisions-h"><span class="sechead__no">03</span><span class="sechead__title">설계 결정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>이 경로를 만들고 고치면서 내린 판단 다섯 가지입니다. 고민, 선택지, 결정과 이유, 대가 순서로 적었습니다.</p>
+
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-01</span><h3>ack는 다음 보관소가 받은 뒤에만 보냈습니다</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>2026년 5월, 스키마가 맞지 않아 약 9시간 동안 적재가 멈췄고 그 사이 데이터 일부를 잃었습니다. 따라가 보니 DLQ 소비자가 한 번 다시 보낸 메시지를 ack로 지우고 있었습니다. 최종 DLQ는 설정돼 있었지만 비어 있었습니다. HTTP 오류는 0이라 경보도 울리지 않았습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 다시 보내는 횟수를 늘린다. ② DLQ에서 본 큐로 한 번만 다시 보내고, 또 실패하면 최종 보관 큐에 넣는다. 그 전송이 성공한 뒤에만 ack한다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. ack는 이 메시지를 넘겨받은 곳이 생겼다는 뜻이어야 합니다. 다음 보관소가 받기 전에 ack하면 메시지를 책임지는 곳이 없어집니다. 횟수만 늘리면 스키마 불일치 같은 영구 실패가 본 큐를 계속 막습니다. 그래서 일시 장애에는 기회를 한 번 더 주고, 영구 장애는 사람이 보도록 넘겼습니다.</dd></div>
+                <div><dt>대가</dt><dd>최종 보관 큐에는 소비자가 없어서, 복구할 때 임시 소비자를 붙이는 절차를 따로 적어 두었습니다. 보관 기간 14일이 지나면 그대로 잃기 때문에, 보관된 메시지의 나이도 따로 감시했습니다.</dd></div>
+              </dl>
+            </article>
+
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-02</span><h3>원본 사본은 적재 직전에 남기고, 복구 완료는 ID로 판정했습니다</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>소비자가 성공으로 보고 ack한 뒤 ClickHouse 쓰기가 실패하면, 메시지는 DLQ로도 가지 않습니다. 보관 기간을 넘긴 메시지도 되살릴 원천이 없었습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 큐에 보관된 메시지만으로 복구한다. ② ClickHouse에 넣기 직전에 R2에 원본 사본을 30일 동안 남기고, 복구 완료는 원본 사본과 ClickHouse의 ID를 맞춰 판정한다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. 큐는 메시지를 옮기는 장치이지, 기록을 보관하는 원장이 아닙니다. ack 뒤에 잃은 것은 ack 전에 남긴 사본으로만 되살릴 수 있습니다. 복구가 끝났다는 조건도 "보관 큐가 비었다"가 아니라 "원본에 있던 ID가 ClickHouse에 모두 있다"로 정했습니다. 2026년 6월 장애를 이 방식으로 마무리했습니다(트러블슈팅 T-01).</dd></div>
+                <div><dt>대가</dt><dd>사본 쓰기는 실패해도 적재를 막지 않게 두었습니다. 그래서 사본에도 없는 이벤트는 이 대조로 찾을 수 없습니다. 확인한 범위도 그 장애 구간뿐이라, 시스템 전체에서 빠진 것이 없다고는 말하지 않습니다.</dd></div>
+              </dl>
+            </article>
+
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-03</span><h3>중복은 세 층으로 나눠 거르고, ClickHouse를 미리 조회하지 않았습니다</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>30분 넘게 늦게 온 재전송이 소비자의 중복 제거를 모두 통과해 집계를 부풀렸습니다. 감시도 FINAL을 건 값으로 세고 있어서 이 중복을 보지 못했습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 소비자의 중복 제거를 없애고 ClickHouse 병합에만 맡긴다. ② 넣기 전에 ClickHouse를 조회해 이미 있으면 버린다. ③ 입구, 소비자, 저장소 세 층으로 나누고 층마다 맡는 범위를 적는다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. ①은 다른 배치로 흩어진 중복이 INSERT 시점 집계에 그대로 더해집니다. ②는 쓰기 경로에 넓은 읽기를 끼워 넣는 방식이라 ClickHouse 설계와 맞지 않고, 동시에 도착한 두 건은 막지도 못합니다. 소비자는 자기 안에서 생긴 중복만 처리하게 했습니다. 각 층을 남길지는 요청 ID, 발행 시도 ID, 큐 메시지 ID를 붙여 관측한 숫자로 정했습니다. 감시는 화면에 보여 주는 값(FINAL)이 아니라, FINAL 없이 센 건수와의 차이로 따로 셉니다.</dd></div>
+                <div><dt>대가</dt><dd>30분을 넘긴 재전송은 여전히 통과합니다. 이 부분은 되돌릴 수 없는 집계 직전에서 한 번만 반영하는 규칙으로 넘겼습니다(<a href="green.html">V3 실시간 아키텍처</a>).</dd></div>
+              </dl>
+            </article>
+
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-04</span><h3>원본 적재와 파생 테이블의 실패 회로를 나눴습니다</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>파생 테이블에 넣을 때 ClickHouse 500, 520 오류가 반복되자 서킷 브레이커가 열렸고, 원본 적재까지 함께 막혔습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 비동기 쓰기의 대기 상한을 늘린다. ② 파생 테이블에만 짧은 재시도를 넣고, 회로를 테이블과 경로마다 나눈다. 520은 원인까지 좁힌다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. 파생 테이블은 원본에서 다시 만들 수 있지만, 원본은 놓치면 되살릴 수 없습니다. 같은 회로를 쓰면 가벼운 실패가 중요한 경로를 막습니다. 재시도는 일시 오류에만 하고, 대기 시간에 무작위 값(지터)을 더했습니다. 520은 서버에 닿지도 않은 요청이었습니다. 서버의 유휴 제한(10초)보다 오래 쉰 연결을 다시 쓰다 생기는 경쟁으로 원인을 좁혔습니다. ClickHouse 지원팀과 함께 서버 keep_alive_timeout을 60초로 늘렸고, 이후 40시간 가까이 520이 0건이었습니다.</dd></div>
+                <div><dt>대가</dt><dd>60초는 10~60초 사이에 쉰 연결만 해결합니다. 그보다 오래 쉰 연결에서 생기는 오류는 남습니다. 서버 설정을 바꾸려면 서버를 차례로 다시 띄워야 했습니다.</dd></div>
+              </dl>
+            </article>
+
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">D-05</span><h3>중복 판정의 기준을 저장소가 아니라 계약에 두었습니다</h3></header>
+              <dl class="ts__rows">
+                <div><dt>고민</dt><dd>중복 표시를 쓰던 KV는 쓰기가 잦은 용도에 맞지 않았습니다. 최종 일관성이라, 동시에 온 두 건이 모두 "아직 없음"을 볼 수도 있었습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① KV를 그대로 쓴다. ② Durable Object 같은 특정 저장소를 기준으로 삼는다. ③ 지켜야 할 계약과 그 구현을 나눈다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 보장 수준은 "행이 물리적으로 정확히 한 번"이 아니라 "결과에 한 번만 반영"으로 정했습니다. 중복 판정을 선점(claim), 임대(lease), 차단(fence), 완료(complete)의 네 상태로 나누고, 완료 전에는 ack하지 않는다는 규칙을 계약에 적었습니다. 중복 판정은 상태 기계라서, 판정 권한은 원자적으로 쓸 수 있는 곳에 있어야 합니다. 구현은 바꿀 수 있어야 합니다. 이후 수집 경로를 Kafka와 Flink로 옮길 때 이 계약이 그대로 기준이 됐습니다.</dd></div>
+                <div><dt>대가</dt><dd>첫 구현체 시험에서 시간 초과와 대조 불일치가 나왔습니다. 그래서 기존 경로에서는 전환을 미뤘습니다.</dd></div>
+              </dl>
+            </article>
           </section>
 
           <section id="d-result" aria-labelledby="d-result-h">
-            <h2 class="sechead" id="d-result-h"><span class="sechead__no">03</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-result-h"><span class="sechead__no">04</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
               <li>2026.10.16 Kafka 경로로 주 경로를 넘길 때까지 주 수집 경로로 운영했습니다.</li>
               <li>장애 구간 이벤트 ID 3,900여 개를 양방향으로 대조했고, 원본 기록 기준 누락 0, 중복 0이었습니다(2026.06, 그 구간 한정).</li>
               <li>ClickHouse HTTP 520은 하루 150건 안팎에서 이후 40시간 가까이 0건이 됐습니다(여러 변경을 함께 적용한 뒤의 결과).</li>
               <li>큐 깊이 경보에 90초 안 2번 연속 확인 규칙을 적용했습니다(2026.07). 적용 전 과거 경보 8건에 돌려 보니 장애 6건은 모두 잡고, 지표가 1분 동안 잠깐 튄 2건은 걸렀습니다. 호출은 최대 1분쯤 늦어집니다.</li>
-              <li>9월 말 사람 방문 세션 중 집계된 비율이 사흘 사이 약 60%에서 30%로 떨어져, 10월에 세션 처리를 Kafka와 Flink 경로로 옮겼습니다. 자세한 내용은 <a href="stream.html">실시간 스트림 파이프라인</a>에 있습니다.</li>
+              <li>9월 말 사람 방문 세션 중 집계된 비율이 사흘 사이 약 60%에서 30%로 떨어져, 10월에 세션 처리를 Kafka와 Flink 경로로 옮겼습니다. 자세한 내용은 <a href="green.html">V3 실시간 아키텍처</a>에 있습니다.</li>
             </ul>
             <p>다시 읽을 수 있는 원본이 있어야 중복도 정리하고 복구도 확인할 수 있었습니다. 복구는 큐 상태만 보고 끝내면 안 되고, 원본 기록과 ClickHouse의 ID를 맞춰 본 뒤에 끝내야 합니다.</p>
           </section>
 
           <section id="d-ts" aria-labelledby="d-ts-h">
-            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">04</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">05</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <article class="ts">
               <header class="ts__head"><span class="ts__id">T-01</span><h3>적재가 4시간 가까이 멈춘 날 (2026.06)</h3></header>
               <dl class="ts__rows">
@@ -227,7 +280,7 @@
           </section>
 
           <section id="d-kw" aria-labelledby="d-kw-h">
-            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">05</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">06</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ol class="keywords">
               <li><span class="kw__n">01</span><span class="kw__t">데이터 정합성 검증</span></li>
               <li><span class="kw__n">02</span><span class="kw__t">실패 처리 경로 설계</span></li>
@@ -236,7 +289,7 @@
           </section>
 
           <section id="d-links" aria-labelledby="d-links-h">
-            <h2 class="sechead" id="d-links-h"><span class="sechead__no">06</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p>사내 작업이라 공개된 코드나 글은 없습니다. 설계 때 참고한 공식 문서만 남깁니다.</p>
             <ul>
               <li><a href="https://clickhouse.com/docs/engines/table-engines/mergetree-family/replacingmergetree" target="_blank" rel="noopener">ClickHouse ReplacingMergeTree</a></li>
@@ -246,7 +299,7 @@
           </section>
 
           <nav class="pager" aria-label="다른 프로젝트">
-            <a class="prev" href="stream.html"><span class="k">이전 프로젝트</span><span class="t">실시간 스트림 파이프라인 (Kafka + Flink)</span></a>
+            <a class="prev" href="clickhouse.html"><span class="k">이전 프로젝트</span><span class="t">ClickHouse 저장 구조와 조회 경로 최적화</span></a>
             <a class="next" href="sdlc.html"><span class="k">다음 프로젝트</span><span class="t">AI 네이티브 SDLC: AI 에이전트와 함께 일하는 개발, 검증, 배포 체계</span></a>
           </nav>
         </article>
