@@ -41,7 +41,7 @@
         <p class="doc-lede">광고 플랫폼은 지난 날짜의 성과를 나중에 고칩니다. 이 사실에서 출발해, 소급 정정을 쓰기 쪽에서 맞추는 수집 코어를 만들었습니다. 공유 세션 안에 쌓이는 여러 광고 진입 중 행동 직전의 광고에, 확인된 근거로만 성과를 붙여 광고비와 실제 리드, 구매로 ROAS를 계산하게 했습니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.06 – 2026.10</dd></div>
-          <div><dt>역할</dt><dd>광고 연동을 설계하고 운영 판단을 맡았습니다. 연결 lifecycle과 수집 창, 쓰기 측 정합, 프로바이더 어댑터 포트, Kafka 수집 토폴로지, 여정 속 광고 스티칭, CPL과 ROAS 계산 계약까지 정했습니다.</dd></div>
+          <div><dt>역할</dt><dd>광고 연동 코어를 설계하고 구현해 운영했습니다. 연결 lifecycle과 수집 창, 쓰기 쪽 정합, provider adapter port, Kafka 수집 topology, 여정 속 광고 스티칭, CPL과 ROAS 계산 계약까지 직접 정했습니다.</dd></div>
           <div class="wide"><dt>상태</dt><dd>운영 중</dd></div>
           <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Go</li><li class="chip">Kafka (관리형)</li><li class="chip">ClickHouse</li><li class="chip">PostgreSQL</li><li class="chip">GKE</li><li class="chip">GCS</li><li class="chip">Flink</li><li class="chip">Cloudflare Images·Stream</li><li class="chip">Google Ads API</li><li class="chip">Meta Marketing API</li><li class="chip">네이버 검색광고 API</li><li class="chip">franz-go</li><li class="chip">Terraform</li><li class="chip">Argo CD</li><li class="chip">Sentry</li><li class="chip">Cloud Monitoring</li></ul></dd></div>
         </dl>
@@ -70,36 +70,36 @@
               <li>재조회 창이 사실상 2일이라, Meta가 28일까지 소급해 고치는 성과 중 26일치를 영구히 놓치고 있었습니다.</li>
               <li>Google API 버전 종료로 성과 쓰기가 멈췄는데, 결과를 보고 울리는 경보가 없어 몇 주 동안 묻혔습니다.</li>
               <li>광고비와 유입을 화면 표시용 라벨로 조인해 Meta 광고 유입이 전 기간 0으로 보였습니다.</li>
-              <li>공통 어댑터가 없어 프로바이더 이름 분기가 코드 곳곳과 DB 허용목록 10곳에 흩어져 있었습니다.</li>
-              <li>채널 성과 화면은 요청마다 전 이력을 다시 읽다가 읽기 행 상한에 걸려, 제품 경로 호출의 절반 이상(53.8%)이 실패했습니다.</li>
+              <li>공통 adapter가 없어 provider 이름 분기가 코드 곳곳과 DB allowlist 10곳에 흩어져 있었습니다.</li>
+              <li>채널 성과 화면은 요청마다 전 이력을 다시 읽다가 읽기 행 상한에 걸려, 제품 경로 호출의 53.8%가 실패했습니다.</li>
               <li>한 세션에 광고 좌표를 하나만 두는 모델이라, 같은 방문 안의 두 번째 광고 진입이 지워졌습니다.</li>
-              <li>유료 유입에서 가장 큰 몫(42.5%)을 차지하는 네이버는 어댑터가 없어 광고비가 0으로 붙었습니다.</li>
+              <li>유료 유입의 42.5%로 가장 큰 몫을 차지하는 네이버는 adapter가 없어 광고비가 0으로 붙었습니다.</li>
             </ul>
-            <p>저는 이 문제들을 증상별로 고치지 않고 광고 연동 코어를 다시 설계했습니다. 연결 lifecycle부터 수집 창, 정합, 어댑터 포트, Kafka 수집 토폴로지, 여정 스티칭, CPL과 ROAS 계산 계약까지 정했고, Go 서비스로 구현해 운영에 옮겼습니다.</p>
+            <p>저는 이 문제들을 증상별로 고치지 않고 광고 연동 코어를 다시 설계했습니다. 연결 lifecycle부터 수집 창, 정합, adapter port, Kafka 수집 topology, 여정 스티칭, CPL과 ROAS 계산 계약까지 정했고, Go 서비스로 구현해 운영에 옮겼습니다.</p>
           </section>
 
           <section id="d-process" aria-labelledby="d-process-h">
             <h2 class="sechead" id="d-process-h"><span class="sechead__no">02</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
 
             <h3>1. 문제를 층별로 나누기</h3>
-            <p>기존 구현 감사, 운영 실측, 프로바이더 문서 조사로 리서치 12편을 쓰고 각 편을 반박 검증했습니다. 문서만으로 믿기 어려운 ReplacingMergeTree와 FINAL의 동작은 로컬 ClickHouse 두 버전에서 직접 쟀습니다.</p>
+            <p>기존 구현을 감사하고 운영 데이터를 실측하고 provider 문서를 조사해, 문제가 어느 층에서 생기는지부터 나눴습니다. 결론마다 반대 근거를 찾아 다시 검증했고, 문서만으로 믿기 어려운 ReplacingMergeTree와 FINAL의 동작은 로컬 ClickHouse 두 버전에서 직접 쟀습니다.</p>
 
             <h3>2. 확정한 결정을 설계 입력으로 고정하기</h3>
-            <p>창 정책, 정합, grain, 시간대, 프로바이더 범위 같은 결정을 설계 입력 상수로 묶고, 이후 실험은 그 상수를 검증만 하게 했습니다. 정합, 성능, 확장성 세 관점의 설계안을 6개 축으로 채점해 정합을 척추로 삼고 capability 포트와 호출 예산 회계를 붙였습니다.</p>
+            <p>창 정책, 정합, grain, 시간대, provider 범위 같은 결정을 설계 입력 상수로 묶고, 이후 실험은 그 상수를 검증만 하게 했습니다. 정합, 성능, 확장성 세 관점의 설계안을 6개 축으로 채점해 정합을 척추로 삼고 capability port와 호출 예산 회계를 붙였습니다.</p>
 
             <h3>3. 수집 경로 다시 세우기</h3>
-            <p>광고 수집을 트래커 Worker에서 떼어 독립 Go 서비스(GKE)로 옮겼고, PostgreSQL 원장, Kafka, GCS 원문 저장소, 역할별 consumer로 경로를 다시 세웠습니다. Meta부터 계정 단위로 새 경로에 올렸습니다. 광고 API 응답 한 페이지가 화면에 닿기까지의 길은 그림 1과 같습니다.</p>
+            <p>광고 수집을 트래커 Worker에서 떼어 GKE에서 도는 독립 Go 서비스로 옮겼고, PostgreSQL ledger, Kafka, GCS 원문 저장소, 역할별 consumer로 경로를 다시 세웠습니다. Meta부터 계정 단위로 새 경로에 올렸습니다. 광고 API 응답 한 페이지가 화면에 닿기까지의 길은 그림 1과 같습니다.</p>
 
 <figure class="dg" id="dg-ads-a" style="--dg-min: 600px" data-step-ms="3600"
-  data-idle="광고 API 응답 한 번이 원장, 원본 저장소, Kafka, ClickHouse를 거쳐 화면에 닿습니다. 단계마다 앞 단계가 남긴 증거를 확인한 뒤에만 움직입니다."
+  data-idle="광고 API 응답 한 번이 ledger, 원문 저장소, Kafka, ClickHouse를 거쳐 화면에 닿습니다. 단계마다 앞 단계가 남긴 증거를 확인한 뒤에만 움직입니다."
   data-steps='[
-  {"t":"6시간마다 계획기가 최근 14일 작업과 하루 한 번의 긴 창 작업을 원장에 적고 operation 예산을 예약합니다. 디스패처는 지금 실행할 작업만 relay를 거쳐 Kafka 명령 토픽에 보냅니다."},
-  {"t":"소스 consumer는 계정 실행권을 하나만 잡고 60초 간격을 지켜, 어댑터를 거쳐 광고 API를 한 페이지씩 부릅니다.", "d": 3800},
-  {"t":"응답 원문은 GCS에 create-only로 쓰고 다시 읽어 digest를 맞춘 뒤, 체크포인트와 다음 작업을 한 트랜잭션으로 확정합니다.", "d": 4200},
-  {"t":"모든 페이지가 모이면 manifest를 봉인하고, 원장이 수집 결과의 버전을 확정해 관측 토픽에 참조만 보냅니다.", "d": 3800},
-  {"t":"성과 그룹과 소재 그룹이 같은 토픽을 따로 읽습니다. 소재가 실패해 따로 재시도해도 성과 적용과 되읽기는 그대로 끝납니다.", "d": 4400},
-  {"t":"성과 완료가 공개를 준비하면 그림자 테이블에 스냅샷을 채워 통째로 바꾸고 marker를 봉인합니다. 화면은 marker가 맞을 때만 새 스냅샷을 읽습니다.", "d": 4400},
-  {"t":"같은 명령이 한 번 더 와도 원장의 세대 비교가 이미 끝난 작업으로 판정해, 광고 API를 다시 부르지 않습니다.", "d": 3800}
+  {"t":"6시간마다 planner가 최근 14일 작업과 하루 한 번의 긴 창 작업을 ledger에 적고 operation 예산을 예약합니다. dispatcher는 지금 실행할 작업만 relay를 거쳐 Kafka 명령 topic에 보냅니다."},
+  {"t":"소스 consumer는 계정 lease를 하나만 잡고 60초 간격을 지켜, adapter를 거쳐 광고 API를 한 페이지씩 부릅니다.", "d": 3800},
+  {"t":"응답 원문은 GCS에 create-only로 쓰고 다시 읽어 digest를 맞춘 뒤, checkpoint와 다음 작업을 한 트랜잭션으로 확정합니다.", "d": 4200},
+  {"t":"모든 페이지가 모이면 manifest를 봉인하고, ledger가 수집 결과의 버전을 확정해 관측 topic에 참조만 보냅니다.", "d": 3800},
+  {"t":"성과 그룹과 소재 그룹이 같은 topic을 따로 읽습니다. 소재가 실패해 따로 retry해도 성과 적용과 되읽기는 그대로 끝납니다.", "d": 4400},
+  {"t":"성과 완료가 공개를 준비하면 shadow 테이블에 snapshot을 채워 통째로 바꾸고 marker를 봉인합니다. 화면은 marker가 맞을 때만 새 snapshot을 읽습니다.", "d": 4400},
+  {"t":"같은 명령이 한 번 더 와도 ledger의 generation 비교가 이미 끝난 작업으로 판정해, 광고 API를 다시 부르지 않습니다.", "d": 3800}
 ]'>
   <figcaption><span class="n">그림 1</span>광고 한 페이지가 화면에 닿기까지</figcaption>
   <div class="dg__canvas">
@@ -116,15 +116,15 @@
       <rect class="zone" x="24" y="24" width="680" height="100" rx="10"/>
       <text class="m" x="36" y="42">광고 플랫폼</text>
       <g data-step="2"><rect class="box" x="36" y="52" width="176" height="60" rx="8"/><text class="t" x="50" y="78">Google Ads</text><text class="s" x="50" y="98">3 레벨, 프로젝트 예산</text></g>
-      <g data-step="2"><rect class="box" x="276" y="52" width="176" height="60" rx="8"/><text class="t" x="290" y="78">Meta</text><text class="s" x="290" y="98">계정별 호출 제한</text></g>
+      <g data-step="2"><rect class="box" x="276" y="52" width="176" height="60" rx="8"/><text class="t" x="290" y="78">Meta</text><text class="s" x="290" y="98">계정별 rate limit</text></g>
       <g data-step="2"><rect class="box" x="516" y="52" width="176" height="60" rx="8"/><text class="t" x="530" y="78">네이버 검색광고</text><text class="s" x="530" y="98">비동기 보고서</text></g>
       <path class="edge" data-step="2" d="M124 112V150"/>
       <path class="edge" data-step="2" d="M604 112V150"/>
 
-      <!-- 어댑터 포트 -->
+      <!-- adapter port -->
       <g data-step="2">
         <rect class="box" x="36" y="150" width="656" height="60" rx="8"/>
-        <text class="t" x="50" y="176">capability 어댑터</text>
+        <text class="t" x="50" y="176">capability adapter</text>
         <text class="s" x="50" y="196">믿어도 되는 것을 선언</text>
         <rect class="chip-r" x="428" y="171" width="60" height="18" rx="9"/><text class="chip-t" x="458" y="184" text-anchor="middle">고정 일수</text>
         <rect class="chip-r" x="494" y="171" width="60" height="18" rx="9"/><text class="chip-t" x="524" y="184" text-anchor="middle">0행 반환</text>
@@ -140,19 +140,19 @@
       <text class="m" data-step="2" x="342" y="229" text-anchor="end">GET 한 페이지</text>
       <text class="m" data-step="2" x="386" y="229">응답 원문</text>
 
-      <!-- 1행: 원본, 소스 consumer, 명령 토픽 -->
+      <!-- 1행: 원본, 소스 consumer, 명령 topic -->
       <g data-step="3,4"><rect class="box" x="36" y="240" width="176" height="60" rx="8"/><text class="t" x="50" y="266">GCS 원문 저장소</text><text class="s" x="50" y="286">create-only, digest</text></g>
-      <g data-step="2,3,7"><rect class="box" x="276" y="240" width="176" height="60" rx="8"/><text class="t" x="290" y="266">소스 consumer</text><text class="s" x="290" y="286">계정당 실행권 1, 60초</text></g>
-      <g data-step="1,2,7"><rect class="box" x="516" y="240" width="176" height="60" rx="8"/><text class="t" x="530" y="266">Kafka 명령 토픽</text><text class="s" x="530" y="286">키 (고객, 계정)</text></g>
+      <g data-step="2,3,7"><rect class="box" x="276" y="240" width="176" height="60" rx="8"/><text class="t" x="290" y="266">소스 consumer</text><text class="s" x="290" y="286">계정당 lease 1, 60초</text></g>
+      <g data-step="1,2,7"><rect class="box" x="516" y="240" width="176" height="60" rx="8"/><text class="t" x="530" y="266">Kafka 명령 topic</text><text class="s" x="530" y="286">key (고객, 계정)</text></g>
 
-      <!-- 2행: 계획기, 원장, 디스패처 -->
-      <g data-step="1"><rect class="box" x="36" y="330" width="176" height="60" rx="8"/><text class="t" x="50" y="356">계획기</text><text class="s" x="50" y="376">6시간 tick, 최근 창과 긴 창</text></g>
-      <g data-step="1,3,4,7"><rect class="box" x="276" y="330" width="176" height="60" rx="8"/><text class="t" x="290" y="356">PostgreSQL 원장</text><text class="s" x="290" y="376">작업, 실행권, 체크포인트</text></g>
-      <g data-step="1"><rect class="box" x="516" y="330" width="176" height="60" rx="8"/><text class="t" x="530" y="356">디스패처와 relay</text><text class="s" x="530" y="376">outbox, acks=all</text></g>
+      <!-- 2행: planner, ledger, dispatcher -->
+      <g data-step="1"><rect class="box" x="36" y="330" width="176" height="60" rx="8"/><text class="t" x="50" y="356">planner</text><text class="s" x="50" y="376">6시간 tick, 최근 창과 긴 창</text></g>
+      <g data-step="1,3,4,7"><rect class="box" x="276" y="330" width="176" height="60" rx="8"/><text class="t" x="290" y="356">PostgreSQL ledger</text><text class="s" x="290" y="376">작업, lease, checkpoint</text></g>
+      <g data-step="1"><rect class="box" x="516" y="330" width="176" height="60" rx="8"/><text class="t" x="530" y="356">dispatcher와 relay</text><text class="s" x="530" y="376">outbox, acks=all</text></g>
 
-      <!-- 3행: 관측 토픽, 완료 토픽 -->
-      <g data-step="4,5"><rect class="box" x="276" y="420" width="176" height="60" rx="8"/><text class="t" x="290" y="446">Kafka 관측 토픽</text><text class="s" x="290" y="466">프로바이더마다 하나</text></g>
-      <g data-step="6"><rect class="box" x="516" y="420" width="176" height="60" rx="8"/><text class="t" x="530" y="446">Kafka 완료 토픽</text><text class="s" x="530" y="466">역할 완료만</text></g>
+      <!-- 3행: 관측 topic, 완료 topic -->
+      <g data-step="4,5"><rect class="box" x="276" y="420" width="176" height="60" rx="8"/><text class="t" x="290" y="446">Kafka 관측 topic</text><text class="s" x="290" y="466">provider마다 하나</text></g>
+      <g data-step="6"><rect class="box" x="516" y="420" width="176" height="60" rx="8"/><text class="t" x="530" y="446">Kafka 완료 topic</text><text class="s" x="530" y="466">역할 완료만</text></g>
 
       <!-- 단계 1: 작업 기록, 실행 대상, 명령 발행 -->
       <path id="dg-ads-a-f1a" class="flow" data-step="1" d="M212 360H270" marker-end="url(#dg-ads-a-ah)"/>
@@ -182,25 +182,25 @@
       <!-- 역할별 적재 -->
       <rect class="zone" x="24" y="500" width="680" height="98" rx="10"/>
       <text class="m" x="36" y="518">역할별 적재</text>
-      <g data-step="5"><rect class="box" x="36" y="526" width="176" height="60" rx="8"/><text class="t" x="50" y="552">소재 그룹</text><text class="s" x="50" y="572">소재 원장, 미디어</text></g>
-      <g data-step="5,6"><rect class="box" x="276" y="526" width="176" height="60" rx="8"/><text class="t" x="290" y="552">성과 그룹</text><text class="s" x="290" y="572">적용, 되읽기, 영수증</text></g>
+      <g data-step="5"><rect class="box" x="36" y="526" width="176" height="60" rx="8"/><text class="t" x="50" y="552">소재 그룹</text><text class="s" x="50" y="572">소재 ledger, 미디어</text></g>
+      <g data-step="5,6"><rect class="box" x="276" y="526" width="176" height="60" rx="8"/><text class="t" x="290" y="552">성과 그룹</text><text class="s" x="290" y="572">적용, 되읽기, receipt</text></g>
       <g data-step="6"><rect class="box" x="516" y="526" width="176" height="60" rx="8"/><text class="t" x="530" y="552">완료 그룹</text><text class="s" x="530" y="572">완료 상태는 앞으로만</text></g>
 
       <!-- ClickHouse와 화면 -->
       <rect class="zone" x="24" y="612" width="680" height="98" rx="10"/>
       <text class="m" x="36" y="630">ClickHouse와 화면</text>
       <g data-step="5"><rect class="box" x="36" y="638" width="176" height="60" rx="8"/><text class="t" x="50" y="664">정합 fact</text><text class="s" x="50" y="684">범위 삭제, FINAL 되읽기</text></g>
-      <g data-step="6"><rect class="box" x="276" y="638" width="176" height="60" rx="8"/><text class="t" x="290" y="664">대시보드 API</text><text class="s" x="290" y="684">marker 확인 뒤 새 스냅샷</text></g>
-      <g data-step="6"><rect class="box" x="516" y="638" width="176" height="60" rx="8"/><text class="t" x="530" y="664">서빙 스냅샷</text><text class="s" x="530" y="684">그림자와 활성, marker</text></g>
+      <g data-step="6"><rect class="box" x="276" y="638" width="176" height="60" rx="8"/><text class="t" x="290" y="664">대시보드 API</text><text class="s" x="290" y="684">marker 확인 뒤 새 snapshot</text></g>
+      <g data-step="6"><rect class="box" x="516" y="638" width="176" height="60" rx="8"/><text class="t" x="530" y="664">서빙 snapshot</text><text class="s" x="530" y="684">shadow와 active, marker</text></g>
 
       <!-- 단계 5: 역할별로 따로 읽기 -->
       <path id="dg-ads-a-f5a" class="flow" data-step="5" d="M364 480V520" marker-end="url(#dg-ads-a-ah)"/>
       <path id="dg-ads-a-f5b" class="flow" data-step="5" d="M276 462H244V550H218" marker-end="url(#dg-ads-a-ah)"/>
       <path id="dg-ads-a-f5c" class="flow" data-step="5" d="M276 574H236V662H218" marker-end="url(#dg-ads-a-ah)"/>
       <path id="dg-ads-a-f5d" class="edge edge--dash" data-step="5" style="stroke: var(--bad)" d="M150 526C150 476 196 476 196 520" marker-end="url(#dg-ads-a-ahb)"/>
-      <text class="m" data-step="5" x="173" y="476" text-anchor="middle" style="fill: var(--bad)">따로 재시도</text>
+      <text class="m" data-step="5" x="173" y="476" text-anchor="middle" style="fill: var(--bad)">따로 retry</text>
 
-      <!-- 단계 6: 역할 완료, 스냅샷 교체 -->
+      <!-- 단계 6: 역할 완료, snapshot 교체 -->
       <path id="dg-ads-a-f6a" class="flow" data-step="6" d="M452 544H484V450H510" marker-end="url(#dg-ads-a-ah)"/>
       <path id="dg-ads-a-f6b" class="flow" data-step="6" d="M604 480V520" marker-end="url(#dg-ads-a-ah)"/>
       <path id="dg-ads-a-f6c" class="flow" data-step="6" d="M604 586V632" marker-end="url(#dg-ads-a-ah)"/>
@@ -260,7 +260,7 @@
   </div>
 </figure>
 
-            <p>수집된 Meta 성과가 화면 집계표에 공개되기까지 2~7분이 걸렸고, Kafka 소비 지연은 상시 0~4 레코드였습니다. 2026년 9월 말 운영에서 관측한 값입니다.</p>
+            <p>9월 말 운영에서는 수집된 Meta 성과가 화면 집계표에 공개되기까지 2~7분이 걸렸고, Kafka consumer lag은 상시 0~4 레코드였습니다.</p>
 
             <h3>4. 여정과 지표 계약 정하기</h3>
             <p>공유 세션 안의 진입(entry)을 광고 접점 후보로 두고, 행동 직전 마지막 적격 광고 진입을 고르는 규칙, 확인 연결 두 등급, CPL과 ROAS 계산 규칙, 기여도 모델을 정했습니다. 한 사람의 일주일을 따라가면 그림 2와 같습니다.</p>
@@ -270,7 +270,7 @@
   data-steps='[
   {"t":"한 사람이 같은 공유 세션으로 월요일과 화요일에 Meta 광고 A, 수요일에 Google 광고 B, 금요일에 직접 방문으로 들어옵니다. 진입마다 entry가 따로 남습니다."},
   {"t":"금요일 상담 신청이 들어오면 그 시각 이전의 진입만 후보로 두고, 적격 광고 진입 중 가장 늦은 B를 고릅니다. 직접 방문은 광고 후보가 아닙니다.", "d": 4200},
-  {"t":"그 다음에야 매핑합니다. B의 클릭 ID를 고객별 해시 키로 바꿔 Google 클릭 역조회 브리지와 맞추면 캠페인 B에 확정 연결됩니다.", "d": 4000},
+  {"t":"그 다음에야 매핑합니다. B의 클릭 ID를 고객별 hash key로 바꿔 Google 클릭 역조회 브리지와 맞추면 캠페인 B에 확정 연결됩니다.", "d": 4000},
   {"t":"B가 매핑되지 않았다면 A로 물러나지 않고 최신 미매핑으로 남깁니다. 오래된 광고가 성과를 가져가지 않습니다.", "d": 4000},
   {"t":"광고비는 계정 현지 날짜와 통화별로, 리드와 구매는 확인된 연결만 따로 셉니다. 광고비를 행동 행마다 붙이지 않습니다.", "d": 4000},
   {"t":"결합 API가 같은 계정, 캠페인, 기간, 통화로 둘을 붙여 CPL과 ROAS를 냅니다. 광고비가 연결되지 않았거나 통화가 섞이면 0이 아니라 빈 값과 이유를 보여 줍니다.", "d": 4400},
@@ -331,13 +331,13 @@
 
       <g data-step="2"><rect class="box" x="36" y="312" width="176" height="60" rx="8"/><text class="t" x="50" y="338">접점 후보</text><text class="s" x="50" y="358">시간 조건만으로 선택</text></g>
       <g data-step="2,3,4"><rect class="box" x="276" y="312" width="176" height="60" rx="8"/><text class="t" x="290" y="338">가장 늦은 적격 광고 진입</text><text class="s" x="290" y="358">그 다음에 매핑</text></g>
-      <g data-step="3"><rect class="box" x="516" y="312" width="176" height="60" rx="8"/><text class="t" x="530" y="338">클릭 역조회 브리지</text><text class="s" x="530" y="358">Google, 고객별 해시 키</text></g>
+      <g data-step="3"><rect class="box" x="516" y="312" width="176" height="60" rx="8"/><text class="t" x="530" y="338">클릭 역조회 브리지</text><text class="s" x="530" y="358">Google, 고객별 hash key</text></g>
       <g data-step="3,4"><rect class="box" x="36" y="402" width="416" height="60" rx="8"/><text class="t" x="50" y="437">연결 상태</text></g>
       <g data-step="3,4"><rect x="140" y="423" width="70" height="18" rx="9" style="fill: var(--surface-2); stroke: var(--line-2)"/><text class="s" x="175" y="436" text-anchor="middle">후보 없음</text></g>
       <g data-step="3,4"><rect x="232" y="423" width="44" height="18" rx="9" style="fill: var(--surface-2); stroke: var(--line-2)"/><text class="s" x="254" y="436" text-anchor="middle">모호</text></g>
       <g data-step="4"><rect class="box" x="298" y="423" width="80" height="18" rx="9"/><text class="s" x="338" y="436" text-anchor="middle">최신 미매핑</text></g>
       <g data-step="3"><rect class="box" x="400" y="423" width="44" height="18" rx="9"/><text class="s" x="422" y="436" text-anchor="middle">연결</text></g>
-      <g data-step="3"><rect class="box" x="516" y="402" width="176" height="60" rx="8"/><text class="t" x="530" y="428">Meta URL 태그 원장</text><text class="s" x="530" y="448">선언된 ID와 관측 일치</text></g>
+      <g data-step="3"><rect class="box" x="516" y="402" width="176" height="60" rx="8"/><text class="t" x="530" y="428">Meta URL 태그 ledger</text><text class="s" x="530" y="448">선언된 ID와 관측 일치</text></g>
 
       <path id="dg-ads-b-f2b" class="flow" data-step="2" d="M212 342H270" marker-end="url(#dg-ads-b-ah)"/>
       <text class="m" data-step="2" x="244" y="334" text-anchor="middle">최신 1건</text>
@@ -408,9 +408,9 @@
   </div>
 </figure>
 
-            <p>마지막 광고 접점 판정이 기존 구현보다 광고 접점을 23% 더 회수했고, 30일 룩백이 연결의 99.17%를 덮었습니다. 운영 데이터 90일로 잰 값입니다.</p>
+            <p>운영 데이터 90일로 재 보니, 마지막 광고 접점 판정이 기존 구현보다 광고 접점을 23% 더 회수했고 30일 lookback이 연결의 99.17%를 덮었습니다.</p>
 
-            <h3>5. 프로바이더를 넓히고 운영 감시 세우기</h3>
+            <h3>5. provider를 넓히고 운영 감시 세우기</h3>
             <p>Google을 계정 단위 스위치로 코어에 합류시키고, 네이버 검색광고를 같은 명령 경로로 붙였습니다. 프로세스 상태가 아니라 데이터 진행을 보는 감시와 경보를 두었습니다.</p>
           </section>
 
@@ -422,8 +422,8 @@
               <header class="ts__head"><span class="ts__id">D-01</span><h3>최신성과 정합을 다른 수집 lane으로 나누기</h3></header>
               <dl class="ts__rows">
                 <div><dt>고민</dt><dd>광고 성과는 지난 날짜 값이 나중에 바뀝니다. 전환은 클릭한 날짜 칸에 뒤늦게 더해지고, Google은 무효 트래픽을 당월 말까지 소급해 줄이며 전환창이 최대 90일입니다. Meta는 28일이 지나야 값이 고정됩니다. 그런데 Google API 예산은 프로젝트 전체가 함께 쓰는 하루 operation 한도라서, 창을 넓히고 자주 돌릴수록 연결할 수 있는 계정 수가 줄어듭니다.</dd></div>
-                <div><dt>선택지</dt><dd>① 짧은 창을 자주 도는 안<br>② 긴 창을 하루 한 번 도는 안<br>③ 최근 창은 자주, 프로바이더별 소급 최대 창은 하루 한 번 돌고, 클릭 역조회는 별도 lane으로 두는 안</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 최근 14일은 6시간마다, Meta 30일과 Google 95일은 하루 한 번, Google 클릭 역조회는 최근 2일을 하루 한 번 읽습니다. 같은 날짜를 여러 창이 겹쳐 읽는 것은 낭비가 아니라 소급 변경을 잡는 장치이고, 비용은 창 폭이 아니라 재조회 빈도가 정한다고 판단했습니다. 정합 책임을 하루 한 번 도는 창에 두면 최근 창의 폭을 줄여도 정합 범위는 줄지 않습니다. 창 폭은 숫자를 박지 않고 프로바이더가 선언한 고정 일수와 전환창으로 계산했습니다. 실행 식별은 UTC 시 단위로, 조회 날짜는 광고 계정의 현지 날짜로 나눴고, 같은 계정의 writer는 하나만 돌게 했습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 짧은 창을 자주 도는 안<br>② 긴 창을 하루 한 번 도는 안<br>③ 최근 창은 자주, provider별 소급 최대 창은 하루 한 번 돌고, 클릭 역조회는 별도 lane으로 두는 안</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 최근 14일은 6시간마다, Meta 30일과 Google 95일은 하루 한 번, Google 클릭 역조회는 최근 2일을 하루 한 번 읽습니다. 같은 날짜를 여러 창이 겹쳐 읽는 것은 낭비가 아니라 소급 변경을 잡는 장치이고, 비용은 창 폭이 아니라 재조회 빈도가 정한다고 판단했습니다. 정합 책임을 하루 한 번 도는 창에 두면 최근 창의 폭을 줄여도 정합 범위는 줄지 않습니다. 창 폭은 숫자를 박지 않고 provider가 선언한 고정 일수와 전환창으로 계산했습니다. 실행 식별은 UTC 시 단위로, 조회 날짜는 광고 계정의 현지 날짜로 나눴고, 같은 계정의 writer는 하나만 돌게 했습니다.</dd></div>
                 <div><dt>대가</dt><dd>오래된 날짜의 정정은 최대 하루 늦게 화면에 반영됩니다. 클릭 역조회를 지표 창에 묶으면 계정 몇 개 만에 예산 천장에 닿아 lane을 따로 운영해야 했습니다.</dd></div>
               </dl>
             </article>
@@ -432,48 +432,48 @@
               <header class="ts__head"><span class="ts__id">D-02</span><h3>정합은 쓰기 쪽에서, 0은 증거가 있을 때만</h3></header>
               <dl class="ts__rows">
                 <div><dt>고민</dt><dd>성과 테이블은 최신 값이 이기는 ReplacingMergeTree입니다. 소급으로 사라진 행은 지워야 하는데, Google과 Meta 모두 지표가 전부 0인 행을 돌려주지 않아 "삭제"와 "그날 0"이 구분되지 않습니다. 실적 최대화 캠페인의 하위 레벨은 구조적으로 빈 응답이라, 빈 응답을 삭제로 읽으면 창을 넓히는 순간 정상 데이터가 통째로 지워집니다.</dd></div>
-                <div><dt>선택지</dt><dd>① 조회할 때 중복과 삭제를 걸러 내는 안<br>② 빈 응답이면 창 전체를 삭제 표시하는 안<br>③ 어댑터가 "이 레벨, 이 기간은 완전하게 받았다"를 증명한 범위에서만 삭제 표시를 만들고, 0행은 증거가 있을 때만 확정하는 안</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 정정은 (고객, 플랫폼, 계정, 레벨, 날짜 범위) 창 안에서만 하고, 완전성이 증명되지 않으면 정정 자체를 거부합니다. 0행 결과에는 "명시적으로 비었다"는 표시와 그 근거가 있어야 합니다. Google은 같은 실행의 계정 조회가 계정 ID와 시간대까지 맞고 모든 조회 구간이 오류 없이 끝났을 때만 빈 결과를 인정합니다. ClickHouse에 쓴 값을 FINAL로 되읽어 확인한 뒤에만 커서와 완료가 움직입니다. 창을 넓히는 순간 삭제 표시가 처음 발화하므로 이 게이트는 창 확대보다 먼저 와야 했고, 잘못 확정된 삭제는 되돌리기 어렵습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 조회할 때 중복과 삭제를 걸러 내는 안<br>② 빈 응답이면 창 전체를 삭제 표시하는 안<br>③ adapter가 "이 레벨, 이 기간은 완전하게 받았다"를 증명한 범위에서만 삭제 표시를 만들고, 0행은 증거가 있을 때만 확정하는 안</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 정정은 (고객, 플랫폼, 계정, 레벨, 날짜 범위) 창 안에서만 하고, 완전성이 증명되지 않으면 정정 자체를 거부합니다. 0행 결과에는 "명시적으로 비었다"는 표시와 그 근거가 있어야 합니다. Google은 같은 실행의 계정 조회가 계정 ID와 시간대까지 맞고 모든 조회 구간이 오류 없이 끝났을 때만 빈 결과를 인정합니다. ClickHouse에 쓴 값을 FINAL로 되읽어 확인한 뒤에만 cursor와 완료가 움직입니다. 창을 넓히는 순간 삭제 표시가 처음 발화하므로 이 게이트는 창 확대보다 먼저 와야 했고, 잘못 확정된 삭제는 되돌리기 어렵습니다.</dd></div>
                 <div><dt>대가</dt><dd>실행마다 의도 기록과 되읽기가 붙어 지연이 늘었습니다. 응답이 일부만 오면 진전이 없고, Google은 확인 조회가 한 번 늘었습니다.</dd></div>
               </dl>
             </article>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-03</span><h3>어댑터는 "무엇을 할 수 있나"가 아니라 "무엇을 믿어도 되나"를 선언</h3></header>
+              <header class="ts__head"><span class="ts__id">D-03</span><h3>adapter는 "무엇을 할 수 있나"가 아니라 "무엇을 믿어도 되나"를 선언</h3></header>
               <dl class="ts__rows">
-                <div><dt>고민</dt><dd>프로바이더마다 깨지는 지점이 달랐습니다. 네이버 검색광고는 비동기 보고서라 "아직 없음"이 정상 상태이고, 요청마다 HMAC 서명을 하고 TSV를 내려받습니다. 카카오는 레벨별 호출 제한이 있고, Google은 프로젝트 전체가 operation 예산을 나눠 씁니다. 기존 코드는 프로바이더 이름으로 곳곳에서 분기했고, 새 플랫폼은 모든 테스트가 통과해도 DB 허용목록에서 연결이 거부됐습니다.</dd></div>
-                <div><dt>선택지</dt><dd>① 이름 분기를 유지하는 안<br>② 조회 메서드만 있는 얇은 인터페이스<br>③ 신뢰 범위까지 선언하는 capability 포트</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. capability에는 API 버전과 종료일, 조회 방식(기간 조회, 단일 날짜, 비동기 보고서), 0행을 명시적으로 주는지, 며칠 뒤 값이 고정되는지, 월말 동결, 전환창, 쿼터 모델, 레벨별 호출 제한을 담았습니다. 조회 결과도 성공과 실패 둘이 아니라 행, 데이터 없음, 보고서 제출됨, 보고서 무효, 보류의 다섯 가지로 나눴습니다. 이 선언이 삭제 표시와 수집 창, 호출 예산 계산의 입력이 됩니다. 어댑터는 인증, 페이지, 오류 분류, 원문 변환까지만 맡고 원장과 공개는 코어가 확정합니다. 프로바이더 축은 벤더와 제품 두 축으로 나눠 네이버 검색광고와 성과형을 따로 붙이되 화면에는 네이버 하나로 보이게 했습니다. 새 프로바이더는 어댑터부터 DB 허용목록까지 하나의 수직 체크리스트로 붙이고, 허용목록이 플랫폼 타입과 같은지를 계약 테스트로 잠갔습니다.</dd></div>
-                <div><dt>대가</dt><dd>capability 선언을 계속 유지해야 하고, 프로바이더를 붙일 때 여러 층을 함께 바꿔야 합니다. 처리기 공통화는 세 번째 프로바이더가 붙을 때로 미뤄, 그 전까지 확정 로직이 프로바이더마다 복제됐습니다.</dd></div>
+                <div><dt>고민</dt><dd>provider마다 깨지는 지점이 달랐습니다. 네이버 검색광고는 비동기 보고서라 "아직 없음"이 정상 상태이고, 요청마다 HMAC 서명을 하고 TSV를 내려받습니다. 카카오는 레벨별 rate limit이 있고, Google은 프로젝트 전체가 operation 예산을 나눠 씁니다. 기존 코드는 provider 이름으로 곳곳에서 분기했고, 새 플랫폼은 모든 테스트가 통과해도 DB allowlist에서 연결이 거부됐습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 이름 분기를 유지하는 안<br>② 조회 메서드만 있는 얇은 interface<br>③ 신뢰 범위까지 선언하는 capability port</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. capability에는 API 버전과 종료일, 조회 방식(기간 조회, 단일 날짜, 비동기 보고서), 0행을 명시적으로 주는지, 며칠 뒤 값이 고정되는지, 월말 동결, 전환창, 쿼터 모델, 레벨별 rate limit을 담았습니다. 조회 결과도 성공과 실패 둘이 아니라 행, 데이터 없음, 보고서 제출됨, 보고서 무효, 보류의 다섯 가지로 나눴습니다. 이 선언이 삭제 표시와 수집 창, 호출 예산 계산의 입력이 됩니다. adapter는 인증, 페이지, 오류 분류, 원문 변환까지만 맡고 ledger와 공개는 코어가 확정합니다. provider 축은 벤더와 제품 두 축으로 나눠 네이버 검색광고와 성과형을 따로 붙이되 화면에는 네이버 하나로 보이게 했습니다. 새 provider는 adapter부터 DB allowlist까지 하나의 수직 체크리스트로 붙이고, allowlist가 플랫폼 타입과 같은지를 계약 테스트로 잠갔습니다.</dd></div>
+                <div><dt>대가</dt><dd>capability 선언을 계속 유지해야 하고, provider를 붙일 때 여러 층을 함께 바꿔야 합니다. 처리기 공통화는 세 번째 provider가 붙을 때로 미뤄, 그 전까지 확정 로직이 provider마다 복제됐습니다.</dd></div>
               </dl>
             </article>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-04</span><h3>PostgreSQL 원장이 진실과 실행권을 갖고, Kafka는 참조만 나르기</h3></header>
+              <header class="ts__head"><span class="ts__id">D-04</span><h3>PostgreSQL ledger가 source of truth와 lease를 갖고, Kafka는 참조만 나르기</h3></header>
               <dl class="ts__rows">
                 <div><dt>고민</dt><dd>광고 한 페이지가 화면에 닿기까지 광고 API, GCS, PostgreSQL, Kafka, ClickHouse 다섯 시스템을 지나는데, 이들은 트랜잭션을 공유하지 않습니다. 그러면서도 "60초 뒤에 다시", "이 계정은 한 번에 하나만", "여러 사실을 함께 확정" 같은 요구가 있었습니다.</dd></div>
-                <div><dt>선택지</dt><dd>① Kafka 로그를 진실 원천으로 두는 안<br>② CDC 복제본을 쓰는 안<br>③ PostgreSQL 원장 + transactional outbox + 참조만 담은 메시지</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 오프셋은 "어디까지 읽었나"만 말하고, 어느 작업이 몇 세대째인지와 언제 다시 해도 되는지는 말하지 않습니다. Kafka의 배타 단위는 파티션이라 계정 단위 배타도 표현할 수 없습니다. 그래서 작업, 실행권, 체크포인트, 재시도, 영수증은 PostgreSQL에 두고 Kafka 메시지에는 작업 참조만 실었습니다. 자격증명도 응답 원문도 싣지 않아 토픽이 새도 비밀은 새지 않습니다. 발행은 outbox를 거쳐 acks=all 확인 뒤에만 전달 완료로 바꾸고, 소비는 오프셋 자동 확정을 끈 채 PostgreSQL에 결과를 확정한 레코드까지만 오프셋을 올립니다. 재전달되거나 너무 이른 명령은 PostgreSQL의 세대 비교로 판정해 광고 API를 다시 부르지 않고 끝냅니다. exactly-once 대신 at-least-once와 결정론적 ID로 idempotent하게 수렴시켰고, CDC는 DDL과 sequence를 복제하지 않아 실행권의 source of truth가 될 수 없다고 보고 버렸습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① Kafka 로그를 source of truth로 두는 안<br>② CDC 복제본을 쓰는 안<br>③ PostgreSQL ledger와 transactional outbox를 두고 메시지에는 참조만 담는 안</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. offset은 "어디까지 읽었나"만 말하고, 어느 작업이 몇 번째 generation인지와 언제 다시 해도 되는지는 말하지 않습니다. Kafka의 배타 단위는 partition이라 계정 단위 배타도 표현할 수 없습니다. 그래서 작업, lease, checkpoint, retry, receipt는 PostgreSQL에 두고 Kafka 메시지에는 작업 참조만 실었습니다. 자격증명도 응답 원문도 싣지 않아 topic이 새도 비밀은 새지 않습니다. 발행은 outbox를 거쳐 acks=all 확인 뒤에만 전달 완료로 바꾸고, 소비는 offset 자동 확정을 끈 채 PostgreSQL에 결과를 확정한 레코드까지만 offset을 올립니다. 재전달되거나 너무 이른 명령은 PostgreSQL의 generation 비교로 판정해 광고 API를 다시 부르지 않고 끝냅니다. exactly-once 대신 at-least-once와 결정론적 ID로 idempotent하게 수렴시켰고, CDC는 DDL과 sequence를 복제하지 않아 lease의 source of truth가 될 수 없다고 보고 버렸습니다.</dd></div>
                 <div><dt>대가</dt><dd>한 페이지에 PostgreSQL 트랜잭션이 여러 번 들어가 전체 지연이 늘었습니다.</dd></div>
               </dl>
             </article>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-05</span><h3>프로바이더마다 관측 토픽 하나, 역할마다 consumer group 하나, 완료 토픽은 따로</h3></header>
+              <header class="ts__head"><span class="ts__id">D-05</span><h3>provider마다 관측 topic 하나, 역할마다 consumer group 하나, 완료 topic은 따로</h3></header>
               <dl class="ts__rows">
-                <div><dt>고민</dt><dd>소재에는 이미지와 영상처럼 느리고 자주 실패하는 일이 딸려 있습니다. 하나의 작업으로 묶으면 소재 조회 실패가 광고비와 전환 같은 가장 중요한 숫자까지 막았습니다. 프로바이더가 늘어도 성과와 소재 처리 코드는 하나여야 했습니다.</dd></div>
-                <div><dt>선택지</dt><dd>① 프로바이더와 역할 조합마다 토픽과 그룹을 두는 안<br>② 단일 토픽<br>③ 프로바이더마다 관측 토픽 하나를 두고, 그 토픽을 성과와 소재 그룹이 따로 읽고, 역할 완료는 공용 완료 토픽으로 보내는 안</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 프로바이더를 붙일 때는 토픽 하나와 설정 목록만 늘고 consumer 코드는 그대로입니다. 완료를 별도 토픽으로 떼어 완료 상태는 역할 영수증만 반영하고, 공개 준비는 성과 완료에서만 만들었습니다. 소재 실패는 따로 재시도하고 이미 성공한 지표를 되돌리지 않습니다. 키는 (고객, 광고 계정)이라 한 계정은 세 토픽에서 같은 파티션에 놓이고, 계정 사이 처리는 병렬입니다. 클러스터는 관리형 Kafka 최소 구성(파티션 3, 복제 3, min.insync 2, 보존 7일)을 골랐습니다. 메시지가 수백 바이트 참조라 용량보다 비용과 단순함이 중요했고, 기록 원본은 PostgreSQL과 GCS에 있었기 때문입니다. 토픽과 그룹 이름은 설정이 아니라 코드가 조립하고, consumer는 기동할 때 구독 목록이 설정과 정확히 같지 않으면 뜨지 않습니다.</dd></div>
-                <div><dt>대가</dt><dd>계정이 적으면 파티션이 한쪽으로 몰립니다. 7일 넘게 멈춘 그룹은 레코드를 잃어 원장에서 다시 발행해야 하고, 프로바이더 목록을 바꿀 때는 생산 중단부터 lag 0까지 정해진 순서를 지켜야 합니다.</dd></div>
+                <div><dt>고민</dt><dd>소재에는 이미지와 영상처럼 느리고 자주 실패하는 일이 딸려 있습니다. 하나의 작업으로 묶으면 소재 조회 실패가 광고비와 전환 같은 가장 중요한 숫자까지 막았습니다. provider가 늘어도 성과와 소재 처리 코드는 하나여야 했습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① provider와 역할 조합마다 topic과 그룹을 두는 안<br>② 단일 topic<br>③ provider마다 관측 topic 하나를 두고, 그 topic을 성과와 소재 그룹이 따로 읽고, 역할 완료는 공용 완료 topic으로 보내는 안</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. provider를 붙일 때는 topic 하나와 설정 목록만 늘고 consumer 코드는 그대로입니다. 완료를 별도 topic으로 떼어 완료 상태는 역할 receipt만 반영하고, 공개 준비는 성과 완료에서만 만들었습니다. 소재 실패는 따로 retry하고 이미 성공한 지표를 되돌리지 않습니다. key는 (고객, 광고 계정)이라 한 계정은 세 topic에서 같은 partition에 놓이고, 계정 사이 처리는 병렬입니다. 클러스터는 관리형 Kafka 최소 구성으로 partition 3개, replication factor 3, min.insync.replicas 2, retention 7일을 골랐습니다. 메시지가 수백 바이트 참조라 용량보다 비용과 단순함이 중요했고, 기록 원본은 PostgreSQL과 GCS에 있었기 때문입니다. topic과 그룹 이름은 설정이 아니라 코드가 조립하고, consumer는 기동할 때 구독 목록이 설정과 정확히 같지 않으면 뜨지 않습니다.</dd></div>
+                <div><dt>대가</dt><dd>계정이 적으면 partition이 한쪽으로 몰립니다. 7일 넘게 멈춘 그룹은 레코드를 잃어 ledger에서 다시 발행해야 하고, provider 목록을 바꿀 때는 producer 중단부터 consumer lag 0까지 정해진 순서를 지켜야 합니다.</dd></div>
               </dl>
             </article>
 
             <article class="ts">
               <header class="ts__head"><span class="ts__id">D-06</span><h3>한 번에 한 페이지, 원문은 GCS에 고정</h3></header>
               <dl class="ts__rows">
-                <div><dt>고민</dt><dd>호출 제한은 계정과 앱에 걸려 병렬 요청은 오류와 대기만 늘립니다. 계정 하나를 한 번 수집하는 일은 레벨 셋, 여러 페이지, 지표, 설정, 소재, 미디어로 커지는데, 긴 작업은 죽으면 처음부터 다시 해야 했고 다시 부르면 서로 다른 시점의 응답이 섞였습니다.</dd></div>
+                <div><dt>고민</dt><dd>rate limit은 계정과 앱에 걸려 병렬 요청은 오류와 대기만 늘립니다. 계정 하나를 한 번 수집하는 일은 레벨 셋, 여러 페이지, 지표, 설정, 소재, 미디어로 커지는데, 긴 작업은 죽으면 처음부터 다시 해야 했고 다시 부르면 서로 다른 시점의 응답이 섞였습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 계정 단위로 한 번에 조회하는 안<br>② API 응답 한 번을 작업 하나로 하는 작업 사슬</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. GET 한 번이 PostgreSQL 작업 한 행입니다. 계정마다 실행권(lease)은 하나이고, 실행권을 잡을 때 다음 호출 가능 시각을 최소 60초 뒤로 둡니다. 응답 원문은 GCS에 create-only로 쓰고 다시 읽어 digest를 맞춘 뒤, 체크포인트, 작업 성공, 실행권 해제, 다음 작업, 다음 발행을 한 트랜잭션으로 확정합니다. 모든 페이지가 모이면 요청 범위와 완료 범위, capability 버전, 구성원별 기대 행 수를 담은 manifest를 봉인합니다. 죽어도 잃는 것은 한 페이지이고, 적재를 다시 해야 할 때는 광고 API를 다시 부르지 않고 같은 원문에서 다시 만듭니다. 이름이 결정론적이라 늦게 깨어난 옛 작업자가 새 결과를 덮어쓰지 못합니다. 첫 계정에서 최대 5요청, 60초 간격으로 한도를 잰 뒤 운영값을 정했습니다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. GET 한 번이 PostgreSQL 작업 한 행입니다. 계정마다 lease는 하나이고, lease를 잡을 때 다음 호출 가능 시각을 최소 60초 뒤로 둡니다. 응답 원문은 GCS에 create-only로 쓰고 다시 읽어 digest를 맞춘 뒤, checkpoint, 작업 성공, lease 해제, 다음 작업, 다음 발행을 한 트랜잭션으로 확정합니다. 모든 페이지가 모이면 요청 범위와 완료 범위, capability 버전, 구성원별 기대 행 수를 담은 manifest를 봉인합니다. 죽어도 잃는 것은 한 페이지이고, 적재를 다시 해야 할 때는 광고 API를 다시 부르지 않고 같은 원문에서 다시 만듭니다. 이름이 결정론적이라 늦게 깨어난 옛 작업자가 새 결과를 덮어쓰지 못합니다. 첫 계정에서 최대 5요청, 60초 간격으로 한도를 잰 뒤 운영값을 정했습니다.</dd></div>
                 <div><dt>대가</dt><dd>PostgreSQL 트랜잭션 수와 전체 지연이 늘었고, GCS 보존 비용이 생겼습니다. 운영값은 표본이 작아 최대 처리량을 증명하지는 못합니다.</dd></div>
               </dl>
             </article>
@@ -483,7 +483,7 @@
               <dl class="ts__rows">
                 <div><dt>고민</dt><dd>기존 모델은 세션 하나에 광고 좌표 하나였습니다. 10시에 광고 A로 들어와 10시 40분에 광고 B로 다시 들어오고 10시 45분에 문의하면 B가 사라졌고, 세션 단위로 한 번 접힌 이벤트는 뒤의 어떤 JOIN으로도 B를 되살릴 수 없었습니다. 캠페인 이름 매칭은 운영 실측에서 0~17%라 사실상 쓸 수 없었습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 세션의 첫 랜딩<br>② Direct를 포함한 마지막 클릭<br>③ 첫 접점<br>④ 적격 광고 진입만 후보로 둔 시간축 마지막 접점</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>④를 골랐습니다. 공유 세션은 시간이나 탭으로 끊지 않고, 새 광고나 검색 진입마다 entry를 따로 남겨 재료로 보존합니다. 판정에는 순서가 있습니다. 시간 조건만으로 후보를 고르고, 가장 늦은 하나를 고른 뒤, 그때서야 광고 계정의 캠페인 원장과 맞춥니다. 캠페인 원장과 먼저 조인해 후보를 줄이면 매핑되지 않은 최신 진입이 지워지고 과거 진입이 저절로 뽑히기 때문입니다. 그래서 최신 진입이 매핑되지 않으면 과거 광고로 물러나지 않고 "최신 미매핑"으로 남깁니다. 확정 연결은 두 등급만 인정합니다. Google은 클릭 ID를 고객별 해시 키로 바꿔 클릭 역조회 브리지와 맞추고, Meta는 소재에 선언된 URL 태그와 사이트에서 관측한 ID가 같을 때만 연결합니다. 원문 클릭 ID는 저장하지 않습니다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>④를 골랐습니다. 공유 세션은 시간이나 탭으로 끊지 않고, 새 광고나 검색 진입마다 entry를 따로 남겨 재료로 보존합니다. 판정에는 순서가 있습니다. 시간 조건만으로 후보를 고르고, 가장 늦은 하나를 고른 뒤, 그때서야 광고 계정의 캠페인 ledger와 맞춥니다. 캠페인 ledger와 먼저 조인해 후보를 줄이면 매핑되지 않은 최신 진입이 지워지고 과거 진입이 저절로 뽑히기 때문입니다. 그래서 최신 진입이 매핑되지 않으면 과거 광고로 물러나지 않고 "최신 미매핑"으로 남깁니다. 확정 연결은 두 등급만 인정합니다. Google은 클릭 ID를 고객별 hash key로 바꿔 클릭 역조회 브리지와 맞추고, Meta는 소재에 선언된 URL 태그와 사이트에서 관측한 ID가 같을 때만 연결합니다. 원문 클릭 ID는 저장하지 않습니다.</dd></div>
                 <div><dt>대가</dt><dd>URL 매크로를 쓰지 않은 캠페인은 연결이 0으로 보여 온보딩 안내가 필요합니다. 세션이 며칠씩 이어지면서 세션 수를 방문 수로 읽으면 안 된다는 소비 규칙이 생겼습니다.</dd></div>
               </dl>
             </article>
@@ -503,13 +503,13 @@
             <h2 class="sechead" id="d-result-h"><span class="sechead__no">04</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
               <li>실효 2일 창 때문에 Meta 28일 소급 중 26일치를 잃던 구조를, Meta 30일과 Google 95일을 매일 다시 맞추는 구조로 바꿨습니다.</li>
-              <li>읽기 행 상한에 걸려 제품 경로 호출의 53.8%가 실패하던 채널 화면을 정합 fact와 서빙 스냅샷으로 나눴습니다. 캠페인 조회 응답은 p95 291ms 이하이고, 수집된 Meta 성과가 화면 집계표에 공개되기까지 2~7분이 걸립니다.</li>
-              <li>마지막 광고 접점 판정이 기존 구현보다 광고 접점을 23% 더 회수했고, 30일 룩백이 연결의 99.17%를 덮었습니다. 룩백을 90일로 늘려도 0.8%p만 늘어 30일을 기준으로 잡을 근거가 됐습니다.</li>
-              <li>URL 매크로 광고 ID로 92.8~99.9%, 캠페인 ID 태그로 99.97%를 해석했습니다. 캠페인 이름 매칭은 0~17%라 확정 근거에서 뺐습니다.</li>
+              <li>읽기 행 상한에 걸려 제품 경로 호출의 53.8%가 실패하던 채널 화면을 정합 fact와 서빙 snapshot으로 나눴습니다. 캠페인 조회 응답은 p95 291ms 이하이고, 수집된 Meta 성과가 화면 집계표에 공개되기까지 2~7분이 걸립니다.</li>
+              <li>마지막 광고 접점 판정이 기존 구현보다 광고 접점을 23% 더 회수했고, 30일 lookback이 연결의 99.17%를 덮었습니다. lookback을 90일로 늘려도 0.8%p만 늘어 30일을 기준으로 잡을 근거가 됐습니다.</li>
+              <li>광고 유입에 붙은 URL 매크로 광고 ID는 92.8~99.9%, 캠페인 ID 태그는 99.97%가 플랫폼의 실제 ID와 맞아 확정 근거로 삼았습니다. 캠페인 이름이 맞는 비율은 0~17%라 확정 근거에서 뺐습니다.</li>
               <li>Google 조회 구간 쪼개기를 없애 계정당 하루 operation을 약 180에서 약 80으로 줄였고, 같은 등급에서 받을 수 있는 계정 수가 두 배 남짓 늘었습니다.</li>
-              <li>Kafka 소비 지연은 상시 0~4 레코드로 병목이 아니었습니다.</li>
-              <li>Google 편입 검증에서 엄격 시험 817개와 운영 전달 검증 17항목이 모두 통과했고, 독립 REST 조회와 어댑터 결과가 18/18 일치했습니다. 계정 단위 전환은 준비부터 수락까지 약 18분이 걸렸습니다.</li>
-              <li>네이버 검색광고는 어제 보고서가 열리는 시각을 실측해(새벽 2시 17분~4시 17분) 4시 30분 이후에만 요청하게 했고, 비용을 세전으로 통일해 플랫폼 간 ROAS가 약 9% 어긋나는 것을 막았습니다.</li>
+              <li>Kafka consumer lag은 상시 0~4 레코드로 병목이 아니었습니다.</li>
+              <li>Google 편입 검증에서 엄격 시험 817개와 운영 전달 검증 17항목이 모두 통과했고, 독립 REST 조회 결과와 adapter 결과를 18건 비교해 query ID와 행 수, 정규화 값까지 모두 일치했습니다. 계정 단위 cutover는 준비부터 수락까지 약 18분이 걸렸습니다.</li>
+              <li>네이버 검색광고는 전날 보고서가 열리는 시각을 실측해 보니 새벽 2시 17분에서 4시 17분 사이여서 4시 30분 이후에만 요청하게 했고, 비용을 세전으로 통일해 플랫폼 간 ROAS가 약 9% 어긋나는 것을 막았습니다.</li>
               <li>소재 이미지 배달 처리량을 분당 1건에서 10건으로 늘렸고, 중복된 영상 조회를 약 7분의 1로 줄였습니다.</li>
               <li>기여도 카드를 새 ClickHouse로 옮긴 뒤 카드 출력 19칸이 이전과 바이트 단위로 같았습니다.</li>
             </ul>
@@ -520,21 +520,21 @@
             <article class="ts">
               <header class="ts__head"><span class="ts__id">T-01</span><h3>프로세스는 모두 정상인데 한 계정의 데이터만 4시간 넘게 멈춘 사건</h3></header>
               <dl class="ts__rows">
-                <div><dt>막힌 지점</dt><dd>한 Meta 계정의 영상 원본 조회가 잘못된 경로로 400을 반복했습니다. consumer는 모두 Ready였고 Kafka 오프셋도 계속 올라갔는데, 같은 계정의 새 성과 작업이 약 4시간 22분 동안 발행되지 않았습니다.</dd></div>
-                <div><dt>원리</dt><dd>계정마다 실행 중인 작업이 하나여야 한다는 장벽은 계정 호출 제한을 지키는 장치입니다. 이 장벽이 "실행 중"만 세야 하는지, "아직 끝나지 않은 모든 명령"까지 세는지에 따라 막는 범위가 달라집니다.</dd></div>
-                <div><dt>가설</dt><dd>장벽이 미래 시각에 다시 시도할 명령까지 실행 중으로 세고 있다고 봤습니다. 그렇다면 막고 있는 것은 Kafka가 아니라 PostgreSQL 디스패처이고, 브로커나 consumer를 늘려도 풀리지 않습니다.</dd></div>
-                <div><dt>검증과 조치</dt><dd>운영 원장에서 해당 계정의 대기 명령이 미래 시각의 재시도 하나뿐이고, 디스패처가 그 계정의 새 작업을 매번 제외하고 있음을 확인했습니다. 계정 단위 "실행" 보호와 "미완료 명령" 보호를 나누고, 미래 시각의 대기 명령만 장벽에서 뺐습니다. 실행 중이거나 시각이 된 명령은 계속 막고, 계정 실행권과 60초 간격도 그대로 두었습니다. 엔드포인트는 마지막 경로 조각이 아니라 전체 경로로 검사하게 고쳤습니다.</dd></div>
-                <div class="is-key"><dt>결과</dt><dd>수정이 반영되고 1분 안에 핵심 데이터가, 10분 안에 캠페인 성과와 실패하던 영상이 복구됐습니다. 이 사건 뒤 감시 기준을 Pod 상태나 오프셋이 아니라 데이터 진행으로 바꿔, 실행할 작업이 있는데 5분 동안 진행이 없으면 긴급, 계정 핵심 데이터가 6시간 안에 끝나지 않으면 주의로 경보하게 했습니다.</dd></div>
+                <div><dt>막힌 지점</dt><dd>한 Meta 계정의 영상 원본 조회가 잘못된 경로로 400을 반복했습니다. consumer는 모두 Ready였고 Kafka offset도 계속 올라갔는데, 같은 계정의 새 성과 작업이 약 4시간 22분 동안 발행되지 않았습니다.</dd></div>
+                <div><dt>원리</dt><dd>계정마다 실행 중인 작업이 하나여야 한다는 장벽은 계정 rate limit을 지키는 장치입니다. 이 장벽이 "실행 중"만 세야 하는지, "아직 끝나지 않은 모든 명령"까지 세는지에 따라 막는 범위가 달라집니다.</dd></div>
+                <div><dt>가설</dt><dd>장벽이 미래 시각에 다시 시도할 명령까지 실행 중으로 세고 있다고 봤습니다. 그렇다면 막고 있는 것은 Kafka가 아니라 PostgreSQL dispatcher이고, 브로커나 consumer를 늘려도 풀리지 않습니다.</dd></div>
+                <div><dt>검증과 조치</dt><dd>운영 ledger에서 해당 계정의 대기 명령이 미래 시각의 retry 하나뿐이고, dispatcher가 그 계정의 새 작업을 매번 제외하고 있음을 확인했습니다. 계정 단위 "실행" 보호와 "미완료 명령" 보호를 나누고, 미래 시각의 대기 명령만 장벽에서 뺐습니다. 실행 중이거나 시각이 된 명령은 계속 막고, 계정 lease와 60초 간격도 그대로 두었습니다. 엔드포인트는 마지막 경로 조각이 아니라 전체 경로로 검사하게 고쳤습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>수정이 반영되고 1분 안에 핵심 데이터가, 10분 안에 캠페인 성과와 실패하던 영상이 복구됐습니다. 이 사건 뒤 감시 기준을 Pod 상태나 offset이 아니라 데이터 진행으로 바꿔, 실행할 작업이 있는데 5분 동안 진행이 없으면 긴급, 계정 핵심 데이터가 6시간 안에 끝나지 않으면 주의로 경보하게 했습니다.</dd></div>
               </dl>
             </article>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">T-02</span><h3>토큰을 갱신할 때마다 진행 중인 작업의 권한이 사라지던 문제</h3></header>
+              <header class="ts__head"><span class="ts__id">T-02</span><h3>토큰을 갱신할 때마다 아직 끝나지 않은 작업의 권한이 사라지던 문제</h3></header>
               <dl class="ts__rows">
-                <div><dt>막힌 지점</dt><dd>Google을 코어에 붙이는 설계 중에 발견했습니다. Google access token은 수명이 짧아 6시간마다 도는 수집이 매번 갱신했고, 그때마다 자격증명 버전 번호가 올라갔습니다. 역할 권한 검사가 "버전 번호 일치"를 요구해서, 확정된 성과 작업이 끝나기 전에 토큰이 한 번만 바뀌어도 그 작업의 권한이 영원히 거짓이 됐습니다. 그 레코드는 Meta와 함께 쓰는 성과 consumer를 재시작 루프에 넣을 수 있었습니다.</dd></div>
-                <div><dt>원리</dt><dd>버전 번호는 원래 "옛 실행권이 들고 있는 캐시 토큰을 더 쓰지 말라"는 표시였습니다. 역할 권한 검사가 이 값을 빌려 쓰면서, 토큰을 자주 바꾸는 Google에서만 문제가 드러났습니다.</dd></div>
+                <div><dt>막힌 지점</dt><dd>Google을 코어에 붙이는 설계를 하다가 발견했습니다. Google access token은 수명이 짧아 6시간마다 도는 수집이 매번 갱신했고, 그때마다 자격증명 버전 번호가 올라갔습니다. 역할 권한 검사가 "버전 번호 일치"를 요구해서, 확정된 성과 작업이 끝나기 전에 토큰이 한 번만 바뀌어도 그 작업의 권한이 영원히 거짓이 됐습니다. 그 레코드는 Meta와 함께 쓰는 성과 consumer를 재시작 루프에 넣을 수 있었습니다.</dd></div>
+                <div><dt>원리</dt><dd>버전 번호는 원래 "옛 lease가 들고 있는 캐시 토큰을 더 쓰지 말라"는 표시였습니다. 역할 권한 검사가 이 값을 빌려 쓰면서, 토큰을 자주 바꾸는 Google에서만 문제가 드러났습니다.</dd></div>
                 <div><dt>선택지와 결정</dt><dd>Google 토큰 갱신이 버전 번호를 올리지 않게 하는 안은 버전 번호의 원래 용도를 깨고 Google만 예외로 만듭니다. 권한 검사에서 버전 번호 일치를 빼고 설치 활성, 연결 fence, 해지 장벽만 보게 바꿨습니다. 해지와 재연결은 그대로 막히고, Meta의 토큰 rotation에도 같은 뜻으로 맞습니다.</dd></div>
-                <div class="is-key"><dt>결과</dt><dd>수집 이후의 권한을 판정하는 DB 함수로 넣었고, 이 수정을 Google 계정 전환의 선행 조건으로 두었습니다. 같은 맥락에서 실행 세대 기록도 런타임 계정에 컬럼 쓰기 권한을 주지 않고, 잠근 작업에서 세대를 도출하는 좁은 함수 하나로만 쓰게 했습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>수집 이후의 권한을 판정하는 DB 함수로 넣었고, 이 수정을 Google 계정 cutover의 선행 조건으로 두었습니다. 같은 맥락에서 실행 generation 기록도 런타임 계정에 컬럼 쓰기 권한을 주지 않고, 잠근 작업에서 generation을 도출하는 좁은 함수 하나로만 쓰게 했습니다.</dd></div>
               </dl>
             </article>
           </section>
@@ -542,7 +542,7 @@
           <section id="d-learn" aria-labelledby="d-learn-h">
             <h2 class="sechead" id="d-learn-h"><span class="sechead__no">06</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
-              <li>광고 숫자는 "가져왔다"로 끝나지 않고, 언제까지 바뀔 수 있는지가 데이터의 일부였습니다. 프로바이더가 무엇을 약속하는지(고정 일수, 0행 반환 여부, 전환창)를 먼저 선언하게 하자 수집 창, 삭제 표시, 호출 예산이 그 선언에서 계산됐습니다.</li>
+              <li>광고 숫자는 "가져왔다"로 끝나지 않고, 언제까지 바뀔 수 있는지가 데이터의 일부였습니다. provider가 무엇을 약속하는지(고정 일수, 0행 반환 여부, 전환창)를 먼저 선언하게 하자 수집 창, 삭제 표시, 호출 예산이 그 선언에서 계산됐습니다.</li>
               <li>실제 사고는 오류보다 조용한 0으로 더 자주 왔습니다. 빈 결과, 미연결, 시간대 미설정을 0과 다른 상태로 끝까지 실어 나르는 일이 정합 작업의 큰 부분이었습니다.</li>
               <li>광고를 여정에 꿰는 일은 조인보다 순서의 문제였습니다. 후보를 먼저 고르고 매핑을 나중에 해야 최신 진입이 지워지지 않는다는 것을 판정 규칙으로 고정했습니다.</li>
             </ul>

@@ -38,7 +38,7 @@
         <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>elt-pipeline</span></nav>
         <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span><span class="badge badge--ok">운영 중</span></div>
         <h1 class="doc-title" id="detail-h">수집과 ELT 파이프라인 0→1</h1>
-        <p class="doc-lede">브라우저 이벤트를 받아 ClickHouse에 원본으로 쌓고, 집계 단위별 테이블로 나눠 대시보드에 보여 주는 경로를 처음부터 만들었습니다. 2026년 6월에는 적재가 4시간 가까이 멈춘 장애가 있었습니다. 복구한 뒤 Cloudflare R2에 따로 남겨 둔 원본 기록과 ClickHouse에 들어간 이벤트 ID를 서로 맞춰 봤고, 그 구간 원본 기록에 있던 ID가 하나도 빠지지 않은 것을 확인했습니다.</p>
+        <p class="doc-lede">브라우저 이벤트를 Cloudflare Workers 수집 게이트웨이와 Cloudflare Queues로 받아 ClickHouse 원본 테이블에 쌓고, 집계 단위별 테이블을 거쳐 대시보드 API까지 잇는 파이프라인을 처음부터 설계하고 구현했습니다. 2026년 6월에는 적재가 4시간 가까이 멈춘 장애가 있었습니다. 복구한 뒤 Cloudflare R2에 따로 남겨 둔 원본 기록과 ClickHouse에 들어간 이벤트 ID를 서로 맞춰 봤고, 그 구간 원본 기록에 있던 ID가 하나도 빠지지 않은 것을 확인했습니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.04 – 2026.09</dd></div>
           <div><dt>역할</dt><dd>수집부터 조회용 테이블까지 ELT 전반의 설계와 구현 주도</dd></div>
@@ -67,7 +67,7 @@
             <p>고객사 사이트 방문자의 행동과 광고 유입을 이어서 보여 주는 분석 제품입니다. 입사했을 때는 기존 PostgreSQL에 쌓인 데이터와 새로 받을 브라우저 이벤트를 한 분석 저장소로 모으는 경로가 없었습니다.</p>
             <p>브라우저 이벤트는 늦게 오고, 같은 것이 다시 오고, 탭마다 따로 옵니다. 들어온 행을 그대로 더하면 같은 방문이 두 번 집계되고, 빠진 행은 아무도 알아채지 못합니다.</p>
             <dl class="scope">
-              <dt>맡은 일</dt><dd>데이터 모델을 정하고, 이벤트를 받아 ClickHouse에 쌓는 수집과 적재 경로를 만들었습니다. 원본 테이블부터 조회용 테이블까지의 구조와, 적재가 실패한 메시지를 처리하는 경로도 설계했습니다. 장애가 난 뒤에는 복구가 정말 끝났는지 확인하는 일까지 맡았습니다.</dd>
+              <dt>맡은 일</dt><dd>데이터 모델을 정하고, 이벤트를 받아 ClickHouse에 쌓는 수집과 적재 경로를 만들었습니다. 원본 테이블부터 조회용 테이블까지의 구조와, 적재가 실패한 메시지를 처리하는 경로도 설계했습니다. 장애가 난 뒤에는 복구가 실제로 끝났는지 검증하는 일까지 맡았습니다.</dd>
             </dl>
           </section>
 
@@ -77,8 +77,8 @@
 <figure class="dg" id="dg-elt" style="--dg-min: 560px" data-step-ms="3200" data-steps='[
   {"t":"SDK는 retry할 때도 같은 ID를 쓰고, 수집 게이트웨이가 30분 안에 이미 본 ID를 KV로 거릅니다."},
   {"t":"수집 게이트웨이가 main queue에 넣으면, 적재 consumer가 R2에 원본 기록을 남긴 뒤 원본 테이블에 넣습니다."},
-  {"t":"원본 테이블은 그대로 두고, 현재 상태, 세션 Fact, 조회용 뷰 순서로 나눠 읽습니다."},
-  {"t":"적재가 실패하면 3번 retry하고 DLQ에서 1번 다시 보낸 뒤, 최종 보관 queue에 넣고 나서야 queue에서 뺍니다.", "d": 4200},
+  {"t":"원본 테이블은 그대로 두고, 현재 상태 테이블, 세션 집계 테이블, 조회용 뷰 순서로 집계 단위를 나눠 읽습니다."},
+  {"t":"적재가 실패하면 3번 retry하고 DLQ에서 1번 다시 보낸 뒤, 최종 보관 queue가 받은 다음에만 ack합니다.", "d": 4200},
   {"t":"장애가 풀린 뒤 임시 consumer가 최종 보관 queue에서 10건만 먼저 main queue로 보내 확인하고, 나머지를 보냅니다.", "d": 4200},
   {"t":"장애 구간의 R2 원본 기록 ID와 원본 테이블 ID를 양쪽으로 맞춰 보고, 한쪽에만 있는 ID가 0인 것을 확인합니다.", "d": 4200}
 ]'>
@@ -144,7 +144,7 @@
 
       <g data-step="2,3,6"><rect class="box" x="592" y="148" width="102" height="60" rx="8"/><text class="t" x="606" y="174">원본 테이블</text><text class="s" x="606" y="194">그대로 보관</text></g>
       <g data-step="3"><rect class="box" x="592" y="236" width="102" height="60" rx="8"/><text class="t" x="606" y="262">현재 상태</text><text class="s" x="606" y="282">키마다 최신 값</text></g>
-      <g data-step="3"><rect class="box" x="592" y="324" width="102" height="60" rx="8"/><text class="t" x="606" y="350">세션 Fact</text><text class="s" x="606" y="370">세션 단위</text></g>
+      <g data-step="3"><rect class="box" x="592" y="324" width="102" height="60" rx="8"/><text class="t" x="606" y="350">세션 집계</text><text class="s" x="606" y="370">세션 단위</text></g>
       <g data-step="3"><rect class="box" x="592" y="412" width="102" height="60" rx="8"/><text class="t" x="606" y="438">조회용 뷰</text><text class="s" x="606" y="458">기간, 정렬</text></g>
       <g data-step="3"><rect class="box" x="592" y="506" width="102" height="60" rx="8"/><text class="t" x="606" y="541">대시보드 API</text></g>
 
@@ -182,20 +182,20 @@
 </figure>
 
             <h3>1. 같은 이벤트가 여러 번 온다고 보고 테이블을 네 단계로 나눴습니다</h3>
-            <p>브라우저는 전송에 실패하면 retry하고, queue도 같은 메시지를 다시 전달할 수 있습니다. 둘 다 at-least-once 전달이라, 같은 이벤트가 언제든 두 번 이상 올 수 있다고 전제했습니다.</p>
-            <p>ClickHouse의 ReplacingMergeTree는 sort key가 같은 행을 백그라운드 병합 때 하나로 줄입니다. 다만 테이블을 나눠 저장하는 단위인 같은 partition 안에서, 그 안의 데이터 조각인 part끼리만 줄입니다. 병합이 언제 일어날지도 정해져 있지 않습니다. 한편 Materialized View는 데이터가 INSERT될 때 자동으로 실행돼 집계를 만드는 기능인데, 들어온 block마다 count와 sum을 바로 더합니다. 나중에 병합이 원본의 중복을 지워도, 이미 더해진 값은 줄어들지 않습니다.</p>
-            <p>그래서 중복을 한 곳에서 다 막을 수는 없다고 판단했습니다. 원본은 다시 읽을 수 있게 그대로 두었습니다. 테이블은 원본 테이블, 현재 상태 테이블, 세션 Fact, 조회용 뷰의 네 단계로 나눴고, 단계마다 집계 단위가 다릅니다. 세션 Fact는 방문 세션 하나를 한 행으로 정리한 테이블이고, 조회용 뷰는 대시보드가 기간을 골라 정렬된 결과를 읽어 가는 마지막 단계입니다. 현재 상태 테이블은 같은 대상을 가리키는 키마다 가장 최근 값을 고르는 argMax 함수로 최신 값을 읽습니다.</p>
-            <p>ClickHouse에는 조회할 때 중복 행을 합쳐서 읽게 하는 FINAL 옵션이 있습니다. 모든 조회에서 원본에 FINAL을 거는 방식은 조회마다 넓은 범위를 다시 읽어야 해서 버렸습니다. INSERT 시점 집계에만 기대는 방식도 중복으로 더해진 값을 되돌릴 수 없어서 쓰지 않았습니다.</p>
+            <p>ClickHouse 테이블은 원본 테이블, 현재 상태 테이블, 세션 집계 테이블, 조회용 뷰의 네 단계로 나눴고, 단계마다 집계 단위가 다릅니다. 원본 테이블은 들어온 이벤트를 그대로 보관해 언제든 다시 읽을 수 있게 했습니다. 현재 상태 테이블은 키마다 argMax 함수로 가장 최근 값을 골라 읽습니다. 세션 집계 테이블은 방문 세션 하나를 한 행으로 정리하고, 조회용 뷰는 대시보드가 기간을 골라 정렬된 결과를 읽어 가는 마지막 단계입니다.</p>
+            <p>이렇게 나눈 전제는 같은 이벤트가 언제든 두 번 이상 들어온다는 것입니다. 브라우저는 전송에 실패하면 retry하고, queue도 같은 메시지를 다시 전달할 수 있습니다. 둘 다 at-least-once 전달입니다.</p>
+            <p>ClickHouse의 ReplacingMergeTree는 sort key가 같은 행을 백그라운드 병합 때 하나로 줄입니다. 다만 같은 partition 안에 있는 데이터 조각(part)끼리만 줄이고, 병합이 언제 일어날지도 정해져 있지 않습니다. 반면 Materialized View는 INSERT 시점에 실행돼 들어온 block마다 count와 sum을 바로 더합니다. 나중에 병합이 원본의 중복을 지워도, 이미 더해진 값은 줄어들지 않습니다.</p>
+            <p>그래서 중복을 한 곳에서 모두 막을 수는 없다고 보고, 원본은 다시 읽을 수 있게 그대로 둔 채 집계 단위별로 테이블을 나눴습니다. 조회할 때 중복 행을 합쳐 읽는 FINAL 옵션을 모든 조회에서 원본에 거는 방식은 조회마다 넓은 범위를 다시 읽어야 해서 택하지 않았습니다. INSERT 시점 집계에만 기대는 방식도 중복으로 더해진 값을 되돌릴 수 없어서 쓰지 않았습니다.</p>
 
             <h3>2. 이관 경로와 수집 경로를 따로 만들었습니다</h3>
-            <p>먼저 기존 PostgreSQL 데이터를 ClickHouse로 옮기는 이관 경로와, 옮긴 데이터가 맞는지 검사하는 SQL을 만들었습니다. PostgreSQL에서 데이터를 꺼내 민감한 값을 마스킹하고 형식을 바꾼 뒤, Parquet 파일로 만들어 ClickHouse에 한 번에 넣는 순서입니다.</p>
-            <p>이어서 수집 경로를 만들었습니다. 브라우저 SDK가 보낸 이벤트는 수집 게이트웨이(Cloudflare Workers)를 거쳐 Cloudflare Queues에 들어가고, queue에서 메시지를 꺼내는 적재 consumer가 ClickHouse에 씁니다. 테이블 DDL은 12개를 작성했습니다.</p>
-            <p>PostgreSQL은 고객 설정과 권한, 수집 작업 상태를 맡고, ClickHouse는 행동 데이터와 분석 조회를 맡게 했습니다. 설정이 바뀌면 PostgreSQL의 outbox, 즉 내보낼 변경을 따로 적어 두는 테이블에 먼저 기록하고, 그 기록을 엣지에서 읽는 key-value store인 Cloudflare KV로 보냅니다. 전달은 PostgreSQL에서 KV 쪽으로 한 방향으로만 일어납니다. 결제 카드번호, 주민등록번호, 비밀번호 입력값은 SDK가 브라우저에서 보내기 전에 막았습니다.</p>
+            <p>저장소는 역할을 나눴습니다. PostgreSQL은 고객 설정과 권한, 수집 작업 상태를 맡고, ClickHouse는 행동 데이터와 분석 조회를 맡습니다. 설정이 바뀌면 내보낼 변경을 PostgreSQL의 outbox 테이블에 먼저 기록하고, 그 기록을 엣지에서 읽는 key-value store인 Cloudflare KV로 보냅니다. 전달은 PostgreSQL에서 KV 쪽으로 한 방향으로만 일어납니다.</p>
+            <p>그 위에 두 경로를 따로 만들었습니다. 먼저 기존 PostgreSQL 데이터를 ClickHouse로 한 번 옮기는 이관 경로입니다. PostgreSQL에서 데이터를 꺼내 민감한 값을 마스킹하고 형식을 바꾼 뒤, Parquet 파일로 만들어 ClickHouse에 한 번에 넣습니다. 옮긴 데이터가 맞는지 검사하는 SQL도 함께 만들었습니다.</p>
+            <p>이어서 새 이벤트를 계속 받는 수집 경로를 만들었습니다. 브라우저 SDK가 보낸 이벤트는 Cloudflare Workers로 만든 수집 게이트웨이를 거쳐 Cloudflare Queues에 들어가고, queue에서 메시지를 꺼내는 적재 consumer가 ClickHouse에 씁니다. 결제 카드번호, 주민등록번호, 비밀번호 입력값은 SDK가 브라우저에서 보내기 전에 막았습니다. 테이블 DDL은 12개를 작성했습니다.</p>
 
             <h3>3. 중복은 세 곳에서 거르고, 실패한 메시지는 보관한 뒤에만 queue에서 뺐습니다</h3>
-            <p>SDK는 이벤트를 retry할 때 이벤트 ID(event_id)와 발생 시각(event_ts)을 바꾸지 않습니다. 그래야 뒤에서 같은 이벤트인지 알아볼 수 있습니다. 게이트웨이는 30분 안에 이미 본 ID를 KV에 적어 두고 한 번 거릅니다. ClickHouse에서는 ReplacingMergeTree가 병합 때 남은 중복을 마지막으로 정리하고, 정확한 값이 필요한 곳은 FINAL이나 argMax로 읽습니다.</p>
-            <p>당시 Cloudflare Worker는 요청 하나를 처리하면서 다른 곳으로 보낼 수 있는 subrequest가 50개로 제한돼 있었습니다. 그래서 이 50개를 KV 조회 30개와 다른 서버로 보내는 fetch 20개로 나눠 썼습니다. 또 세션 시작 이벤트는 SDK가 보낸 직후에 바로 지우지 않습니다. 게이트웨이는 요청을 받았다는 HTTP 202 응답에 queue에 실제로 넣은 세션과 이벤트의 짝을 담아 돌려주고, SDK는 그 응답에 들어 있는 것만 지웁니다. 그래서 queue에 들어가지 못한 이벤트를 브라우저가 먼저 지워 버리는 일이 없습니다.</p>
-            <p>평소 이벤트가 지나가는 queue를 main queue라고 부릅니다. 적재에 실패한 메시지는 main queue에서 3번 retry한 뒤, 실패한 메시지를 따로 모으는 Dead Letter Queue인 DLQ로 갑니다. DLQ에서는 main queue로 1번만 다시 보내고, 그래도 실패하면 꺼내 가는 consumer가 없는 최종 보관 queue에 14일 동안 둡니다. queue에 처리 완료 신호인 ack를 언제 보낼지, 그리고 실패가 이어질 때 쓰기를 잠시 끊는 circuit breaker를 어떻게 나눌지는 아래 설계 결정에 적었습니다.</p>
+            <p>중복은 수집 게이트웨이, 적재 consumer, ClickHouse의 세 곳에서 거릅니다. 이를 위해 SDK는 이벤트를 retry할 때 이벤트 ID와 발생 시각을 바꾸지 않습니다. 그래야 뒤에서 같은 이벤트인지 알아볼 수 있습니다. 게이트웨이는 30분 안에 이미 본 ID를 KV에 적어 두고 한 번 거르고, 적재 consumer는 자기 처리 범위 안에서 생긴 중복을 거릅니다. ClickHouse에서는 ReplacingMergeTree가 병합 때 남은 중복을 마지막으로 정리하고, 정확한 값이 필요한 곳은 FINAL이나 argMax로 읽습니다.</p>
+            <p>게이트웨이는 Cloudflare Workers의 요청당 한도 안에서 동작하게 설계했습니다. 당시 Worker 요청 하나가 다른 곳으로 보낼 수 있는 subrequest는 50개였고, 이를 KV 조회 30개와 다른 서버로 보내는 fetch 20개로 나눠 썼습니다. SDK는 세션 시작 이벤트를 보낸 직후 바로 지우지 않습니다. 게이트웨이가 HTTP 202 응답에 queue에 실제로 넣은 세션과 이벤트의 짝을 담아 돌려주면, SDK는 그 응답에 들어 있는 것만 지웁니다. 그래서 queue에 들어가지 못한 이벤트를 브라우저가 먼저 지워 버리는 일이 없습니다.</p>
+            <p>적재에 실패한 메시지는 세 단계를 거칩니다. 평소 이벤트가 지나가는 main queue에서 3번 retry한 뒤, 실패한 메시지를 따로 모으는 Dead Letter Queue(DLQ)로 갑니다. DLQ에서는 main queue로 1번만 다시 보내고, 그래도 실패하면 꺼내 가는 consumer가 없는 최종 보관 queue에 14일 동안 둡니다. 처리 완료 신호인 ack를 언제 보낼지, 실패가 이어질 때 쓰기를 잠시 끊는 circuit breaker를 어떻게 나눌지는 아래 설계 결정에 적었습니다.</p>
           </section>
 
           <section id="d-decisions" aria-labelledby="d-decisions-h">
@@ -203,12 +203,12 @@
             <p>이 경로를 만들고 고치면서 내린 판단 다섯 가지입니다. 고민, 선택지, 결정과 이유, 대가 순서로 적었습니다.</p>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-01</span><h3>ack는 다음 보관소가 받은 뒤에만 보냈습니다</h3></header>
+              <header class="ts__head"><span class="ts__id">D-01</span><h3>ack는 다음 queue가 메시지를 받은 뒤에만 보냈습니다</h3></header>
               <dl class="ts__rows">
-                <div><dt>고민</dt><dd>2026년 5월, 들어온 데이터의 schema가 테이블과 맞지 않아 약 9시간 동안 적재가 멈췄고, 그 사이 데이터 일부를 잃었습니다. 원인을 따라가 보니 DLQ consumer가 main queue로 한 번 다시 보낸 메시지를 ack로 처리 완료 표시해 queue에서 지우고 있었습니다. 그래서 다시 보낸 메시지가 또 실패해도 마지막으로 받아 둘 최종 DLQ로 가지 않았고, 최종 DLQ는 설정만 돼 있고 비어 있었습니다. HTTP 오류는 한 건도 없었기 때문에 경보도 울리지 않았습니다.</dd></div>
+                <div><dt>고민</dt><dd>2026년 5월, 들어온 데이터의 schema가 테이블과 맞지 않아 약 9시간 동안 적재가 멈췄고, 그 사이 데이터 일부를 잃었습니다. 원인을 따라가 보니 DLQ consumer가 main queue로 한 번 다시 보낸 메시지를 ack해 DLQ에서 지우고 있었습니다. 그래서 다시 보낸 메시지가 또 실패해도 최종 보관 queue로 가지 않았고, 최종 보관 queue는 설정만 돼 있고 비어 있었습니다. HTTP 오류는 한 건도 없었기 때문에 경보도 울리지 않았습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 다시 보내는 횟수를 늘린다. ② DLQ에서 main queue로 한 번만 다시 보내고, 또 실패하면 최종 보관 queue에 넣는다. 그 전송이 성공한 뒤에만 ack한다.</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. ack는 이 메시지를 넘겨받은 곳이 생겼다는 뜻이어야 합니다. 다음 보관소가 받기 전에 ack하면 메시지를 책임지는 곳이 없어집니다. 횟수만 늘리면 schema 불일치 같은 영구 실패가 main queue를 계속 막습니다. 그래서 일시 장애에는 기회를 한 번 더 주고, 영구 장애는 사람이 보도록 넘겼습니다.</dd></div>
-                <div><dt>대가</dt><dd>최종 보관 queue에는 consumer가 없어서, 복구할 때 임시 consumer를 붙이는 절차를 따로 적어 두었습니다. 보관 기간 14일이 지나면 메시지를 그대로 잃기 때문에, 보관된 메시지가 들어온 지 얼마나 지났는지도 따로 감시했습니다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. ack는 메시지를 책임질 다음 단계가 정해졌다는 뜻이어야 합니다. 다음 queue가 받기 전에 ack하면 그 메시지를 책임지는 곳이 사라집니다. 횟수만 늘리면 schema 불일치 같은 영구 실패가 main queue를 계속 막습니다. 그래서 일시적인 실패에는 기회를 한 번 더 주고, 영구적인 실패는 최종 보관 queue에 모아 사람이 확인하게 했습니다.</dd></div>
+                <div><dt>대가</dt><dd>최종 보관 queue에는 consumer가 없어서, 복구할 때 임시 consumer를 붙이는 runbook을 따로 만들었습니다. 보관 기간 14일이 지나면 메시지를 그대로 잃기 때문에, 보관된 메시지가 들어온 지 얼마나 지났는지도 따로 감시했습니다.</dd></div>
               </dl>
             </article>
 
@@ -216,9 +216,9 @@
               <header class="ts__head"><span class="ts__id">D-02</span><h3>원본 사본은 적재 직전에 남기고, 복구 완료는 ID로 판정했습니다</h3></header>
               <dl class="ts__rows">
                 <div><dt>고민</dt><dd>적재 consumer가 처리에 성공했다고 보고 ack를 보낸 뒤에 ClickHouse 쓰기가 실패하면, 그 메시지는 queue에서 이미 지워져 DLQ로도 가지 않습니다. queue의 보관 기간을 넘긴 메시지도 되살릴 원본이 어디에도 없었습니다.</dd></div>
-                <div><dt>선택지</dt><dd>① queue에 보관된 메시지만으로 복구한다. ② ClickHouse에 넣기 직전에 Cloudflare의 파일 저장소인 R2에 원본 사본을 30일 동안 남기고, 복구가 끝났는지는 원본 사본과 ClickHouse의 이벤트 ID를 맞춰 보고 판단한다.</dd></div>
+                <div><dt>선택지</dt><dd>① queue에 보관된 메시지만으로 복구한다. ② ClickHouse에 넣기 직전에 Cloudflare의 object storage인 R2에 원본 사본을 30일 동안 남기고, 복구가 끝났는지는 원본 사본과 ClickHouse의 이벤트 ID를 맞춰 보고 판단한다.</dd></div>
                 <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. queue는 메시지를 옮기는 장치이지, 기록을 오래 보관하는 ledger가 아닙니다. ack 뒤에 잃은 것은 ack 전에 남긴 사본으로만 되살릴 수 있습니다. 복구가 끝났다는 조건도 "보관 queue가 비었다"가 아니라 "원본 사본에 있던 ID가 ClickHouse에 모두 있다"로 정했습니다. 2026년 6월 장애를 이 방식으로 마무리했고, 자세한 과정은 아래 트러블슈팅 T-01에 적었습니다.</dd></div>
-                <div><dt>대가</dt><dd>R2에 사본을 쓰다 실패해도 ClickHouse 적재는 그대로 진행하게 두었습니다. 그래서 사본에도 남지 않은 이벤트는 이 대조로 찾을 수 없습니다. 확인한 범위도 그 장애 구간뿐이라, 시스템 전체에서 빠진 것이 없다고는 말하지 않습니다.</dd></div>
+                <div><dt>대가</dt><dd>R2에 사본을 쓰다 실패해도 ClickHouse 적재는 그대로 진행하게 두었습니다. 그래서 사본에도 남지 않은 이벤트는 이 대조로 찾을 수 없습니다. 확인한 범위도 그 장애 구간뿐이라, 시스템 전체에 누락이 없다는 근거로 쓰지는 않습니다.</dd></div>
               </dl>
             </article>
 
@@ -227,28 +227,28 @@
               <dl class="ts__rows">
                 <div><dt>고민</dt><dd>게이트웨이의 KV는 30분 안에 본 ID만 기억합니다. 그래서 30분 넘게 늦게 다시 온 이벤트는 게이트웨이와 적재 consumer의 dedup을 모두 통과했고, 집계 숫자를 부풀렸습니다. 데이터를 감시하는 지표도 FINAL로 중복을 합친 뒤의 값을 세고 있어서, 원본에 쌓인 이 중복을 보지 못했습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 적재 consumer의 dedup을 없애고 ClickHouse 병합에만 맡긴다. ② 넣기 전에 ClickHouse를 조회해 이미 있으면 버린다. ③ 입구인 게이트웨이, 적재 consumer, 저장소인 ClickHouse의 세 층으로 나누고, 층마다 어느 범위의 중복을 맡는지 적어 둔다.</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. ①을 고르면 서로 다른 batch로 나뉘어 들어간 중복이 병합되기 전에 INSERT 시점 집계에 그대로 더해집니다. ②는 쓸 때마다 넓은 범위를 먼저 읽어야 해서 ClickHouse를 쓰는 방식과 맞지 않고, 같은 이벤트 두 건이 동시에 도착하면 둘 다 "아직 없음"을 보게 되어 막지도 못합니다. 적재 consumer는 자기 처리 범위 안에서 생긴 중복만 맡게 했습니다. 각 층을 계속 둘지는 실제 숫자를 보고 정했습니다. 요청마다 요청 ID를, queue에 넣는 시도마다 발행 시도 ID를, queue 메시지마다 메시지 ID를 붙여서 중복이 어느 단계에서 생기는지 세어 봤습니다. 중복 감시는 화면에 보여 주는 FINAL 값만 보지 않고, FINAL 없이 센 행 수와 FINAL로 센 행 수의 차이를 따로 셉니다. 이 차이가 아직 합쳐지지 않은 중복의 양입니다.</dd></div>
-                <div><dt>대가</dt><dd>30분을 넘겨 다시 온 이벤트는 이 구조에서도 여전히 통과합니다. 이 문제는 한 번 더하면 되돌릴 수 없는 집계 바로 앞에서 같은 이벤트를 한 번만 반영하게 하는 규칙으로 풀기로 하고, 다음 구조인 <a href="green.html">V3 실시간 아키텍처</a>로 넘겼습니다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. ①을 고르면 서로 다른 batch로 나뉘어 들어간 중복이 병합되기 전에 INSERT 시점 집계에 그대로 더해집니다. ②는 쓸 때마다 넓은 범위를 먼저 읽는 read-before-write라 ClickHouse에 맞지 않고, 같은 이벤트 두 건이 동시에 도착하면 둘 다 "아직 없음"을 보게 되어 막지도 못합니다. 적재 consumer는 자기 처리 범위 안에서 생긴 중복만 맡게 했습니다. 각 층을 계속 둘지는 실제 숫자를 보고 정했습니다. 요청마다 요청 ID를, queue에 넣는 시도마다 시도 ID를, queue 메시지마다 메시지 ID를 붙여서 중복이 어느 단계에서 생기는지 측정했습니다. 중복 감시는 화면에 보여 주는 FINAL 값만 보지 않고, FINAL 없이 센 행 수와 FINAL로 센 행 수의 차이를 따로 셉니다. 이 차이가 아직 합쳐지지 않은 중복의 양입니다.</dd></div>
+                <div><dt>대가</dt><dd>30분을 넘겨 다시 온 이벤트는 이 구조에서도 여전히 통과합니다. 이 문제는 다음 구조인 <a href="green.html">V3 실시간 아키텍처</a>에서, 되돌릴 수 없는 집계 바로 앞에서 같은 이벤트를 한 번만 반영하는 방식으로 풀었습니다.</dd></div>
               </dl>
             </article>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-04</span><h3>원본 적재와 파생 테이블의 실패 회로를 나눴습니다</h3></header>
+              <header class="ts__head"><span class="ts__id">D-04</span><h3>원본 적재와 파생 테이블 쓰기의 circuit breaker를 나눴습니다</h3></header>
               <dl class="ts__rows">
                 <div><dt>고민</dt><dd>원본에서 만들어 내는 파생 테이블에 쓸 때 ClickHouse가 HTTP 500과 520 오류를 반복해서 돌려줬습니다. 실패가 이어지면 쓰기를 잠시 끊는 circuit breaker가 이 오류 때문에 열렸는데, 원본과 파생 테이블이 같은 circuit breaker를 쓰고 있어서 원본 적재까지 함께 막혔습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 비동기 쓰기 요청이 기다릴 수 있는 시간의 상한을 늘린다. ② 파생 테이블 쓰기에만 짧은 retry를 넣고, circuit breaker를 테이블과 경로마다 따로 둔다. 520 오류는 원인을 끝까지 찾는다.</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. 파생 테이블은 원본에서 다시 만들 수 있지만, 원본은 놓치면 되살릴 수 없습니다. 같은 circuit breaker를 쓰면 덜 중요한 쪽의 실패가 중요한 경로까지 막습니다. retry는 잠깐 지나가는 오류에만 하고, 여러 요청이 같은 순간에 다시 몰리지 않도록 retry 전 대기 시간에 무작위 jitter를 더했습니다. 520 오류를 받은 요청은 ClickHouse 서버에 닿지도 않았습니다. 서버는 10초 동안 아무 요청이 없는 연결을 닫는데, 클라이언트는 10초 넘게 쉰 연결을 다시 꺼내 쓰고 있었습니다. 서버가 연결을 닫는 순간과 클라이언트가 그 연결로 요청을 보내는 순간이 겹치면서 요청이 실패한 것으로 원인을 좁혔습니다. ClickHouse 지원팀과 함께 서버가 쉬는 연결을 유지하는 keep_alive_timeout을 60초로 늘렸고, 그 뒤 40시간 가까이 지켜보는 동안 520 오류는 한 건도 없었습니다.</dd></div>
-                <div><dt>대가</dt><dd>60초로 늘려도 해결되는 것은 10초에서 60초 사이 동안 쉰 연결뿐입니다. 60초보다 오래 쉰 연결에서 생기는 오류는 그대로 남습니다. 또 서버 설정을 바꾸려면 서버를 rolling restart해야 했습니다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>②를 골랐습니다. 파생 테이블은 원본에서 다시 만들 수 있지만, 원본은 놓치면 되살릴 수 없습니다. 같은 circuit breaker를 쓰면 덜 중요한 쪽의 실패가 중요한 경로까지 막습니다. retry는 잠깐 지나가는 오류에만 하고, 여러 요청이 같은 순간에 다시 몰리지 않도록 retry backoff에 무작위 jitter를 더했습니다. 520 오류를 받은 요청은 ClickHouse 서버에 닿지도 않았습니다. 서버는 10초 동안 idle인 연결을 닫는데, 클라이언트는 10초 넘게 idle이던 연결을 다시 꺼내 쓰고 있었습니다. 서버가 연결을 닫는 순간과 클라이언트가 그 연결로 요청을 보내는 순간이 겹치면서 요청이 실패한 것으로 원인을 좁혔습니다. ClickHouse 지원팀과 함께 서버의 keep_alive_timeout을 60초로 늘렸고, 그 뒤 40시간 가까이 지켜보는 동안 520 오류는 한 건도 없었습니다.</dd></div>
+                <div><dt>대가</dt><dd>60초로 늘려도 해결되는 것은 10초에서 60초 사이 idle이던 연결뿐입니다. 60초보다 오래 idle이던 연결에서 생기는 오류는 그대로 남습니다. 또 서버 설정을 바꾸려면 서버를 rolling restart해야 했습니다.</dd></div>
               </dl>
             </article>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-05</span><h3>중복 판정의 기준을 저장소가 아니라 계약에 두었습니다</h3></header>
+              <header class="ts__head"><span class="ts__id">D-05</span><h3>중복 판정 규칙을 먼저 정하고, 저장소는 바꿀 수 있게 두었습니다</h3></header>
               <dl class="ts__rows">
                 <div><dt>고민</dt><dd>이미 본 이벤트 ID를 표시해 두던 KV는 쓰기가 잦은 용도에 맞지 않았습니다. KV는 쓴 값이 모든 곳에 바로 보이지 않고 시간이 지나야 맞춰지는 eventual consistency 저장소라서, 같은 이벤트 두 건이 동시에 오면 둘 다 "아직 없음"을 보고 통과할 수 있었습니다.</dd></div>
-                <div><dt>선택지</dt><dd>① KV를 그대로 쓴다. ② Cloudflare의 Durable Object처럼 특정 저장소 하나를 기준으로 삼는다. ③ 중복 판정이 지켜야 할 규칙인 계약을 먼저 정하고, 그 규칙을 어느 저장소로 구현할지는 따로 둔다.</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 목표는 "저장소에 행이 exactly-once로 들어간다"가 아니라 "같은 이벤트가 집계 결과에 한 번만 반영된다"로 정했습니다. 중복 판정은 네 상태로 나눴습니다. 이벤트를 누가 처리할지 먼저 잡는 claim, 그 권한을 정해진 시간 동안만 갖는 lease, 권한이 끝난 처리자가 늦게 쓰는 것을 막는 fence, 처리를 마친 complete입니다. 그리고 완료 전에는 ack하지 않는다는 규칙을 계약에 적었습니다. 중복 판정은 이렇게 상태가 차례로 바뀌는 구조라서, 판정 권한은 한 번에 하나의 쓰기만 성공하도록 atomic하게 쓸 수 있는 저장소에 있어야 합니다. 다만 그 저장소가 무엇인지는 나중에 바꿀 수 있어야 한다고 봤습니다. 이후 수집 경로를 Kafka와 Flink로 옮길 때 이 계약이 그대로 기준이 됐습니다.</dd></div>
-                <div><dt>대가</dt><dd>계약을 처음 구현한 저장소로 시험해 보니 시간 초과가 났고, 넣은 이벤트와 결과를 맞춰 본 숫자도 어긋났습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① KV를 그대로 쓴다. ② Cloudflare의 Durable Object처럼 특정 저장소 하나를 기준으로 삼는다. ③ 중복 판정이 지켜야 할 규칙을 먼저 정하고, 그 규칙을 어느 저장소로 구현할지는 따로 둔다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 목표는 "저장소에 행이 exactly-once로 들어간다"가 아니라 "같은 이벤트가 집계 결과에 한 번만 반영된다"로 정했습니다. 중복 판정은 네 상태로 나눴습니다. 이벤트를 누가 처리할지 먼저 잡는 claim, 그 권한을 정해진 시간 동안만 갖는 lease, 권한이 끝난 처리자가 늦게 쓰는 것을 막는 fence, 처리를 마친 complete입니다. 완료 전에는 ack하지 않는다는 규칙도 함께 정했습니다. 중복 판정은 이렇게 상태가 차례로 바뀌는 구조라서, 판정 권한은 한 번에 하나의 쓰기만 성공하는 atomic 쓰기를 지원하는 저장소에 있어야 합니다. 다만 그 저장소가 무엇인지는 나중에 바꿀 수 있어야 한다고 봤습니다. 이후 수집 경로를 Kafka와 Flink로 옮길 때 이 규칙이 그대로 기준이 됐습니다.</dd></div>
+                <div><dt>대가</dt><dd>이 규칙을 처음 구현한 저장소로 시험했을 때는 timeout이 났고, 넣은 이벤트와 결과를 대조한 숫자도 맞지 않았습니다.</dd></div>
               </dl>
             </article>
           </section>
@@ -256,10 +256,10 @@
           <section id="d-result" aria-labelledby="d-result-h">
             <h2 class="sechead" id="d-result-h"><span class="sechead__no">04</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
-              <li>이 경로는 2026년 10월 16일에 Kafka 경로로 넘기기 전까지, 실제 이벤트를 받는 주 수집 경로로 운영했습니다.</li>
+              <li>이 파이프라인은 2026년 10월 16일 Kafka 경로로 cutover하기 전까지 실제 이벤트를 받는 주 수집 경로로 운영했습니다.</li>
               <li>2026년 6월 적재가 멈췄던 구간을 복구한 뒤, R2 원본 기록과 ClickHouse에 있는 이벤트 ID 3,900여 개를 양쪽에서 서로 맞춰 봤습니다. 원본 기록에 있는데 ClickHouse에서 빠진 ID는 하나도 없었고, 다시 넣으면서 두 번 들어간 ID도 없었습니다. 이 결과는 그 장애 구간에 한정한 것입니다.</li>
               <li>ClickHouse에 쓸 때 하루 150건 안팎으로 나던 HTTP 520 오류가, 고친 뒤 40시간 가까이 지켜보는 동안 한 건도 나지 않았습니다. keep-alive 시간 조정과 retry 같은 여러 변경을 함께 적용한 뒤의 결과라, 어느 한 변경만의 효과는 아닙니다.</li>
-              <li>2026년 7월에는 queue에 쌓인 메시지 수인 queue depth 경보가 한 번 튄 값만으로 울리지 않게 바꿨습니다. 90초 안에 두 번 연속으로 threshold를 넘을 때만 울립니다. 바꾸기 전에 이 규칙을 과거 경보 8건에 대입해 보니, 실제 장애였던 6건은 모두 잡았고 지표가 1분 동안 잠깐 튀었던 2건은 걸렀습니다. 대신 담당자를 부르는 호출은 최대 1분쯤 늦어집니다.</li>
+              <li>2026년 7월에는 queue에 쌓인 메시지 수인 queue depth 경보가 한 번 튄 값만으로 울리지 않게 바꿨습니다. 90초 안에 두 번 연속으로 threshold를 넘을 때만 울립니다. 바꾸기 전에 이 조건을 과거 경보 8건에 적용해 보니, 실제 장애였던 6건은 모두 잡았고 지표가 1분 동안 잠깐 튀었던 2건은 걸렀습니다. 대신 on-call 호출은 최대 1분쯤 늦어집니다.</li>
               <li>9월 말에는 사람이 방문한 세션 가운데 집계에 잡힌 세션의 비율이 사흘 만에 약 60%에서 30%로 떨어졌습니다. 이 일을 계기로 10월에 세션 처리를 Kafka와 Flink 경로로 옮겼고, 자세한 내용은 <a href="green.html">V3 실시간 아키텍처</a>에 있습니다.</li>
             </ul>
             <p>다시 읽을 수 있는 원본이 있어야 중복도 정리하고 복구도 확인할 수 있었습니다. 복구는 queue 상태만 보고 끝내면 안 되고, 원본 기록과 ClickHouse의 ID를 맞춰 본 뒤에 끝내야 합니다.</p>
@@ -270,7 +270,7 @@
             <article class="ts">
               <header class="ts__head"><span class="ts__id">T-01</span><h3>적재가 4시간 가까이 멈춘 날 (2026.06)</h3></header>
               <dl class="ts__rows">
-                <div><dt>문제</dt><dd>ClickHouse 인스턴스가 종료되면서 적재가 4시간 가까이 멈췄습니다. 최종 보관 queue에 3천 건 넘게 쌓였고, 적재가 늦어진다는 경보가 울렸습니다. 보관 기간 14일이 지나면 그대로 잃는 상황이었습니다.</dd></div>
+                <div><dt>문제</dt><dd>ClickHouse 인스턴스가 종료되면서 적재가 4시간 가까이 멈췄습니다. 최종 보관 queue에 3천 건 넘게 쌓였고, 적재 지연 경보가 울렸습니다. 보관 기간 14일이 지나면 그대로 잃는 상황이었습니다.</dd></div>
                 <div><dt>원인</dt><dd>원인은 ClickHouse 인스턴스가 종료된 것 하나뿐이었습니다. 더 어려운 문제는 복구가 끝났다는 것을 무엇으로 확인하느냐였습니다.</dd></div>
                 <div><dt>해결</dt><dd>최종 보관 queue에는 메시지를 꺼내 가는 consumer가 없어서, 필요할 때 직접 메시지를 가져가는 임시 pull consumer를 붙였습니다. 먼저 10건만 main queue로 보내 모두 적재되는 것을 확인하고, 나머지를 같은 방식으로 보냈습니다. main queue로 보내는 데 성공한 뒤에만 ack했습니다. 다만 queue가 비었다는 것은 queue에 있던 메시지가 나갔다는 뜻일 뿐, ClickHouse에 모두 들어갔다는 뜻은 아닙니다. 그래서 장애 구간의 ClickHouse 이벤트 ID와 R2에 남아 있던 원본 기록의 ID를 서로 맞춰 봤습니다. R2의 원본 기록은 적재 consumer가 ClickHouse에 넣기 직전에 써 두고 30일 동안 보관하는 사본입니다.</dd></div>
                 <div class="is-key"><dt>결과</dt><dd>양쪽 ID가 3,900여 개로 정확히 같았고, 한쪽에만 있는 ID는 하나도 없었습니다. 전체 행 수와 서로 다른 ID의 수도 같아서, 다시 넣으면서 두 번 들어간 행도 없었습니다. 이 확인은 그 장애 구간에 한정한 것입니다.</dd></div>

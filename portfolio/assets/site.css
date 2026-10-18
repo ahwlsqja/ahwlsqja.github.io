@@ -303,13 +303,16 @@ li::marker { color: var(--text-3); }
   text-decoration: none;
   white-space: nowrap;
   margin-right: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .brand b { color: var(--accent); font-weight: 500; }
 .topnav {
   display: flex;
   align-items: center;
   gap: var(--s-1);
-  min-width: 0;
+  flex: none;
 }
 .topnav a {
   display: inline-flex;
@@ -360,12 +363,12 @@ li::marker { color: var(--text-3); }
   :root:not([data-theme="dark"]) .theme-btn .i-moon { display: block; }
 }
 
-@media (max-width: 720px) {
-  .topnav a .t { display: none; }        /* 좁은 화면: §번호만 남김 */
+@media (max-width: 760px) {
+  .topnav[data-spy] a .t { display: none; }        /* 좁은 화면: §번호만 남김 */
   .topnav a { padding: 6px 7px; }
   .topnav a .n { font-size: var(--fs-xs); color: var(--text-2); }
 }
-@media (max-width: 400px) {
+@media (max-width: 460px) {
   .topnav .ext { display: none; }
   .topbar__row { gap: var(--s-2); }
 }

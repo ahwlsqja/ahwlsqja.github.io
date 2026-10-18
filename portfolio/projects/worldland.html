@@ -93,7 +93,7 @@
               <table class="tbl">
                 <thead><tr><th scope="col">비즈니스 요구</th><th scope="col">제가 만든 것</th></tr></thead>
                 <tbody>
-                  <tr><th scope="row">공급자가 머신을 쉽게 붙인다</th><td>공급자 머신에 까는 노드 SDK입니다. Hub와 연결을 유지하는 노드 데몬과, 머신을 Kubernetes 클러스터에 join시키는 installer로 나뉩니다.</td></tr>
+                  <tr><th scope="row">공급자가 머신을 쉽게 붙인다</th><td>공급자 머신에 설치하는 노드 SDK입니다. Hub와 연결을 유지하는 노드 데몬과, 머신을 Kubernetes 클러스터에 join시키는 installer로 나뉩니다.</td></tr>
                   <tr><th scope="row">대금이 확인된 렌탈에만 GPU를 내준다</th><td>체인에서 결제를 확인한 뒤에만 GPU 컨테이너(Pod)를 만드는 흐름과, 렌탈 종료를 체인에서 받아 GPU를 돌려받는 event listener입니다.</td></tr>
                   <tr><th scope="row">쓴 만큼만 정산하고 남은 돈은 돌려준다</th><td>예치, 정산, 출금을 처리하는 렌탈 정산 컨트랙트입니다.</td></tr>
                   <tr><th scope="row">여러 클러스터의 GPU를 한곳에서 본다</th><td>여러 클러스터의 노드와 렌탈 Pod를 지켜보면서, 지금 빌려줄 수 있는 GPU 수를 세는 기능입니다.</td></tr>
@@ -103,18 +103,18 @@
             </div>
             <dl class="scope">
               <dt>맡은 일</dt><dd>Hub 백엔드와 노드 SDK, 렌탈 정산 컨트랙트를 맡았습니다. 같은 기간에 웹 화면을 만들고, NFT 마켓과 Faucet 컨트랙트를 월드랜드 메인넷에 배포했습니다.</dd>
-              <dt>팀원</dt><dd>노드 SDK 첫 원형, kubeadm control plane 구축 가이드, 마이닝 노드 이미지는 팀원이 만들었습니다.</dd>
+              <dt>팀원</dt><dd>노드 SDK의 첫 prototype, kubeadm control plane 구축 가이드, 마이닝 노드 이미지는 팀원이 만들었습니다.</dd>
             </dl>
           </section>
 
           <section id="d-process" aria-labelledby="d-process-h">
             <h2 class="sechead" id="d-process-h"><span class="sechead__no">03</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <h3>0. 전체 구조: Akash와 비교한 뼈대</h3>
+            <h3>0. 전체 구조: Akash Network와 비교한 아키텍처</h3>
 
-<figure class="dg" id="dg-worldland" style="--dg-min: 560px" data-step-ms="3400" data-idle="전체 그림입니다. 재생하거나 아래 단계를 누르면 해당 부분을 강조합니다. 정산 컨트랙트는 Sepolia 테스트넷, 클러스터 경로는 Kind에서 확인했습니다." data-steps='[
+<figure class="dg" id="dg-worldland" style="--dg-min: 560px" data-step-ms="3400" data-idle="전체 그림입니다. 재생하거나 아래 단계를 누르면 해당 부분을 강조합니다. 정산 컨트랙트는 Sepolia 테스트넷에서, 클러스터 쪽 흐름은 로컬 Kind 클러스터에서 확인했습니다." data-steps='[
   {"t":"노드 데몬이 지갑으로 서명해 로그인하면 Hub CA가 mTLS 인증서를 내줍니다."},
   {"t":"노드 데몬이 NVML로 읽은 GPU metric을 담아 30초마다 heartbeat를 보내고, 끊기면 다시 연결합니다.", "d": 3800},
-  {"t":"installer가 Hub에서 24시간짜리 join 명령을 받아 이 머신을 클러스터의 워커 노드로 붙입니다.", "d": 3800},
+  {"t":"installer가 Hub에서 24시간 유효한 join token이 담긴 명령을 받아 이 머신을 클러스터의 워커 노드로 붙입니다.", "d": 3800},
   {"t":"Hub가 여러 클러스터의 노드와 렌탈 Pod를 지켜보며 빌려줄 수 있는 GPU를 세고, 재시작하면 클러스터에서 다시 셉니다.", "d": 4000},
   {"t":"사용자가 예치하고 렌탈을 시작하면, Hub가 체인에서 그 거래를 확인한 뒤에만 사용자 Namespace에 GPU Pod를 만듭니다.", "d": 4400}
 ]'>
@@ -145,7 +145,7 @@
       <g data-step="1,2"><rect class="box" x="36" y="268" width="128" height="60" rx="8"/><text class="t" x="50" y="294">노드 데몬</text><text class="s" x="50" y="314">Hub와 연결 유지</text></g>
 
       <!-- Hub -->
-      <g data-step="3"><rect class="box" x="294" y="84" width="150" height="60" rx="8"/><text class="t" x="308" y="110">join 토큰 발급</text><text class="s" x="308" y="130">24시간, CA hash 포함</text></g>
+      <g data-step="3"><rect class="box" x="294" y="84" width="150" height="60" rx="8"/><text class="t" x="308" y="110">join token 발급</text><text class="s" x="308" y="130">24시간, CA hash 포함</text></g>
       <g data-step="4"><rect class="box" x="294" y="176" width="150" height="60" rx="8"/><text class="t" x="308" y="202">가용 GPU 계산</text><text class="s" x="308" y="222">전체 − 렌탈 사용 중</text></g>
       <g data-step="1"><rect class="box" x="294" y="268" width="150" height="60" rx="8"/><text class="t" x="308" y="294">Hub CA</text><text class="s" x="308" y="314">지갑 주소로 발급</text></g>
       <g data-step="5"><rect class="box" x="294" y="360" width="150" height="60" rx="8"/><text class="t" x="308" y="386">결제 확인</text><text class="s" x="308" y="406">거래 확인 뒤 Pod 생성</text></g>
@@ -204,14 +204,15 @@
   </div>
 </figure>
 
-            <p>설계 전에 Akash Network의 노드와 공급자 코드를 분석해 비교했습니다. 공급자가 자기 Kubernetes 클러스터와 공급자 데몬을 운영하는 뼈대는 같습니다. Akash는 공급자 bid, lease, escrow 정산을 모두 체인 위에서 처리합니다. 월드랜드는 체인 위에 예치와 정산만 두고, 사용자와 GPU의 matching과 Pod를 만들고 지우는 일은 Hub가 맡았습니다.</p>
+            <p>시스템은 네 부분으로 이뤄집니다. 공급자 머신에서 도는 노드 SDK, 노드를 인증하고 렌탈을 중개하는 Hub, 공급자가 운영하는 여러 Kubernetes 클러스터, 예치와 정산을 맡는 체인 위 렌탈 컨트랙트입니다. 공급자 머신은 Hub에서 인증서와 join 명령을 받아 클러스터에 워커 노드로 붙습니다. 사용자가 체인에 예치하고 렌탈을 시작하면, Hub가 그 거래를 확인한 뒤 클러스터에 GPU Pod를 만듭니다.</p>
+            <p>이 구조는 Akash Network의 노드와 공급자 코드를 분석해 비교한 뒤 정했습니다. 공급자가 자기 Kubernetes 클러스터와 공급자 데몬을 운영하는 기본 구조는 같습니다. Akash는 공급자 bid, lease, escrow 정산을 모두 체인 위에서 처리합니다. 월드랜드는 체인 위에 예치와 정산만 두고, 사용자와 GPU의 matching과 Pod를 만들고 지우는 일은 Hub가 맡았습니다.</p>
 
             <h3>1. 공급자가 머신을 쉽게 붙인다</h3>
             <dl class="scope" style="margin-bottom: var(--s-5)">
               <dt>요구</dt><dd>머신을 붙이기 어려우면 공급자가 들어오지 않습니다.</dd>
               <dt>설계</dt><dd>공급자 지갑 하나를 신원으로 삼고, 노드 SDK를 두 역할로 나눴습니다.
                 <ul>
-                  <li><code>node master</code>는 클러스터를 가진 공급자의 노드 데몬입니다. 지갑 서명으로 로그인하는 SIWE를 거치면, Hub 안의 CA인 Hub CA가 지갑 주소로 인증서를 내줍니다. 그다음 클러스터를 등록합니다. 그 뒤로는 양쪽이 서로 인증서를 확인하는 mTLS 연결로 30초마다 heartbeat를 보내고, 연결이 끊기면 reconnect합니다.</li>
+                  <li><code>node master</code>는 클러스터를 가진 공급자의 노드 데몬입니다. 지갑 서명으로 로그인하는 SIWE를 거치면, Hub 안의 CA인 Hub CA가 지갑 주소로 인증서를 발급합니다. 그다음 클러스터를 등록합니다. 그 뒤로는 양쪽이 서로 인증서를 확인하는 mTLS 연결로 30초마다 heartbeat를 보내고, 연결이 끊기면 다시 연결합니다.</li>
                   <li><code>node worker</code>는 GPU 머신을 그 클러스터에 붙이는 installer입니다.</li>
                 </ul></dd>
               <dt>구현</dt><dd>installer 하나로 머신 점검부터 클러스터 join까지 끝냅니다.</dd>
@@ -222,27 +223,27 @@
 <pre><code>./node worker -hub-http &lt;Hub 주소&gt; -private-key-file &lt;키 파일&gt; -master-wallet &lt;지갑 주소&gt;</code></pre>
             </div>
             <ol>
-              <li>구성요소 6개(nvidia-smi, containerd, kubeadm, kubelet, kubectl, nvidia-ctk)를 점검합니다. 드라이버 말고 빠진 것은 바로 설치합니다.</li>
+              <li>구성요소 6개(nvidia-smi, containerd, kubeadm, kubelet, kubectl, nvidia-ctk)를 점검합니다. NVIDIA 드라이버를 뺀 나머지는 없으면 바로 설치합니다.</li>
               <li>containerd의 default runtime을 NVIDIA runtime으로 설정합니다.</li>
               <li>지갑 서명으로 인증하고, Hub에 join token을 요청합니다.</li>
-              <li>Hub가 24시간짜리 토큰으로 <code>kubeadm join</code> 명령을 만들어 돌려줍니다.</li>
+              <li>Hub가 24시간 유효한 join token을 발급하고, 이를 담은 <code>kubeadm join</code> 명령을 만들어 돌려줍니다.</li>
               <li>installer는 Hub에서 받은 명령이 <code>kubeadm join</code>으로 시작할 때만 실행합니다.</li>
               <li>NVIDIA Management Library(NVML)로 GPU 종류와 VRAM 용량을 읽어 노드 정보에 표시합니다.</li>
             </ol>
-            <p>Hub는 클러스터 CA public key의 hash를 join 명령에 넣었습니다. 새 노드는 이 값으로 자기가 붙으려는 API 서버가 맞는지 확인합니다. installer는 <code>kubeadm reset</code>을 해도 남는 CNI 설정과 network interface도 지웁니다. 이것이 남아 있으면, 클러스터에서 빠졌다가 다시 붙는 머신에서 CNI plugin인 flannel이 멈췄습니다.</p>
+            <p>Hub는 클러스터 CA public key의 hash를 join 명령에 넣었습니다. 새 노드는 이 값으로 자기가 붙으려는 API 서버가 맞는지 확인합니다. installer는 <code>kubeadm reset</code>을 해도 남는 CNI 설정과 network interface도 지웁니다. 이것이 남아 있으면 클러스터에서 빠졌다가 다시 붙는 머신에서 CNI plugin인 flannel이 멈추기 때문입니다.</p>
 
             <h3>2. 대금이 확인된 렌탈에만 GPU를 내준다</h3>
             <dl class="scope" style="margin-bottom: var(--s-5)">
               <dt>요구</dt><dd>대금 없이 GPU가 나가면 돌려받을 방법이 없습니다.</dd>
               <dt>설계</dt><dd>결제 확인 뒤에만 Pod를 만드는 순서를 Hub 한곳에 고정했습니다.</dd>
-              <dt>구현</dt><dd>예치금을 확인하고, 렌탈 시작 거래를 확인한 뒤 Pod를 만들고, 렌탈이 끝나면 Pod를 거둬들이는 과정을 이 순서대로 묶었습니다.</dd>
+              <dt>구현</dt><dd>예치금을 확인하고, 렌탈 시작 거래를 확인한 뒤 Pod를 만들고, 렌탈이 끝나면 Pod를 회수하는 과정을 이 순서대로 묶었습니다.</dd>
             </dl>
             <ul>
               <li>렌탈 요청이 오면 사용자가 컨트랙트에 넣어 둔 예치금을 봅니다. 1시간 요금보다 적으면 요청을 받지 않습니다.</li>
               <li>렌탈 시작 거래는 체인이 남긴 처리 결과인 transaction receipt를 읽어 확인합니다. 거래가 성공했는지, 어떤 컨트랙트 함수를 불렀는지, 사용자와 공급자가 누구인지를 봅니다.</li>
               <li>확인을 통과하면 사용자 지갑마다 따로 둔 Namespace에 GPU Pod를 만들고 SSH 접속 정보를 줍니다. Namespace마다 ResourceQuota로 자원 상한을, NetworkPolicy로 네트워크 접근 규칙을 걸었습니다.</li>
               <li>공급자 머신에서 아무 이미지나 돌지 않게, 이미지는 미리 정한 목록에서만 고릅니다.</li>
-              <li>체인에서 렌탈 종료 이벤트가 오면 Pod를 지워 GPU를 돌려받습니다. event listener는 RPC endpoint 여러 개를 하나씩 시도해 붙습니다. 연결이 끊겼다 돌아오면 마지막으로 읽은 checkpoint부터 다시 읽습니다.</li>
+              <li>체인에서 렌탈 종료 이벤트가 오면 Pod를 지워 GPU를 돌려받습니다. event listener는 RPC endpoint 여러 개를 순서대로 시도하는 failover 방식으로 연결합니다. 연결이 끊겼다 돌아오면 마지막 checkpoint부터 이벤트를 다시 읽습니다.</li>
             </ul>
 
             <h3>3. 쓴 만큼만 정산하고 남은 돈은 돌려준다</h3>
@@ -281,8 +282,8 @@
               <li>Kubernetes로 옮긴 뒤에는 Hub가 공급자 요청으로 마이닝 Pod를 배포하고 지웁니다. 마이닝 GPU는 공급자별로 따로 셌습니다.</li>
             </ul>
 
-            <h3>6. 설계 고민: 실행 경로를 Kubernetes 하나로</h3>
-            <p>클러스터가 없는 개인 공급자를 받으려고, Hub가 공급자 머신의 Docker를 원격 실행하는 경로를 더했습니다. 그러자 이미지 pull 지연과 Hub 재시작에 대비한 reconcile 로직이 계속 붙었습니다. 그 로직을 쌓는 대신 scheduling과 Pod lifecycle을 Kubernetes에 맡기기로 했습니다. installer로 개인 머신도 워커 노드로 붙일 수 있었기 때문입니다. Docker 원격 실행 코드 약 1,400줄을 지웠습니다.</p>
+            <h3>6. 설계 결정: 렌탈 실행 방식을 Kubernetes로 통일</h3>
+            <p>클러스터가 없는 개인 공급자를 받으려고, Hub가 공급자 머신의 Docker를 원격으로 실행하는 방식을 더했습니다. 그러자 이미지 pull 지연과 Hub 재시작에 대비한 reconcile 로직이 계속 붙었습니다. 그 로직을 쌓는 대신 scheduling과 Pod lifecycle을 Kubernetes에 맡기기로 했습니다. installer로 개인 머신도 워커 노드로 붙일 수 있었기 때문입니다. 그 결과 Docker 원격 실행 코드 약 1,400줄을 걷어 냈습니다.</p>
           </section>
 
           <section id="d-ts" aria-labelledby="d-ts-h">
@@ -312,10 +313,10 @@
             <ul>
               <li>전에는 공급자가 GPU 머신을 마켓에 붙이려면 구성요소 설치, container runtime 설정, join token 발급, 클러스터 join 같은 6단계를 사람이 직접 해야 했습니다. 이제는 NVIDIA 드라이버만 깔려 있으면 installer 명령 한 줄로 이 과정이 끝납니다.</li>
               <li>노드 SDK에 넣은 지갑 서명 로그인, 연결용 인증서 자동 발급, NVML을 이용한 GPU 자동 감지 기능이 월드랜드 공식 GitHub 저장소에 반영됐습니다.</li>
-              <li>Hub는 체인에서 결제를 확인하기 전에는 GPU Pod를 만들지 않습니다. 로컬 Kind 클러스터에서 사용자가 예치하는 단계부터 렌탈이 끝나 Pod를 거둬들이는 단계까지 전체 흐름을 E2E 테스트로 확인했습니다.</li>
+              <li>Hub는 체인에서 결제를 확인하기 전에는 GPU Pod를 만들지 않습니다. 로컬 Kind 클러스터에서 사용자가 예치하는 단계부터 렌탈이 끝나 Pod를 회수하는 단계까지 전체 흐름을 E2E 테스트로 확인했습니다.</li>
               <li>렌탈 정산 컨트랙트는 Sepolia 테스트넷에 배포했고, 컨트랙트 테스트는 약 40개입니다.</li>
               <li>전에는 Hub가 재시작하면 공급자 쪽 노드를 사람이 다시 시작해야 했습니다. 이제는 연결이 끊기면 노드 데몬이 스스로 Hub에 다시 연결합니다.</li>
-              <li>렌탈 컨테이너를 실행하는 경로를 Docker 원격 실행과 Kubernetes 두 가지에서 Kubernetes 하나로 줄였습니다. Hub 백엔드 테스트는 약 350개입니다.</li>
+              <li>렌탈 컨테이너를 실행하는 방식을 Docker 원격 실행과 Kubernetes 두 가지에서 Kubernetes 하나로 줄였습니다. Hub 백엔드 테스트는 약 350개입니다.</li>
             </ul>
           </section>
 
