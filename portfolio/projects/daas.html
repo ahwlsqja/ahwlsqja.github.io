@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>DAAS-Vader · 모진영</title>
-<meta name="description" content="Sui 컨트랙트로 워커 스테이킹과 배포 요청을 받고, 체인 이벤트를 K3s 작업으로 바꾼 해커톤 프로젝트입니다.">
+<title>DAAS-Vader: SUI를 맡긴 컴퓨터를 Kubernetes 워커로 받는 서버리스 플랫폼 · 모진영</title>
+<meta name="description" content="남는 컴퓨터를 가진 사람이 SUI를 맡기면 그 컴퓨터를 Kubernetes 워커로 받는 플랫폼입니다. 워커 참여 경로, 마스터, Sui Move 컨트랙트 2개, 체인 이벤트 처리를 설계하고 개발한 해커톤 프로젝트입니다.">
 <meta name="color-scheme" content="dark light">
 <script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,6 +13,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
 <script src="../assets/site.js" defer></script>
+<style>
+.shot { margin: var(--s-5, 20px) 0; border: 1px solid var(--line); border-radius: var(--r-lg, 14px); background: var(--surface-2); overflow: hidden; }
+.shot a { display: block; line-height: 0; }
+.shot img { display: block; width: 100%; height: auto; }
+.shot figcaption { padding: 10px 14px; border-top: 1px solid var(--line); font-family: var(--f-mono); font-size: var(--fs-xs, 12px); line-height: 1.55; color: var(--text-3); }
+</style>
 </head>
 <body>
 <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -21,7 +27,7 @@
   <div class="shell topbar__row">
     <a class="brand" href="../index.html">mojinyeong<b>/</b>portfolio</a>
     <nav class="topnav" aria-label="이동">
-      <a href="../index.html#projects"><span class="t">← 포트폴리오</span></a>
+      <a href="../index.html#side"><span class="t">← 포트폴리오</span></a>
       <a class="ext" href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a>
     </nav>
     <button class="icon-btn theme-btn" type="button" aria-label="테마 바꾸기">
@@ -35,16 +41,16 @@
   <section class="sec" id="detail" aria-labelledby="detail-h">
     <div class="doc-head">
       <div class="shell">
-        <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>daas-vader</span></nav>
-        <div class="doc-head__badges"><span class="badge badge--accent">Hackathon</span><span class="badge badge--plain">팀 프로젝트</span><span class="badge badge--warn">데모</span></div>
-        <h1 class="doc-title" id="detail-h">DAAS-Vader: Sui 컨트랙트 이벤트로 움직이는 Kubernetes</h1>
-        <p class="doc-lede">Sui 컨트랙트로 워커 스테이킹과 배포 요청을 받는 Kubernetes를 만들었습니다. 마스터가 체인 이벤트를 읽어 kubectl 명령으로 바꿔 실행합니다.</p>
+        <nav class="trail" aria-label="위치"><a href="../index.html#side">← 포트폴리오</a><span aria-hidden="true">/</span><span>daas-vader</span></nav>
+        <div class="doc-head__badges"><span class="badge badge--plain">Team</span><span class="badge badge--plain">Sui Suimming Hackathon 2025 University Track 수상</span></div>
+        <h1 class="doc-title" id="detail-h">DAAS-Vader: SUI를 맡긴 컴퓨터를 Kubernetes 워커로 받는 서버리스 플랫폼</h1>
+        <p class="doc-lede">남는 컴퓨터를 가진 사람이 SUI를 맡기면, 그 컴퓨터를 Kubernetes 워커로 받는 플랫폼입니다. 개발자의 배포 요청은 Sui 컨트랙트로 받습니다. 이 구조를 해커톤 데모로 만들었고, 그중 워커 참여 경로, 마스터, 컨트랙트, 이벤트 처리를 직접 설계하고 개발했습니다.</p>
         <dl class="spec">
-          <div><dt>기간</dt><dd class="num">2025.09 (1주)</dd></div>
-          <div><dt>소속</dt><dd>Sui Suimming Hackathon 2025, 팀 프로젝트 (University Track 수상)</dd></div>
-          <div class="wide"><dt>역할</dt><dd>아이디어 제안과 팀장. 마스터(컨트롤 플레인), 워커 등록과 스케줄러 Move 컨트랙트, 이벤트 기반 배포, K3s agent join 수정 설계와 개발</dd></div>
-          <div class="wide"><dt>상태</dt><dd>해커톤 데모 (Docker, Sui Testnet)</dd></div>
-          <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Go</li><li class="chip">K3s v1.28.2</li><li class="chip">Sui Move</li><li class="chip">Sui JSON-RPC</li><li class="chip">Docker</li><li class="chip">containerd</li><li class="chip">kubectl</li></ul></dd></div>
+          <div><dt>기간</dt><dd class="num">2025.09 (약 1주)</dd></div>
+          <div><dt>구분</dt><dd>Sui Suimming Hackathon 2025 (서울), 4명</dd></div>
+          <div class="wide"><dt>역할</dt><dd>아이디어 제안과 팀장. 워커가 클러스터에 참여하는 경로, 마스터(K3s 컨트롤 플레인), Sui Move 컨트랙트 2개, 체인 이벤트 처리를 직접 설계하고 개발</dd></div>
+          <div class="wide"><dt>상태</dt><dd>해커톤 데모 (로컬 Docker, Sui Testnet)</dd></div>
+          <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Go 1.21</li><li class="chip">K3s v1.28.2</li><li class="chip">Sui Move</li><li class="chip">Sui JSON-RPC</li><li class="chip">Docker</li><li class="chip">containerd</li><li class="chip">kubectl</li></ul></dd></div>
         </dl>
       </div>
     </div>
@@ -53,170 +59,299 @@
       <div class="doc-body">
         <aside class="toc" aria-label="이 페이지">
           <ol>
-            <li><a href="#d-situation"><span class="n">01</span>상황과 역할</a></li>
-            <li><a href="#d-process"><span class="n">02</span>해결 과정</a></li>
-            <li><a href="#d-result"><span class="n">03</span>결과</a></li>
+            <li><a href="#d-situation"><span class="n">01</span>상황</a></li>
+            <li><a href="#d-task"><span class="n">02</span>과제와 역할</a></li>
+            <li><a href="#d-process"><span class="n">03</span>해결 과정</a></li>
             <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
-            <li><a href="#d-learn"><span class="n">05</span>배운 점</a></li>
-            <li><a href="#d-kw"><span class="n">06</span>핵심 역량</a></li>
-            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
+            <li><a href="#d-result"><span class="n">05</span>결과</a></li>
+            <li><a href="#d-learn"><span class="n">06</span>배운 점</a></li>
+            <li><a href="#d-kw"><span class="n">07</span>핵심 역량</a></li>
           </ol>
         </aside>
 
         <article class="doc-main">
           <section id="d-situation" aria-labelledby="d-situation-h">
-            <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황과 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <p>Sui 해커톤에서 누구나 자기 머신을 워커로 내놓는 Kubernetes 클러스터를 제안했습니다. Sui 생태계에서 Vercel 같은 배포 플랫폼이 되는 것을 목표로 잡았습니다.</p>
-            <p>먼저 정해야 할 것은 워커가 클러스터에 들어오는 조건이었습니다. 주인을 모르는 머신이 들어오면 남의 워크로드가 그 위에서 돕니다. 기본 K3s는 서버가 만든 join 토큰 하나로 워커를 받습니다. 이 토큰으로는 워커의 주인을 구분할 수 없습니다.</p>
+            <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황: 어떤 프로젝트이고 무엇을 해결하는가</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>DAAS-Vader는 Sui 해커톤에서 만든 탈중앙 서버리스 플랫폼입니다. 팀 README에 적은 목표는 "Sui의 Vercel"입니다.</p>
+            <p>이 서비스에는 두 종류의 사용자가 있습니다.</p>
+            <ul>
+              <li>개발자: 팀 문서는 Vercel 같은 중앙화 서비스의 문제로 높은 비용, 벤더 락인, 검열 가능성을 꼽았습니다. 개발자는 지갑을 연결하고 Docker 이미지를 올려 앱을 배포합니다.</li>
+              <li>노드 제공자: 남는 컴퓨터 자원을 내놓고 보상을 받는 사람입니다. SUI를 맡기고 자기 컴퓨터를 워커로 등록합니다.</li>
+            </ul>
+
+<figure class="shot"><a href="../assets/side/daas/daas-role-select.jpg" target="_blank" rel="noopener"><img src="../assets/side/daas/daas-role-select.jpg" alt="첫 화면의 역할 선택. 서비스 사용자와 노드 제공자 두 유형으로 나눴습니다 (팀원 제작 화면)" loading="lazy"></a><figcaption>첫 화면의 역할 선택. 서비스 사용자와 노드 제공자 두 유형으로 나눴습니다 (팀원 제작 화면)</figcaption></figure>
+
+            <p>먼저 풀어야 할 기술 문제는 소유자를 알 수 없는 컴퓨터가 클러스터에 참여하는 것이었습니다. 기본 K3s는 서버가 만든 join 토큰 하나로 워커를 받습니다. 토큰만 있으면 누구나 참여할 수 있습니다. 워커의 소유자도 구분하지 못합니다.</p>
+            <p>이 문제를 블록체인으로 풀려고 했습니다. README는 이 방향을 "기존의 중앙화된 인증을 블록체인 스테이킹으로 바꾸는 것"으로 적었습니다.</p>
+            <ul>
+              <li>관리자가 주는 인증 대신 스테이킹을 워커 참여 조건으로 설계했습니다.</li>
+              <li>SUI를 맡긴 워커에는 지갑 주소가 붙습니다. 그래서 누구의 워커인지 체인에서 확인할 수 있습니다.</li>
+              <li>배포 요청도 컨트랙트로 받아 체인에 기록을 남기게 했습니다.</li>
+              <li>이미지는 DockerHub 대신 Walrus에 올리게 했습니다(팀원 담당).</li>
+            </ul>
             <dl class="scope">
-              <dt>맡은 일</dt><dd>아이디어를 내고 팀을 이끌었습니다. 마스터, 워커 등록과 스케줄러 Move 컨트랙트, 이벤트 기반 배포, K3s agent의 join 수정을 직접 설계하고 개발했습니다.</dd>
-              <dt>팀원</dt><dd>웹 화면과 Walrus 연동, Docker 이미지 등록 컨트랙트는 팀원이 맡았습니다.</dd>
+              <dt>해결하려는 문제</dt><dd>토큰만 있으면 누구나, 소유자도 알 수 없이 클러스터에 참여할 수 있습니다.</dd>
+              <dt>해결 방식</dt><dd>SUI 스테이킹을 워커 참여 조건으로 두고, 배포 요청은 컨트랙트로 받아 체인에 기록합니다.</dd>
             </dl>
           </section>
 
-          <section id="d-process" aria-labelledby="d-process-h">
-            <h2 class="sechead" id="d-process-h"><span class="sechead__no">02</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-
-            <figure class="dg" id="dg-daas" style="--dg-min: 560px" data-step-ms="3000" data-idle="데모 환경(Docker, Sui Testnet) 기준입니다. 마스터는 TEE 대신 일반 컨테이너로 띄웠습니다." data-steps='[
-              {"t":"스테이커가 SUI를 맡기고 Worker Registry에 워커를 등록합니다."},
-              {"t":"마스터가 등록 이벤트를 읽고, K3s 서버의 join 토큰을 Worker Registry에 기록합니다.", "d": 3800},
-              {"t":"워커 머신의 K3s agent가 join 토큰으로 K3s 서버에 붙습니다."},
-              {"t":"배포 요청자가 K8s Scheduler에 배포를 요청하면, 스케줄러가 요청자의 워커 중 하나를 고릅니다.", "d": 3600},
-              {"t":"마스터가 요청 이벤트를 kubectl 명령으로 바꿔 실행하면, K3s가 Pod를 노드에 배치합니다.", "d": 3800}
-            ]'>
-              <figcaption><span class="n">그림 1</span>체인 이벤트를 K3s 작업으로 바꾸는 경로</figcaption>
-              <div class="dg__canvas">
-                <svg viewBox="0 0 728 520" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <marker id="dg-daas-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
-                  </defs>
-
-                  <!-- 구역 -->
-                  <rect class="zone" fill="none" x="12" y="24" width="148" height="208" rx="10"/>
-                  <text class="m" x="24" y="42">사용자</text>
-                  <rect class="zone" fill="none" x="188" y="24" width="372" height="208" rx="10"/>
-                  <text class="m" x="200" y="42">Sui Testnet</text>
-                  <rect class="zone" fill="none" x="104" y="272" width="396" height="224" rx="10"/>
-                  <text class="m" x="488" y="289" text-anchor="end">마스터 컨테이너</text>
-                  <text class="m" x="488" y="303" text-anchor="end">TEE를 둘 자리, 데모는 일반 컨테이너</text>
-                  <rect class="zone" fill="none" x="548" y="272" width="168" height="224" rx="10"/>
-                  <text class="m" x="560" y="289">워커 머신</text>
-
-                  <!-- 사용자 -->
-                  <g data-step="4"><rect class="box" x="24" y="56" width="124" height="60" rx="8"/><text class="t" x="38" y="82">배포 요청자</text><text class="s" x="38" y="102">컨트랙트로 요청</text></g>
-                  <g data-step="1"><rect class="box" x="24" y="156" width="124" height="60" rx="8"/><text class="t" x="38" y="182">스테이커</text><text class="s" x="38" y="202">SUI를 맡기고 등록</text></g>
-
-                  <!-- Sui Testnet -->
-                  <g data-step="4"><rect class="box" x="204" y="56" width="152" height="60" rx="8"/><text class="t" x="218" y="82">K8s Scheduler</text><text class="s" x="218" y="102">작업이 적은 워커 선택</text></g>
-                  <g data-step="1,2"><rect class="box" x="204" y="156" width="152" height="60" rx="8"/><text class="t" x="218" y="182">Worker Registry</text><text class="s" x="218" y="202">스테이크 확인, 워커 등록</text></g>
-                  <g data-step="2,4"><rect class="box" x="404" y="106" width="140" height="60" rx="8"/><text class="t" x="418" y="132">체인 이벤트</text><text class="s" x="418" y="152">워커 등록, 배포 요청</text></g>
-
-                  <!-- 마스터 -->
-                  <g data-step="2,5"><rect class="box" x="120" y="320" width="148" height="60" rx="8"/><text class="t" x="134" y="346">이벤트 처리기</text><text class="s" x="134" y="366">3초마다 이벤트 조회</text></g>
-                  <g data-step="2,3,5"><rect class="box" x="344" y="320" width="140" height="60" rx="8"/><text class="t" x="358" y="346">K3s 서버</text><text class="s" x="358" y="366">v1.28.2, 포트 6443</text></g>
-                  <g data-step="5"><rect class="box" x="120" y="420" width="148" height="60" rx="8"/><text class="t" x="134" y="446">kubectl 실행기</text><text class="s" x="134" y="466">요청을 명령으로 변환</text></g>
-
-                  <!-- 워커 -->
-                  <g data-step="3"><rect class="box" x="564" y="320" width="140" height="60" rx="8"/><text class="t" x="578" y="346">K3s agent</text><text class="s" x="578" y="366">join 토큰으로 합류</text></g>
-                  <g data-step="5"><rect class="box" x="564" y="420" width="140" height="60" rx="8"/><text class="t" x="578" y="446">Pod</text><text class="s" x="578" y="466">K3s가 노드에 배치</text></g>
-
-                  <!-- 경로 -->
-                  <path id="dg-daas-e1" class="flow" fill="none" data-step="1" d="M148 186H198" marker-end="url(#dg-daas-ah)"/>
-                  <path id="dg-daas-e2" class="flow" fill="none" data-step="2" d="M356 186C382 186 376 146 398 146" marker-end="url(#dg-daas-ah)"/>
-                  <path id="dg-daas-e3" class="flow" fill="none" data-step="2,5" d="M474 166V262H256V314" marker-end="url(#dg-daas-ah)"/>
-                  <path id="dg-daas-e4" class="flow" fill="none" data-step="2" d="M344 338H274" marker-end="url(#dg-daas-ah)"/>
-                  <path id="dg-daas-e5" class="flow" fill="none" data-step="2" d="M216 320V222" marker-end="url(#dg-daas-ah)"/>
-                  <path id="dg-daas-e6" class="flow" fill="none" data-step="3" d="M564 362H490" marker-end="url(#dg-daas-ah)"/>
-                  <path id="dg-daas-e7" class="flow" fill="none" data-step="4" d="M148 86H198" marker-end="url(#dg-daas-ah)"/>
-                  <path id="dg-daas-e8" class="flow" fill="none" data-step="4" d="M356 86C382 86 376 126 398 126" marker-end="url(#dg-daas-ah)"/>
-                  <path id="dg-daas-e9" class="flow" fill="none" data-step="5" d="M194 380V414" marker-end="url(#dg-daas-ah)"/>
-                  <path id="dg-daas-e10" class="flow" fill="none" data-step="5" d="M268 440H372V386" marker-end="url(#dg-daas-ah)"/>
-                  <path id="dg-daas-e11" class="flow" fill="none" data-step="5" d="M420 380V460H558" marker-end="url(#dg-daas-ah)"/>
-
-                  <!-- 경로 라벨 -->
-                  <text class="m" x="482" y="214">3초마다 조회</text>
-                  <text class="m" x="208" y="250" text-anchor="end">join 토큰 기록</text>
-                  <text class="m" x="306" y="331" text-anchor="middle">join 토큰</text>
-                  <text class="m" x="527" y="355" text-anchor="middle">join</text>
-                  <text class="m" x="202" y="402">배포 요청</text>
-                  <text class="m" x="276" y="433">kubectl apply</text>
-                  <text class="m" x="428" y="453">Pod 배치</text>
-
-                  <!-- 움직이는 점 -->
-                  <circle class="pkt" r="4" data-step="2,5"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#dg-daas-e3"/></animateMotion></circle>
-                  <circle class="pkt" r="4" data-step="3"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-daas-e6"/></animateMotion></circle>
-                  <circle class="pkt" r="4" data-step="5"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#dg-daas-e11"/></animateMotion></circle>
-                </svg>
-              </div>
-            </figure>
-
-            <h3>1. 워커 등록과 배포 요청을 Move 컨트랙트로 받기</h3>
-            <p>관리자가 토큰을 나눠 주는 방식 대신, 워커마다 Sui 지갑으로 SUI를 맡기고 등록하게 했습니다. 스테이크를 건 워커에는 지갑 주소가 붙어서, 어떤 워커가 누구 것인지 체인에서 확인할 수 있습니다.</p>
-            <p>배포 요청도 kubectl로 API 서버를 직접 부르는 대신 컨트랙트 호출로 받았습니다. 요청과 워커 배정 기록이 체인에 남기 때문입니다.</p>
-            <p>컨트랙트는 Worker Registry와 K8s Scheduler로 나눴습니다. Worker Registry는 최소 스테이크를 확인하고 워커를 등록합니다. 워커 활성화와 join 토큰 저장도 맡습니다. K8s Scheduler는 요청자의 활성 워커 중에서 작업이 적은 워커를 고르고, 쉬고 있는 워커를 먼저 씁니다. 고른 워커는 체인에 기록으로 남깁니다.</p>
-
-            <h3>2. 마스터에서 체인 이벤트를 K3s 작업으로 바꾸기</h3>
-            <p>마스터는 K3s v1.28.2 서버를 Alpine 컨테이너로 실행합니다. Sui Testnet 이벤트는 3초 간격으로 조회합니다(<code>suix_queryEvents</code>).</p>
-            <p>워커 등록 이벤트가 오면 마스터가 K3s 서버의 node-token을 읽습니다. 이 값을 그 워커의 join 토큰으로 컨트랙트에 기록합니다(<code>set_join_token</code>).</p>
-            <p>배포 요청 이벤트가 오면 요청을 kubectl 명령으로 바꿔 실행합니다. GET은 <code>kubectl get</code>, POST와 PUT은 <code>kubectl apply</code>, DELETE는 <code>kubectl delete</code>가 됩니다.</p>
-            <p>WebSocket 구독(<code>suix_subscribeEvent</code>) 코드도 작성했습니다. 데모는 연결을 유지하지 않아도 되는 폴링으로 돌렸습니다.</p>
-            <p>마스터는 Sui Nautilus의 보안 실행 환경(TEE) 안에서 돌리는 구상이었습니다. 데모에서는 일반 컨테이너로 대신했습니다.</p>
-
-            <h3>3. K3s agent의 join 코드에 Seal 토큰 확인 넣기</h3>
-            <p>워커가 들어올 때 스테이크를 확인하려고 K3s agent 코드를 고쳤습니다. K3s 전체를 복사해 따로 관리하지 않고, agent 쪽 패키지 소스만 가져와 go.mod의 replace로 연결했습니다.</p>
-            <p>Seal 토큰은 이 프로젝트에서 정한 형식으로, 지갑 주소와 서명, 챌린지를 담습니다. agent가 서버에 붙을 때 토큰을 검증하는 곳은 두 군데입니다. join을 다시 시도하는 반복문과 토큰을 읽는 함수입니다. 두 곳에 같은 규칙을 넣었습니다. 토큰이 Seal 형식이면 스테이크와 서명을 확인하고, 아니면 원래 K3s 토큰 검증으로 넘어갑니다.</p>
-            <p>해커톤 기간에는 체인 조회와 서명 검증을 모의 응답으로 두고, 토큰 종류에 따라 검증을 나누는 구조를 먼저 만들었습니다. 데모용 워커 컨테이너는 원본 K3s agent에 마스터가 발급한 join 토큰을 넘기도록 구성했습니다.</p>
-
-            <h3>4. EC2 워커 설정 스크립트</h3>
-            <p>EC2 워커 설정 스크립트에는 K3s 노드 통신에 쓰는 포트를 여는 방화벽 규칙을 넣었습니다. API 서버 6443, kubelet 10250, Flannel VXLAN 8472/udp, WireGuard 51820/udp입니다. 컨테이너 런타임은 워커 설정에서 containerd와 Docker 중 하나를 고르게 했습니다.</p>
+          <section id="d-task" aria-labelledby="d-task-h">
+            <h2 class="sechead" id="d-task-h"><span class="sechead__no">02</span><span class="sechead__title">과제와 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>팀 README에는 이미지 업로드, 워커 등록, 작업 실행 세 흐름을 그렸습니다. 4명 팀에서 아이디어를 내고 팀을 이끌었습니다. 직접 설계하고 개발한 부분은 다음과 같습니다.</p>
+            <ul>
+              <li>SUI를 맡겨 워커를 등록하는 경로(컨트랙트, 마스터의 토큰 기록)와, join 때 스테이크를 확인하도록 고친 K3s agent</li>
+              <li>마스터: K3s 서버 실행, Sui 이벤트 조회, 이벤트를 kubectl 명령으로 바꾸는 처리</li>
+              <li>Sui Move 컨트랙트 2개: Worker Registry, K8s Scheduler</li>
+              <li>배포 문서와 EC2 워커 설정 스크립트</li>
+            </ul>
+            <p>팀원이 맡은 부분은 웹 화면(Next.js), Walrus 업로드 연동, Docker 이미지 등록 컨트랙트, Mysten Seal을 쓴 암호화 모듈, 발표 자료입니다. 팀원 화면의 스테이킹 통계는 직접 만든 Worker Registry 컨트랙트를 읽습니다.</p>
           </section>
 
-          <section id="d-result" aria-labelledby="d-result-h">
-            <h2 class="sechead" id="d-result-h"><span class="sechead__no">03</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+          <section id="d-process" aria-labelledby="d-process-h">
+            <h2 class="sechead" id="d-process-h"><span class="sechead__no">03</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+
+<figure class="dg" id="dg-daas" style="--dg-min: 560px" data-step-ms="3400"
+  data-idle="설계한 흐름입니다. 실선은 Testnet 기록이나 로그로 확인한 경로이고, 점선은 코드로만 만들었거나 마치지 못한 경로입니다. 확인한 것은 1, 2, 4단계와 5단계의 이벤트 읽기까지입니다."
+  data-steps='[
+  {"t":"노드 제공자가 SUI를 맡기고 Worker Registry에 워커를 등록합니다."},
+  {"t":"마스터의 이벤트 처리기가 등록 이벤트를 읽고, K3s 서버의 join 토큰을 Worker Registry에 기록합니다.", "d": 4200},
+  {"t":"워커의 K3s agent가 join 토큰으로 K3s 서버에 붙어 클러스터에 참여합니다. 코드로 만든 경로이고 실행 로그는 없습니다.", "d": 4200},
+  {"t":"배포 요청자가 K8s Scheduler에 배포를 요청하면, 스케줄러가 요청자의 워커 중 작업이 없는 워커를 골라 요청 이벤트에 담습니다.", "d": 4200},
+  {"t":"이벤트 처리기가 요청 이벤트를 읽고, kubectl 실행기가 이를 명령으로 바꿔 K3s 서버에 실행합니다. 로그는 요청 이벤트를 읽은 데까지만 있습니다.", "d": 4600},
+  {"t":"K3s가 Pod를 노드에 배치합니다. 데모는 여기까지 가지 못해, 컨트랙트가 고른 워커는 체인 기록으로만 남았습니다.", "d": 4200}
+]'>
+  <figcaption><span class="n">그림 1</span>스테이킹부터 배포 요청 실행까지</figcaption>
+  <div class="dg__canvas">
+    <svg viewBox="0 0 728 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="dg-daas-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" fill="var(--text-3)" d="M0 0L8 4L0 8z"/></marker>
+      </defs>
+
+      <!-- 구역 -->
+      <rect class="zone" fill="none" x="24" y="24" width="140" height="212" rx="10"/>
+      <text class="m" x="36" y="44">사용자</text>
+      <rect class="zone" fill="none" x="184" y="24" width="344" height="212" rx="10"/>
+      <text class="m" x="196" y="44">Sui Testnet</text>
+      <rect class="zone" fill="none" x="184" y="260" width="344" height="236" rx="10"/>
+      <text class="m" x="196" y="280">마스터 컨테이너</text>
+      <text class="m" x="196" y="296">TEE를 둘 자리, 데모는 일반 컨테이너</text>
+      <rect class="zone" fill="none" x="548" y="24" width="156" height="472" rx="10"/>
+      <text class="m" x="560" y="44">워커 머신</text>
+
+      <!-- 사용자 -->
+      <g data-step="1"><rect class="box" fill="var(--surface-2)" x="36" y="60" width="116" height="60" rx="8"/><text class="t" x="50" y="86">노드 제공자</text><text class="s" x="50" y="106">SUI를 맡기고 등록</text></g>
+      <g data-step="4"><rect class="box" fill="var(--surface-2)" x="36" y="156" width="116" height="60" rx="8"/><text class="t" x="50" y="182">배포 요청자</text><text class="s" x="50" y="202">컨트랙트로 요청</text></g>
+
+      <!-- Sui Testnet -->
+      <g data-step="1,2,3"><rect class="box" fill="var(--surface-2)" x="360" y="60" width="152" height="60" rx="8"/><text class="t" x="374" y="86">Worker Registry</text><text class="s" x="374" y="106">스테이크 확인, 토큰 보관</text></g>
+      <g data-step="4"><rect class="box" fill="var(--surface-2)" x="196" y="156" width="132" height="60" rx="8"/><text class="t" x="210" y="182">K8s Scheduler</text><text class="s" x="210" y="202">작업 없는 워커 선택</text></g>
+      <g data-step="2,4,5"><rect class="box" fill="var(--surface-2)" x="364" y="156" width="100" height="60" rx="8"/><text class="t" x="378" y="182">이벤트</text><text class="s" x="378" y="202">등록, 배포 요청</text></g>
+
+      <!-- 마스터 컨테이너 -->
+      <g data-step="5"><rect class="box" fill="var(--surface-2)" x="196" y="312" width="136" height="60" rx="8"/><text class="t" x="210" y="338">kubectl 실행기</text><text class="s" x="210" y="358">요청을 명령으로 변환</text></g>
+      <g data-step="2,5"><rect class="box" fill="var(--surface-2)" x="372" y="312" width="140" height="60" rx="8"/><text class="t" x="386" y="338">이벤트 처리기</text><text class="s" x="386" y="358">체인 이벤트 조회</text></g>
+      <g data-step="2,3,5,6"><rect class="box" fill="var(--surface-2)" x="372" y="420" width="140" height="60" rx="8"/><text class="t" x="386" y="446">K3s 서버</text><text class="s" x="386" y="466">v1.28.2, 포트 6443</text></g>
+
+      <!-- 워커 머신 -->
+      <g data-step="3"><rect class="box" fill="var(--surface-2)" x="560" y="156" width="132" height="60" rx="8"/><text class="t" x="574" y="182">K3s agent</text><text class="s" x="574" y="202">join 토큰으로 참여</text></g>
+      <g data-step="6"><rect class="box" fill="var(--surface-2)" style="stroke-dasharray: 4 4" x="560" y="420" width="132" height="60" rx="8"/><text class="t" x="574" y="446">Pod</text><text class="s" x="574" y="466">노드에 배치 (미완)</text></g>
+
+      <!-- 확인한 경로 (실선) -->
+      <path id="dg-daas-a1" class="flow" fill="none" data-step="1" d="M152 90H354" marker-end="url(#dg-daas-ah)"/>
+      <path id="dg-daas-a2" class="flow" fill="none" data-step="2" d="M414 120V150" marker-end="url(#dg-daas-ah)"/>
+      <path id="dg-daas-a3" class="flow" fill="none" data-step="2,5" d="M414 216V306" marker-end="url(#dg-daas-ah)"/>
+      <path id="dg-daas-a4" class="flow" fill="none" data-step="2" d="M414 420V378" marker-end="url(#dg-daas-ah)"/>
+      <path id="dg-daas-a5" class="flow" fill="none" data-step="2" d="M496 312V126" marker-end="url(#dg-daas-ah)"/>
+      <path id="dg-daas-a7" class="flow" fill="none" data-step="4" d="M152 186H190" marker-end="url(#dg-daas-ah)"/>
+      <path id="dg-daas-a8" class="flow" fill="none" data-step="4" d="M328 186H358" marker-end="url(#dg-daas-ah)"/>
+
+      <!-- 확인하지 못한 경로 (점선, 움직이지 않음) -->
+      <path id="dg-daas-a6b" class="edge edge--dash" fill="none" data-step="3" d="M512 100H610V150" marker-end="url(#dg-daas-ah)"/>
+      <path id="dg-daas-a6" class="edge edge--dash" fill="none" data-step="3" d="M600 216V396H476V414" marker-end="url(#dg-daas-ah)"/>
+      <path id="dg-daas-a9" class="edge edge--dash" fill="none" data-step="5" d="M372 342H338" marker-end="url(#dg-daas-ah)"/>
+      <path id="dg-daas-a10" class="edge edge--dash" fill="none" data-step="5" d="M264 372V450H366" marker-end="url(#dg-daas-ah)"/>
+      <path id="dg-daas-a11" class="edge edge--dash" fill="none" data-step="6" d="M512 450H554" marker-end="url(#dg-daas-ah)"/>
+
+      <!-- 경로 라벨 -->
+      <text class="m" x="268" y="82" text-anchor="middle">SUI 맡기기</text>
+      <text class="m" x="406" y="142" text-anchor="end">등록 이벤트</text>
+      <text class="m" x="406" y="252" text-anchor="end">3초마다 조회</text>
+      <text class="m" x="488" y="252" text-anchor="end">토큰 기록</text>
+      <text class="m" x="406" y="402" text-anchor="end">join 토큰 읽기</text>
+      <text class="m" x="560" y="92">토큰 읽기</text>
+      <text class="m" x="608" y="312">토큰으로 join</text>
+      <text class="m" x="276" y="442">kubectl 실행</text>
+
+      <!-- 범례 -->
+      <path class="edge" fill="none" d="M36 452H60"/>
+      <text class="m" x="68" y="456">기록·로그로 확인</text>
+      <path class="edge edge--dash" fill="none" d="M36 476H60"/>
+      <text class="m" x="68" y="480">코드만 있거나 미완</text>
+
+      <!-- 움직이는 점: 확인한 경로에만 둔다 -->
+      <circle class="pkt" fill="var(--accent)" r="4" data-step="1"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#dg-daas-a1"/></animateMotion></circle>
+      <circle class="pkt" fill="var(--accent)" r="4" data-step="2,5"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-daas-a3"/></animateMotion></circle>
+      <circle class="pkt" fill="var(--accent)" r="4" data-step="2"><animateMotion dur="1.6s" begin="0.6s" repeatCount="indefinite"><mpath href="#dg-daas-a5"/></animateMotion></circle>
+      <circle class="pkt" fill="var(--accent)" r="4" data-step="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-daas-a7"/></animateMotion></circle>
+      <circle class="pkt" fill="var(--accent)" r="4" data-step="4"><animateMotion dur="1.2s" begin="0.6s" repeatCount="indefinite"><mpath href="#dg-daas-a8"/></animateMotion></circle>
+    </svg>
+  </div>
+</figure>
+
+            <h3>1. 아키텍처</h3>
+
+<figure class="shot"><a href="../assets/side/daas/daas-architecture.png" target="_blank" rel="noopener"><img src="../assets/side/daas/daas-architecture.png" alt="해커톤 당시 정리한 전체 구조. 기술 문서와 팀 README에 넣은 그림입니다" loading="lazy"></a><figcaption>해커톤 당시 정리한 전체 구조. 기술 문서와 팀 README에 넣은 그림입니다</figcaption></figure>
+
             <ul>
-              <li>Move 컨트랙트: 4개 모듈, 약 1,000줄, Sui Testnet 배포</li>
-              <li>Sui Testnet에서 컨트랙트가 낸 워커 등록과 배포 요청 이벤트를 마스터가 3초 폴링으로 받아 해석하는 것 확인 (2025.09)</li>
-              <li>Sui Suimming Hackathon University Track 수상 (2025.09)</li>
+              <li>client, walrus, chain: task (팀원): 이미지를 Walrus에 blob으로 올립니다. 이미지 정보는 컨트랙트에 등록합니다.</li>
+              <li>chain: worker registry (직접 개발): 스테이크를 확인하고 워커를 등록합니다. 소유자별 워커 목록과 join 토큰을 보관합니다.</li>
+              <li>chain: kubernetes schedule (직접 개발): 배포 요청을 검사합니다. 그다음 요청자의 워커 중 하나를 고릅니다.</li>
+              <li>masternode (직접 개발): K3s 서버를 띄우고, 체인 이벤트를 받아 kubectl 명령으로 바꿉니다. Sui Nautilus의 보안 실행 환경(TEE)에 둘 구상이었습니다. 데모는 일반 컨테이너로 대신했습니다.</li>
+              <li>operator (워커 부분 직접 개발): 노드 제공자의 컴퓨터에서 K3s agent를 띄워 클러스터에 참여합니다. 그림의 select task는 팀원 화면입니다. run docker images to pods는 만들지 못했습니다.</li>
+            </ul>
+
+            <h3>2. 주요 흐름</h3>
+
+            <h4>흐름 1. 노드 제공자가 워커를 클러스터에 참여시키기</h4>
+            <ol>
+              <li>노드 제공자가 <code>stake_and_register_worker</code>를 호출하며 SUI를 맡깁니다.</li>
+              <li>컨트랙트가 최소 스테이크, 이름 중복, 주소당 워커 10개 이하를 확인합니다. 통과하면 등록 이벤트를 냅니다.</li>
+              <li>마스터가 이벤트를 받아 K3s join 토큰을 <code>set_join_token</code>으로 컨트랙트에 기록합니다.</li>
+              <li>노드 제공자가 <code>activate_worker</code>로 워커를 active로 바꿉니다.</li>
+              <li>워커가 join 토큰으로 <code>k3s agent</code>를 실행해 클러스터에 참여합니다.</li>
+            </ol>
+            <p>1~4단계는 Sui Testnet 기록으로 확인했습니다. 5단계는 실행 로그가 남아 있지 않습니다. 데모 워커는 원본 K3s agent를 썼습니다. 토큰은 컨트랙트 대신 마스터 HTTP에서 받았습니다.</p>
+
+            <h4>흐름 2. 배포 요청을 컨트랙트로 받아 처리하기</h4>
+            <ol>
+              <li>요청자가 <code>submit_k8s_request</code>로 배포 요청을 보냅니다. 요청에는 메서드, 리소스, 네임스페이스, 내용, 우선순위를 담습니다.</li>
+              <li>컨트랙트가 메서드 5종(GET, POST, PUT, PATCH, DELETE), 리소스 7종, 우선순위 1~10 범위를 확인합니다.</li>
+              <li>컨트랙트가 요청자 본인의 active 워커 중 하나를 고릅니다. 고른 워커의 작업 수는 1 올립니다.</li>
+              <li>마스터가 요청 이벤트를 받고, <code>kubectl get nodes</code>로 K3s가 준비됐는지 확인합니다.</li>
+              <li>마스터가 요청을 kubectl 명령으로 바꿔 실행합니다. 결과와 실행 시간은 로그에 남깁니다.</li>
+            </ol>
+            <p>1~3단계는 Sui Testnet 기록으로 확인했습니다. 4단계에서는 K3s가 준비되지 않아 요청이 처리되지 않은 로그가 남아 있습니다. POST 요청은 내용을 kubectl에 넘기는 부분이 빠져 Pod 생성까지 가지 못했습니다.</p>
+
+            <h4>흐름 3. 개발자가 이미지를 올리기 (팀원 부분)</h4>
+            <ol>
+              <li>개발자가 Docker 이미지 tar 파일을 올립니다. 화면이 파일을 Walrus에 저장하고 Blob ID를 받습니다.</li>
+              <li>이미지 정보를 컨트랙트에 등록하면 작업 풀에 올라갑니다. 노드 제공자는 작업 풀에서 작업을 고릅니다.</li>
+            </ol>
+            <p>작업 풀에서 고른 작업을 배포로 잇는 부분은 화면 시연이었습니다. 그래서 흐름 3은 흐름 2와 이어지지 않았습니다.</p>
+
+<figure class="shot"><a href="../assets/side/daas/daas-image-upload.jpg" target="_blank" rel="noopener"><img src="../assets/side/daas/daas-image-upload.jpg" alt="이미지 업로드 화면. Walrus Blob ID를 받고 블록체인에 등록하는 단계를 보여 줍니다 (팀원 제작 화면)" loading="lazy"></a><figcaption>이미지 업로드 화면. Walrus Blob ID를 받고 블록체인에 등록하는 단계를 보여 줍니다 (팀원 제작 화면)</figcaption></figure>
+
+<figure class="shot"><a href="../assets/side/daas/daas-task-pool.jpg" target="_blank" rel="noopener"><img src="../assets/side/daas/daas-task-pool.jpg" alt="노드 제공자가 고르는 작업 풀. 작업마다 보상, CPU, 메모리, 기간이 보입니다. 목록은 시험으로 올린 이미지들입니다 (팀원 제작 화면)" loading="lazy"></a><figcaption>노드 제공자가 고르는 작업 풀. 작업마다 보상, CPU, 메모리, 기간이 보입니다. 목록은 시험으로 올린 이미지들입니다 (팀원 제작 화면)</figcaption></figure>
+
+            <h3>3. 설계 고민과 결정</h3>
+
+            <h4>워커가 클러스터에 참여하는 조건</h4>
+            <ul>
+              <li>고민: 개인 컴퓨터를 워커로 받으면 소유자를 알 수 없는 머신이 참여합니다.</li>
+              <li>선택지: K3s 기본 토큰 하나를 나눠 주는 방법, 관리자가 워커마다 토큰을 주는 방법, 워커마다 SUI를 맡기게 하는 방법이 있었습니다.</li>
+              <li>결정: 스테이킹을 골랐습니다. 첫째 방법은 워커 소유자를 구분하지 못합니다. 둘째 방법은 중앙 관리자가 다시 생깁니다.</li>
+            </ul>
+
+            <h4>요청 경로를 어디에 둘까</h4>
+            <ul>
+              <li>고민: 처음에는 kubectl 요청을 게이트웨이가 받아 마스터로 넘겼습니다. 권한 검사는 마스터에서 일어났습니다. 그래서 사용자는 마스터를 믿어야 했습니다.</li>
+              <li>선택지: 게이트웨이 구조, 쓰기 요청만 컨트랙트로 확인하는 구조, 모든 요청을 컨트랙트로 먼저 받는 구조를 차례로 검토했습니다.</li>
+              <li>결정: 마지막 구조를 골랐습니다. 배포 요청은 <code>sui client call</code>로 시작하게 했습니다. 마스터는 이벤트를 실행만 하게 했습니다. 권한 검사를 컨트랙트에 두어, 사용자가 믿을 대상을 마스터에서 컨트랙트로 옮기려 했습니다. 대신 응답이 몇 초 늦어집니다. kubectl을 바로 쓰는 편의도 내려놓았습니다.</li>
+            </ul>
+
+            <h4>K3s를 어디까지 고칠까</h4>
+            <ul>
+              <li>고민: join 과정에 스테이크 확인을 넣으려면 K3s 소스를 고쳐야 합니다.</li>
+              <li>선택지: K3s 전체를 복사해 따로 관리하는 방법, 워커에 필요한 agent 쪽 코드만 가져오는 방법이 있었습니다.</li>
+              <li>결정: 워커에 필요한 agent와 그 의존 패키지만 가져와 go.mod의 replace로 연결했습니다. 워커에 필요한 것은 agent뿐이었습니다.</li>
+            </ul>
+
+            <h4>새 토큰과 원래 K3s 토큰을 같이 둘까</h4>
+            <ul>
+              <li>고민: 고친 agent가 원래 K3s 토큰을 못 쓰면 일반 워커로 하는 시험이 막힙니다.</li>
+              <li>선택지: 새 토큰만 받는 방법, 두 형식을 모두 받는 방법이 있었습니다.</li>
+              <li>결정: 두 형식을 모두 받게 했습니다. 토큰이 직접 정한 형식(SEAL 접두어, 지갑 주소, 서명, 챌린지)이면 스테이크와 서명을 확인하는 분기를 넣었습니다. 그 밖의 토큰은 원래 K3s 검증으로 넘깁니다. 같은 규칙을 join 재시도 경로와 토큰 읽기 경로 두 곳에 넣었습니다. 해커톤 기간에는 스테이크 조회와 서명 확인을 모의 응답으로 두었습니다. 이 분기는 기본 설정에서 꺼 두었습니다.</li>
+            </ul>
+
+            <h3>4. 구현 상세</h3>
+
+            <h4>마스터</h4>
+            <ul>
+              <li>Go로 만든 마스터는 K3s 관리, HTTP API, Sui 이벤트 처리 세 부분을 함께 띄웁니다.</li>
+              <li>K3s v1.28.2 서버를 Alpine 컨테이너 안에서 실행합니다. 쓰지 않는 Traefik과 servicelb는 껐습니다.</li>
+              <li>이벤트는 <code>suix_queryEvents</code>로 3초마다 조회합니다. 패키지 ID와 이벤트 이름으로 거릅니다.</li>
+              <li>요청 메서드는 kubectl 명령으로 바꿉니다. GET은 <code>get</code>, POST와 PUT은 <code>apply</code>, PATCH는 <code>patch</code>, DELETE는 <code>delete</code>입니다.</li>
+              <li>WebSocket 구독 코드도 만들었습니다. 데모는 폴링으로 돌렸습니다.</li>
+            </ul>
+
+            <h4>컨트랙트</h4>
+            <ul>
+              <li>Worker Registry는 워커를 두 표에 나눠 저장합니다. 하나는 노드 이름으로, 다른 하나는 소유자 주소로 찾습니다.</li>
+              <li>join 토큰 기록은 관리자 주소만 할 수 있게 막았습니다.</li>
+              <li>K8s Scheduler는 요청자 본인의 active 워커만 후보로 둡니다.</li>
+              <li>점수는 작업이 없는 워커가 1000점, 작업이 있는 워커가 100 ÷ (작업 수 + 1)입니다. 그래서 작업이 없는 워커가 먼저 뽑힙니다.</li>
+            </ul>
+
+            <h4>워커</h4>
+            <ul>
+              <li>워커 프로그램은 스테이킹 확인, K3s agent 실행, 30초 하트비트, 상태 API 순서로 동작합니다.</li>
+              <li>컨테이너 런타임은 설정에서 containerd와 Docker 중 하나를 고릅니다.</li>
+              <li>EC2 설정 스크립트는 K3s 통신 포트 6443, 10250, 8472/udp, 51820/udp를 엽니다.</li>
             </ul>
           </section>
 
           <section id="d-ts" aria-labelledby="d-ts-h">
             <h2 class="sechead" id="d-ts-h"><span class="sechead__no">04</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">T-01</span><h3>Move 컨트랙트 빌드가 bridge 모듈 중복으로 실패한 문제</h3></header>
+              <header class="ts__head"><span class="ts__id">T-01</span><h3>Move 빌드가 bridge 모듈 중복으로 멈춘 문제</h3></header>
               <dl class="ts__rows">
-                <div><dt>문제</dt><dd><code>sui move build</code>가 <code>Duplicate module found: 0x...b::bridge</code> 오류로 멈췄습니다.</dd></div>
-                <div><dt>원인</dt><dd>Sui 프레임워크가 업데이트되면서 bridge 모듈이 시스템 패키지로 함께 들어왔습니다. 이 모듈이 Move.lock에 남은 이전 의존성과 겹쳤습니다.</dd></div>
-                <div><dt>해결</dt><dd>Move.lock을 지우고 <code>sui move clean</code> 뒤 다시 빌드했습니다. 이후 Move.toml에 Sui 프레임워크를 <code>rev = "framework/testnet"</code>으로 고정했습니다.</dd></div>
-                <div class="is-key"><dt>결과</dt><dd>빌드가 통과했습니다. 이후 Worker Registry와 K8s Scheduler를 담은 패키지를 Sui Testnet에 배포했습니다. Sui 프레임워크 버전은 배포할 네트워크에 맞춰 Move.toml에 고정해야 합니다.</dd></div>
+                <div><dt>문제</dt><dd><code>sui move build</code>가 <code>Duplicate module found: ...::bridge</code> 오류로 멈췄습니다.</dd></div>
+                <div><dt>원인</dt><dd>Sui 프레임워크가 업데이트되면서 bridge 모듈이 중복으로 들어왔습니다. Move.lock에 남은 이전 의존성과도 충돌했습니다.</dd></div>
+                <div><dt>해결</dt><dd>Move.lock을 지우고 다시 빌드하는 방법과 의존성 설정을 바꾸는 방법을 정리해 차례로 시도했습니다. 최종 Move.toml에는 Sui 프레임워크를 Testnet 버전(<code>framework/testnet</code>)으로 고정했습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>빌드가 통과했고 패키지를 Sui Testnet에 배포했습니다.</dd></div>
               </dl>
             </article>
           </section>
 
-          <section id="d-learn" aria-labelledby="d-learn-h">
-            <h2 class="sechead" id="d-learn-h"><span class="sechead__no">05</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <p>K3s 소스를 직접 읽으며 agent가 토큰을 검증하고 서버에 붙는 순서를 코드로 이해했습니다. 이 구조를 다시 보며 두 가지를 배웠습니다. 첫째, 워커가 들어오는 조건은 워커가 아니라 서버가 확인해야 합니다. 원본 agent를 쓰는 워커는 워커 쪽 확인을 거치지 않기 때문입니다. 둘째, join 토큰을 공개 체인에 그대로 기록하면 안 됩니다. 체인에 올린 값은 누구나 읽을 수 있습니다.</p>
-          </section>
-
-          <section id="d-kw" aria-labelledby="d-kw-h">
-            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">06</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <ol class="keywords">
-              <li><span class="kw__n">01</span><span class="kw__t">체인 이벤트 기반 Kubernetes 작업 자동화</span></li>
-              <li><span class="kw__n">02</span><span class="kw__t">Sui Move 컨트랙트 설계</span></li>
-              <li><span class="kw__n">03</span><span class="kw__t">K3s agent join 과정 분석</span></li>
-            </ol>
-          </section>
-
-          <section id="d-links" aria-labelledby="d-links-h">
-            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+          <section id="d-result" aria-labelledby="d-result-h">
+            <h2 class="sechead" id="d-result-h"><span class="sechead__no">05</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
-              <li><a href="https://youtu.be/-vzkZYCYSrM" target="_blank" rel="noopener">데모 영상</a></li>
+              <li>Sui Suimming Hackathon 2025 University Track 수상 (2025.09)</li>
+              <li>Sui Testnet에 컨트랙트 패키지 2개 배포 (주 컨트랙트 2개 약 740줄, 시험용 모듈 2개)</li>
+              <li>Testnet SUI를 맡긴 워커 등록 6건, 활성화 5건, join 토큰 기록 1건, 스케줄러 배정 8건이 Sui Testnet에 남아 있습니다. 실행 결과 기록은 0건입니다.</li>
+              <li>배정 기록에서 선택 규칙을 확인했습니다. 요청 3건이 작업이 없는 워커 3개에 하나씩 갔습니다. 네 번째 요청은 첫 워커로 돌아갔습니다.</li>
+              <li>마스터가 Testnet 이벤트를 3초 폴링으로 받아 메서드, 리소스, 네임스페이스를 읽어 내는 것까지 로그로 확인했습니다. (데모, 로컬 Docker)</li>
+            </ul>
+            <h3>마치지 못한 것</h3>
+            <ul>
+              <li>데모에서는 스테이킹이 참여 조건으로 강제되지 않았습니다. 마스터가 join 토큰을 인증 없이 내줬습니다. 데모 워커는 원본 K3s agent를 썼습니다.</li>
+              <li>워커 쪽 스테이크와 서명 확인은 모의 응답입니다.</li>
+              <li>컨트랙트 경로로 들어온 POST 요청은 Pod 생성까지 가지 못했습니다. 요청 내용을 kubectl에 넘기는 부분이 빠져 있었습니다.</li>
+              <li>K3s가 준비되기 전에 들어온 요청은 처리되지 않고 버려졌습니다. Testnet 이벤트로 한 시험에서 마스터가 요청을 받고도 "K3s is not ready" 로그만 남긴 기록이 있습니다. 요청을 담아 둘 대기열은 만들지 못했습니다.</li>
+              <li>스케줄러는 요청자 본인의 워커만 고릅니다. 개발자의 앱을 다른 사람의 워커에 올리는 구조는 만들지 못했습니다.</li>
+              <li>맡긴 SUI는 컨트랙트 안에 보관하지 않고 다른 주소로 보냈습니다. 그래서 돌려주거나 깎을 수 없었습니다.</li>
+              <li>join 토큰은 컨트랙트에 그대로 기록했습니다.</li>
+              <li>고른 워커에 Pod 배치, 결과의 체인 기록, Walrus 이미지 실행, 보상과 슬래싱은 만들지 못했습니다.</li>
             </ul>
           </section>
 
+          <section id="d-learn" aria-labelledby="d-learn-h">
+            <h2 class="sechead" id="d-learn-h"><span class="sechead__no">06</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>워커의 참여 조건은 워커가 아니라 서버가 확인해야 합니다. join 토큰 같은 비밀 값은 공개 체인에 그대로 기록하면 안 됩니다. 맡긴 SUI는 컨트랙트 안에 보관해야 돌려주거나 깎을 수 있습니다.</p>
+          </section>
+
+          <section id="d-kw" aria-labelledby="d-kw-h">
+            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">07</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ol class="keywords">
+              <li><span class="kw__n">01</span><span class="kw__t">체인 이벤트를 kubectl 명령으로 바꾸는 이벤트 처리</span></li>
+              <li><span class="kw__n">02</span><span class="kw__t">Sui Move 컨트랙트 설계</span></li>
+              <li><span class="kw__n">03</span><span class="kw__t">K3s agent join 과정 분석과 수정</span></li>
+            </ol>
+          </section>
+
           <nav class="pager" aria-label="다른 프로젝트">
-            <a class="prev" href="worldland.html"><span class="k">이전 프로젝트</span><span class="t">월드랜드 GPU 노드 플랫폼</span></a>
-            <a class="next" href="../index.html#projects"><span class="k">마지막 프로젝트</span><span class="t">포트폴리오 목록으로</span></a>
+            <a class="prev" href="fabric.html"><span class="k">이전 프로젝트</span><span class="t">Scholarly Chain, Hyperledger Fabric 학생회 장부</span></a>
+            <a class="next" href="pbft.html"><span class="k">다음 프로젝트</span><span class="t">PBFT 합의 엔진과 Go P2P 라이브러리</span></a>
           </nav>
         </article>
       </div>
@@ -226,7 +361,7 @@
 
 <footer class="shell foot">
   <span>© 2026 모진영</span>
-  <a href="../index.html#projects">← 포트폴리오</a>
+  <a href="../index.html#side">← 포트폴리오</a>
 </footer>
 </body>
 </html>

@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>HWPtoRAG (글목): HWP 표를 살려 AI가 읽게 하는 엔진 · 모진영</title>
+<meta name="description" content="한글(HWP) 문서의 표를 깨뜨리지 않고 AI가 읽는 구조로 바꾸는 Rust 엔진과 변환 서비스를 만든 팀 프로젝트입니다.">
+<meta name="color-scheme" content="dark light">
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js" defer></script>
+<style>
+.shot{margin:var(--s-5,20px) 0;border:1px solid var(--line-2,var(--line));border-radius:10px;overflow:hidden;background:var(--surface-2,transparent)}
+.shot a{display:block}
+.shot img{display:block;width:100%;height:auto}
+.shot figcaption{padding:10px 14px;border-top:1px solid var(--line);font-family:var(--f-mono);font-size:12px;line-height:1.6;color:var(--text-3)}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+
+<header class="topbar">
+  <div class="shell topbar__row">
+    <a class="brand" href="../index.html">mojinyeong<b>/</b>portfolio</a>
+    <nav class="topnav" aria-label="이동">
+      <a href="../index.html#side"><span class="t">← 포트폴리오</span></a>
+      <a class="ext" href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <button class="icon-btn theme-btn" type="button" aria-label="테마 바꾸기">
+      <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <section class="sec" id="detail" aria-labelledby="detail-h">
+    <div class="doc-head">
+      <div class="shell">
+        <nav class="trail" aria-label="위치"><a href="../index.html#side">← 포트폴리오</a><span aria-hidden="true">/</span><span>hwptorag</span></nav>
+        <div class="doc-head__badges"><span class="badge badge--accent">최우수상</span><span class="badge badge--plain">팀 프로젝트</span><span class="badge badge--plain">특허 출원</span></div>
+        <h1 class="doc-title" id="detail-h">HWPtoRAG (글목): HWP 표를 살려 AI가 읽게 하는 엔진</h1>
+        <p class="doc-lede">한글(HWP) 문서를 PDF로 바꾸지 않고 파일 안의 레코드를 직접 읽어, 표 구조를 살린 Markdown, JSON, RAG-JSON으로 바꾸는 엔진과 변환 서비스입니다. 엔진, 변환 서버, API, 평가 도구를 직접 설계하고 개발했습니다.</p>
+        <dl class="spec">
+          <div><dt>기간</dt><dd class="num">2026.02 – 2026.05</dd></div>
+          <div><dt>팀</dt><dd>3명과 자문 교수 1명. 대표, 개발 총괄, 시스템 설계</dd></div>
+          <div class="wide"><dt>수상과 특허</dt><dd>상명대학교 2026학년도 창업아이디어경진대회 최우수상 (공동 수상, 2026.05) / 특허 출원: 한글(HWP) 문서의 바이너리 레코드 해석을 이용한 표 구조 보존 시맨틱 중간 표현 생성 방법 (2026.03, 자문 교수와 공동 발명)</dd></div>
+          <div class="wide"><dt>상태</dt><dd>웹 변환기 화면 공개, 변환 서버는 2026.10 현재 중단. 2026년 3월부터 방향을 넓히면서 이름을 글목(GEULMOK)으로 바꿨습니다.</dd></div>
+          <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Rust</li><li class="chip">PyO3</li><li class="chip">Python</li><li class="chip">FastAPI</li><li class="chip">NestJS</li><li class="chip">Next.js</li><li class="chip">Supabase</li><li class="chip">Docker</li><li class="chip">Railway</li></ul></dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="shell">
+      <div class="doc-body">
+        <aside class="toc" aria-label="이 페이지">
+          <ol>
+            <li><a href="#d-situation"><span class="n">01</span>상황과 역할</a></li>
+            <li><a href="#d-process"><span class="n">02</span>해결 과정</a></li>
+            <li><a href="#d-result"><span class="n">03</span>결과</a></li>
+            <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
+            <li><a href="#d-learn"><span class="n">05</span>배운 점</a></li>
+            <li><a href="#d-kw"><span class="n">06</span>핵심 역량</a></li>
+            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
+          </ol>
+        </aside>
+
+        <article class="doc-main">
+          <section id="d-situation" aria-labelledby="d-situation-h">
+            <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황과 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+<p>HWPtoRAG(글목)는 한글(HWP) 문서를 AI가 바로 읽을 수 있는 형태로 바꾸는 엔진과 변환 서비스입니다. RAG는 문서를 검색해 AI 답변의 근거로 붙이는 방식입니다. 공공, 법률, 학술 분야에는 HWP로 작성된 문서가 많습니다. 그런데 Unstructured.io, Azure Document Intelligence 같은 AI 문서 처리 도구는 HWP를 받지 않습니다. 그래서 HWP 문서를 RAG에 넣으려면 대개 PDF나 이미지로 바꾼 뒤 다시 읽어야 했습니다. 이 중간 변환을 없애는 것이 목표였습니다.</p><p>웹에서 파일을 끌어다 놓으면 Markdown, JSON, Plain Text, RAG-JSON, CSV, HTML 중 고른 형식으로 바꿔 줬습니다. 비로그인으로 하루 5회, 최대 100MB 파일까지 쓸 수 있게 했습니다. 개발자용으로 Python 패키지와 REST API도 만들었습니다. Python 패키지는 PyPI에 공개하지 않았습니다.</p><p>대상 사용자는 넷입니다.</p><ul>
+  <li>학위 논문을 Markdown으로 옮기려는 대학원생과 연구자</li>
+  <li>판결문과 계약서를 구조화하려는 리걸테크</li>
+  <li>RAG 파이프라인에 HWP를 넣으려는 AI 스타트업</li>
+  <li>행정 문서를 디지털로 옮기려는 공공기관</li>
+</ul><figure class="shot"><a href="../assets/side/hwptorag/geulmok-user-workflow.png" target="_blank" rel="noopener"><img src="../assets/side/hwptorag/geulmok-user-workflow.png" alt="업로드, 출력 형식 선택, 결과 확인의 3단계 사용 흐름입니다. 사업계획서에 넣은 기획 화면입니다. 결과 화면의 당사자와 금액 표, Audit 형식, 원문 위치 역추적은 구현하지 않았습니다. 폐쇄망 설치는 준비 스크립트까지만 만들었습니다." loading="lazy"></a><figcaption>업로드, 출력 형식 선택, 결과 확인의 3단계 사용 흐름입니다. 사업계획서에 넣은 기획 화면입니다. 결과 화면의 당사자와 금액 표, Audit 형식, 원문 위치 역추적은 구현하지 않았습니다. 폐쇄망 설치는 준비 스크립트까지만 만들었습니다.</figcaption></figure><h3>해결하려던 문제</h3><ol>
+  <li>PDF나 이미지로 바꾸면 병합 셀과 머리글-값 관계가 사라집니다.</li>
+  <li>법률 문서는 당사자, 금액, 기간이 표 안에 들어 있습니다. 표가 깨지면 검색과 요약이 틀립니다.</li>
+  <li>LangChain용으로 공개된 기존 HWP 로더는 pyhwp로 텍스트만 뽑아서 표 구조가 사라졌습니다.</li>
+  <li>법무 쪽 사용자는 문서를 외부 서버로 보내기 어렵습니다.</li>
+</ol><figure class="shot"><a href="../assets/side/hwptorag/geulmok-before-after.png" target="_blank" rel="noopener"><img src="../assets/side/hwptorag/geulmok-before-after.png" alt="같은 HWP 표를 범용 AI에 그대로 넣었을 때와 도메인 IR(법률 문서용 중간 표현)을 거쳤을 때를 비교한 발표용 예시 화면입니다. 그림 속 금액과 신뢰도는 설명용 값이며 실제 측정값이 아닙니다." loading="lazy"></a><figcaption>같은 HWP 표를 범용 AI에 그대로 넣었을 때와 도메인 IR(법률 문서용 중간 표현)을 거쳤을 때를 비교한 발표용 예시 화면입니다. 그림 속 금액과 신뢰도는 설명용 값이며 실제 측정값이 아닙니다.</figcaption></figure><h3>왜 바이너리를 직접 읽었나</h3><p>HWP 5.0 파일 안에는 표 셀마다 행과 열 좌표, 병합 크기가 이미 저장돼 있습니다. 이 값을 읽으면 표 모양을 추론할 필요가 없습니다. 모델로 추론하면 GPU나 외부 API가 필요합니다. 이는 폐쇄망 요구와 맞지 않았습니다. 그래서 CPU만으로 동작하는 엔진을 직접 만들기로 했습니다.</p><h3>과제와 역할</h3><ul>
+  <li>팀 목표 1 (2026.02): HWP를 직접 읽는 엔진과 웹 변환기를 만들고, 개발자용 API와 Python 패키지를 만든다.</li>
+  <li>팀 목표 2 (2026.03 – 05): 같은 엔진 위에 법률 문서의 당사자, 금액, 기간을 찾는 법률 문서 처리층을 얹고 창업아이디어경진대회에 나간다.</li>
+</ul><dl class="scope">
+  <dt>맡은 일</dt><dd>대표, 개발 총괄. 엔진, 변환 서버, SaaS API, Python 바인딩, 평가 도구를 직접 설계하고 개발했습니다. 웹 화면 중 출력 형식 선택, 변환 이력, 일괄 변환, 서버 API 연동도 맡았습니다.</dd>
+  <dt>팀원 (사업)</dt><dd>사업계획, 수익 모델, 시장 조사, 발표 일부를 맡았습니다.</dd>
+  <dt>팀원 (UX, 프런트엔드)</dt><dd>웹 화면 초기 구현(랜딩, 업로드와 변환 화면, 파일 검사와 분할 업로드, 요금, Google 로그인)과 협업 편집 화면 일부를 맡았습니다. 검수 샘플을 한글 원본과 대조하는 일도 맡았습니다.</dd>
+  <dt>자문 교수</dt><dd>검증과 보안 자문, 특허 공동 발명.</dd>
+  <dt>기반 코드</dt><dd>HWP 5.0과 HWPX를 읽어 들이는 부분은 오픈소스 Rust 크레이트 hwpers(MIT/Apache-2.0)를 기반으로 했습니다. 그 위에서 레코드 트리, 표 복원, 출력기를 직접 만들었습니다.</dd>
+</dl>
+          </section>
+          <section id="d-process" aria-labelledby="d-process-h">
+            <h2 class="sechead" id="d-process-h"><span class="sechead__no">02</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+<figure class="dg" id="dg-hwptorag" style="--dg-min: 560px" data-step-ms="3200"
+  data-idle="웹에서 올린 HWP 파일 한 건이 변환 서버와 Rust 엔진을 거쳐, 고른 형식 하나로 나오는 순서입니다."
+  data-steps='[
+  {"t":"큰 파일은 5MB 조각으로 나눠 변환 서버에 직접 올립니다. HWP 파일은 100MB까지 받습니다."},
+  {"t":"조각 합치기에서 조각을 하나로 이은 뒤 대기열에서 빈자리를 기다립니다. 엔진은 한 번에 3개까지만 실행하고, 60초를 넘으면 중단합니다.", "d": 4200},
+  {"t":"Rust 엔진이 파일 안의 레코드를 level 값(계층 깊이)으로 묶어 레코드 트리를 만듭니다.", "d": 3600},
+  {"t":"셀 순서가 아니라 파일에 저장된 좌표로 표를 다시 세웁니다. 병합으로 덮인 칸과 누락된 칸도 따로 표시합니다.", "d": 4200},
+  {"t":"첫 행이 머리글인지 6개 신호의 점수로 정하고, 표 유형과 신뢰도를 붙입니다.", "d": 3600},
+  {"t":"고른 형식 하나로 씁니다. RAG 청크는 표를 자르지 않고 제목 경로를 함께 싣습니다.", "d": 4000}
+]'>
+  <figcaption><span class="n">그림 1</span>HWP 표 하나가 RAG 청크가 되기까지</figcaption>
+  <div class="dg__canvas">
+    <svg viewBox="0 0 728 616" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="dg-hwptorag-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" fill="var(--text-3)" d="M0 0L8 4L0 8z"/></marker>
+      </defs>
+
+      <!-- 구역 -->
+      <rect class="zone" fill="none" x="24" y="24" width="268" height="120" rx="10"/>
+      <text class="m" x="38" y="44">브라우저</text>
+      <rect class="zone" fill="none" x="316" y="24" width="388" height="120" rx="10"/>
+      <text class="m" x="330" y="44">변환 서버 (NestJS)</text>
+      <rect class="zone" fill="none" x="24" y="192" width="680" height="220" rx="10"/>
+      <text class="m" x="38" y="212">Rust 엔진</text>
+      <rect class="zone" fill="none" x="24" y="452" width="680" height="140" rx="10"/>
+      <text class="m" x="106" y="472">출력 (셋 중 하나)</text>
+
+      <!-- 브라우저 -->
+      <g data-step="1"><rect class="box" fill="var(--surface-2)" x="40" y="60" width="104" height="60" rx="8"/><text class="t" x="54" y="86">HWP 파일</text><text class="s" x="54" y="106">최대 100MB</text></g>
+      <g data-step="1">
+        <rect class="box" fill="var(--surface-2)" x="186" y="52" width="98" height="60" rx="8"/>
+        <rect class="box" fill="var(--surface-2)" x="182" y="56" width="98" height="60" rx="8"/>
+        <rect class="box" fill="var(--surface-2)" x="178" y="60" width="98" height="60" rx="8"/>
+        <text class="t" x="192" y="86">5MB 조각</text><text class="s" x="192" y="106">여러 개로 나눔</text>
+      </g>
+      <path id="dg-hwptorag-e1" class="flow" fill="none" data-step="1" d="M144 90H172" marker-end="url(#dg-hwptorag-ah)"/>
+
+      <!-- 변환 서버 -->
+      <path id="dg-hwptorag-e2" class="flow" fill="none" data-step="1" d="M284 90H326" marker-end="url(#dg-hwptorag-ah)"/>
+      <g data-step="1,2"><rect class="box" fill="var(--surface-2)" x="332" y="60" width="124" height="60" rx="8"/><text class="t" x="346" y="86">조각 합치기</text><text class="s" x="346" y="106">다 모이면 하나로</text></g>
+      <path id="dg-hwptorag-e3" class="flow" fill="none" data-step="2" d="M456 90H484" marker-end="url(#dg-hwptorag-ah)"/>
+      <g data-step="2">
+        <rect class="box" fill="var(--surface-2)" x="490" y="60" width="198" height="60" rx="8"/>
+        <text class="t" x="504" y="86">대기열 (동시 3개)</text><text class="s" x="504" y="106">60초 넘으면 중단</text>
+        <rect class="box" style="fill: var(--surface-3)" x="638" y="76" width="12" height="12" rx="3"/>
+        <rect class="box" style="fill: var(--surface-3)" x="654" y="76" width="12" height="12" rx="3"/>
+        <rect class="box" style="fill: var(--surface-3)" x="670" y="76" width="12" height="12" rx="3"/>
+      </g>
+
+      <!-- 대기열에서 엔진으로 -->
+      <path id="dg-hwptorag-e4" class="flow" fill="none" data-step="3" d="M589 120V164H130V222" marker-end="url(#dg-hwptorag-ah)"/>
+      <text class="m" x="578" y="181" text-anchor="end">빈자리가 나면 엔진 실행</text>
+
+      <!-- Rust 엔진: 단계 상자 -->
+      <g data-step="3"><rect class="box" fill="var(--surface-2)" x="40" y="228" width="128" height="60" rx="8"/><text class="t" x="54" y="254">레코드 트리</text><text class="s" x="54" y="274">계층 깊이로 묶음</text></g>
+      <g data-step="4"><rect class="box" fill="var(--surface-2)" x="202" y="228" width="136" height="60" rx="8"/><text class="t" x="216" y="254">셀 좌표 읽기</text><text class="s" x="216" y="274">행, 열, 병합 크기</text></g>
+      <g data-step="4"><rect class="box" fill="var(--surface-2)" x="372" y="228" width="120" height="60" rx="8"/><text class="t" x="386" y="254">격자 복원</text><text class="s" x="386" y="274">칸마다 상태 표시</text></g>
+      <g data-step="5"><rect class="box" fill="var(--surface-2)" x="526" y="228" width="162" height="60" rx="8"/><text class="t" x="540" y="254">머리글 점수와 신뢰도</text><text class="s" x="540" y="274">머리글, 표 유형</text></g>
+      <path class="flow" fill="none" data-step="4" d="M168 258H196" marker-end="url(#dg-hwptorag-ah)"/>
+      <path class="flow" fill="none" data-step="4" d="M338 258H366" marker-end="url(#dg-hwptorag-ah)"/>
+      <path class="flow" fill="none" data-step="5" d="M492 258H520" marker-end="url(#dg-hwptorag-ah)"/>
+
+      <!-- 레코드 트리 그림 -->
+      <g data-step="3">
+        <path class="edge" fill="none" d="M56 328V341H68M76 350V385M76 363H88M76 385H88"/>
+        <rect class="box" fill="var(--surface-2)" x="48" y="310" width="48" height="18" rx="4"/><text class="s" x="72" y="323" text-anchor="middle">문단</text>
+        <rect class="box" fill="var(--surface-2)" x="68" y="332" width="48" height="18" rx="4"/><text class="s" x="92" y="345" text-anchor="middle">표</text>
+        <rect class="box" fill="var(--surface-2)" x="88" y="354" width="48" height="18" rx="4"/><text class="s" x="112" y="367" text-anchor="middle">셀</text>
+        <rect class="box" fill="var(--surface-2)" x="88" y="376" width="48" height="18" rx="4"/><text class="s" x="112" y="389" text-anchor="middle">셀</text>
+      </g>
+
+      <!-- 셀 좌표 칩 -->
+      <g data-step="4">
+        <rect class="box" fill="var(--surface-2)" x="208" y="312" width="124" height="24" rx="12"/><text class="s" x="270" y="328" text-anchor="middle">0행 0열, 가로 2칸</text>
+        <rect class="box" fill="var(--surface-2)" x="208" y="344" width="124" height="24" rx="12"/><text class="s" x="270" y="360" text-anchor="middle">0행 2열, 1칸</text>
+        <text class="m" x="208" y="390">파일에 저장된 좌표</text>
+      </g>
+      <path id="dg-hwptorag-e5" class="flow" fill="none" data-step="4" d="M338 340H368" marker-end="url(#dg-hwptorag-ah)"/>
+
+      <!-- 격자 -->
+      <g data-step="4,5">
+        <rect class="box" fill="var(--surface-2)" x="378" y="312" width="72" height="24"/>
+        <path class="edge" fill="none" d="M414 312V316M414 332V336"/>
+        <text class="s" x="414" y="328" text-anchor="middle">병합</text>
+        <rect class="box" fill="var(--surface-2)" x="450" y="312" width="36" height="24"/>
+        <rect class="box" fill="var(--surface-2)" x="378" y="336" width="36" height="24"/>
+        <rect class="box" fill="var(--surface-2)" x="414" y="336" width="36" height="24"/>
+        <rect class="box" fill="var(--surface-2)" x="450" y="336" width="36" height="24"/>
+        <rect class="box" fill="var(--surface-2)" x="378" y="360" width="36" height="24"/>
+        <rect class="box" fill="var(--surface-2)" x="414" y="360" width="36" height="24"/>
+        <rect class="box edge--dash" style="fill: none; stroke: var(--text-3)" x="450" y="360" width="36" height="24"/>
+        <text class="m" x="468" y="376" text-anchor="middle">누락</text>
+      </g>
+      <rect class="edge" fill="none" data-step="5" x="374" y="308" width="116" height="32" rx="4"/>
+      <path class="edge" fill="none" data-step="5" d="M530 324H496" marker-end="url(#dg-hwptorag-ah)"/>
+
+      <!-- 머리글과 신뢰도 -->
+      <g data-step="5">
+        <rect class="box" fill="var(--surface-2)" x="530" y="313" width="56" height="22" rx="11"/><text class="s" x="558" y="328" text-anchor="middle">머리글</text>
+        <text class="m" x="530" y="352">6개 신호 점수로 판정</text>
+        <text class="m" x="530" y="375">신뢰도</text>
+        <rect class="box" fill="var(--surface-2)" x="572" y="367" width="78" height="8" rx="4"/>
+        <rect style="fill: var(--text-3)" x="572" y="367" width="60" height="8" rx="4"/>
+        <rect class="pkt" fill="var(--accent)" x="572" y="367" width="60" height="8" rx="4"><animate attributeName="width" values="0;60;60" keyTimes="0;0.6;1" dur="2s" repeatCount="indefinite"/></rect>
+        <text class="s" x="530" y="398">표 유형: 데이터 표</text>
+      </g>
+
+      <!-- 출력: 고른 하나만 -->
+      <path id="dg-hwptorag-e6" class="flow" fill="none" data-step="6" d="M670 288V434H461V478" marker-end="url(#dg-hwptorag-ah)"/>
+      <path class="edge edge--dash" fill="none" data-step="0" d="M461 434H92V478" marker-end="url(#dg-hwptorag-ah)"/>
+      <path class="edge edge--dash" fill="none" data-step="0" d="M266 434V478" marker-end="url(#dg-hwptorag-ah)"/>
+
+      <g data-step="0"><rect class="box" fill="var(--surface-2)" x="40" y="484" width="104" height="60" rx="8"/><text class="t" x="54" y="510">JSON</text><text class="s" x="54" y="530">머리글, 행, 병합</text></g>
+      <g data-step="0"><rect class="box" fill="var(--surface-2)" x="178" y="484" width="176" height="60" rx="8"/><text class="t" x="192" y="510">Markdown + 병합 주석</text><text class="s" x="192" y="530">병합은 표 밑에 주석으로</text></g>
+      <g data-step="6"><rect class="box" fill="var(--surface-2)" x="388" y="484" width="146" height="60" rx="8"/><text class="t" x="402" y="510">RAG 청크 (JSONL)</text><text class="s" x="402" y="530">한 줄에 청크 하나</text></g>
+      <path class="edge" fill="none" data-step="6" d="M534 514H554"/>
+
+      <!-- 청크 한 줄 -->
+      <g data-step="6">
+        <rect class="box" fill="var(--surface-2)" x="554" y="484" width="134" height="92" rx="8"/>
+        <text class="s" x="566" y="504">제목 경로 + 표</text>
+        <rect class="box" fill="var(--surface-2)" x="566" y="514" width="60" height="12"/>
+        <rect class="box" fill="var(--surface-2)" x="626" y="514" width="30" height="12"/>
+        <rect class="box" fill="var(--surface-2)" x="566" y="526" width="30" height="12"/>
+        <rect class="box" fill="var(--surface-2)" x="596" y="526" width="30" height="12"/>
+        <rect class="box" fill="var(--surface-2)" x="626" y="526" width="30" height="12"/>
+        <rect class="box" fill="var(--surface-2)" x="566" y="538" width="30" height="12"/>
+        <rect class="box" fill="var(--surface-2)" x="596" y="538" width="30" height="12"/>
+        <rect class="box" fill="var(--surface-2)" x="626" y="538" width="30" height="12"/>
+        <path class="edge edge--dash bad" fill="none" d="M560 526H662"/>
+        <path class="edge bad" fill="none" style="stroke-width: 2" d="M668 521L678 531M678 521L668 531"/>
+        <text class="m" style="fill: var(--bad)" x="566" y="566">글자 수로 자르지 않음</text>
+      </g>
+
+      <!-- 움직이는 점 -->
+      <circle class="pkt" fill="var(--accent)" r="4" data-step="1"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-hwptorag-e2"/></animateMotion></circle>
+      <circle class="pkt" fill="var(--accent)" r="4" data-step="1"><animateMotion dur="1.2s" begin="-0.4s" repeatCount="indefinite"><mpath href="#dg-hwptorag-e2"/></animateMotion></circle>
+      <circle class="pkt" fill="var(--accent)" r="4" data-step="1"><animateMotion dur="1.2s" begin="-0.8s" repeatCount="indefinite"><mpath href="#dg-hwptorag-e2"/></animateMotion></circle>
+      <circle class="pkt" fill="var(--accent)" r="4" data-step="2"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-hwptorag-e3"/></animateMotion></circle>
+      <circle class="pkt" fill="var(--accent)" r="4" data-step="3"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#dg-hwptorag-e4"/></animateMotion></circle>
+      <circle class="pkt" fill="var(--accent)" r="4" data-step="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-hwptorag-e5"/></animateMotion></circle>
+      <circle class="pkt" fill="var(--accent)" r="4" data-step="6"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#dg-hwptorag-e6"/></animateMotion></circle>
+    </svg>
+  </div>
+</figure>
+<h3>1. 아키텍처</h3><figure class="shot"><a href="../assets/side/hwptorag/geulmok-architecture.png" target="_blank" rel="noopener"><img src="../assets/side/hwptorag/geulmok-architecture.png" alt="경진대회 발표에 쓴 구상도입니다. 입력 문서가 형식 처리, 구조 통일, 도메인 IR의 3단계를 거치는 구조를 그렸습니다. 3단계 도메인 IR은 M&amp;A 계약서 규칙만 1차로 만들었습니다. 그림 아래쪽의 AI 도구와 연동한 적은 없습니다." loading="lazy"></a><figcaption>경진대회 발표에 쓴 구상도입니다. 입력 문서가 형식 처리, 구조 통일, 도메인 IR의 3단계를 거치는 구조를 그렸습니다. 3단계 도메인 IR은 M&amp;A 계약서 규칙만 1차로 만들었습니다. 그림 아래쪽의 AI 도구와 연동한 적은 없습니다.</figcaption></figure><ul>
+  <li><b>웹 변환기 (Next.js, Vercel)</b>: 확장자와 파일 서명을 검사하고, 5MB 조각으로 나눠 변환 서버로 직접 올립니다. 초기 화면과 업로드 코드는 팀원이 만들었습니다.</li>
+  <li><b>변환 서버 (NestJS, Docker, Railway)</b>: 조각을 이어 붙이고 Rust 엔진을 CLI로 실행합니다. 사용량 제한과 결과 삭제도 맡습니다.</li>
+  <li><b>저장소 (Supabase)</b>: 변환 상태는 PostgreSQL, 로그인은 Google 인증, 큰 결과와 추출 이미지는 Storage에 둡니다.</li>
+  <li><b>SaaS API (FastAPI)</b>: 문서 읽기, 청크 분할, 임베딩, 벡터 DB 저장을 한 번에 처리합니다. 벡터 DB는 Qdrant, Pinecone, Weaviate, Milvus 중 고릅니다.</li>
+  <li><b>엔진 (Rust)</b>: HWP 5.0, HWPX, HWPML을 판별하고 표를 복원해 중간 표현을 만듭니다. 출력기는 JSON, Markdown, Plain Text, RAG-JSON, CSV, HTML, HWPX 7가지입니다.</li>
+  <li><b>Python 바인딩 (PyO3)</b>: SaaS API와 LangChain 로더가 엔진을 직접 호출합니다.</li>
+  <li><b>평가 도구</b>: 표 구조 지표(TEDS-S, Table F1)를 계산하고, 원본 대조용 검수 샘플을 뽑습니다. TEDS-S는 표 구조가, Table F1은 셀이 기준 표와 얼마나 같은지 재는 값입니다.</li>
+</ul><h3>2. 주요 흐름</h3><h4>흐름 1. 웹에서 HWP 한 건을 바꿀 때</h4><ol>
+  <li>브라우저가 확장자와 파일 서명을 확인합니다. 100MB를 넘으면 막습니다.</li>
+  <li>업로드 세션을 열고 파일을 5MB 조각으로 보냅니다.</li>
+  <li>서버는 빠진 조각이 있으면 누락 번호를 돌려줍니다. 다 모이면 스트림으로 이어 붙입니다.</li>
+  <li>대기열에서 빈자리를 기다린 뒤 Rust CLI를 실행합니다. 60초를 넘으면 중단합니다.</li>
+  <li>결과가 1MB 미만이면 DB에, 넘으면 Storage에 저장합니다.</li>
+  <li>화면은 상태를 조회해 결과를 보여 줍니다. 1시간이 지난 결과는 매시간 실행되는 정리 작업이 지웁니다.</li>
+</ol><h4>흐름 2. 엔진 안에서 표를 복원할 때</h4><ol>
+  <li>섹션 레코드를 level 값(계층 깊이)으로 묶어 트리를 만듭니다.</li>
+  <li>표를 만나면 셀 헤더에서 행, 열, 병합 크기를 읽습니다.</li>
+  <li>셀을 좌표에 놓고, 병합으로 덮인 칸을 표시하고, 남은 칸은 누락으로 둡니다.</li>
+  <li>첫 행이 머리글인지는 굵기, 배경색, 머리글 단어 같은 6개 신호의 점수로 정합니다.</li>
+  <li>표 유형(데이터 표, 키-값 표, 배치용 표)과 신뢰도를 붙입니다.</li>
+  <li>표 안의 표는 같은 과정을 반복합니다. 깊이는 5단계까지입니다.</li>
+</ol><h4>흐름 3. API로 벡터 DB까지 넣을 때</h4><ol>
+  <li>컬렉션 이름을 임베딩처럼 오래 걸리는 처리 전에 검사합니다.</li>
+  <li>HWP는 PyO3 엔진, DOCX와 PDF는 Python 라이브러리로 읽습니다.</li>
+  <li>표가 든 청크는 크기 제한을 넘어도 자르지 않습니다.</li>
+  <li>임베딩 후 고른 벡터 DB에 넣고 단계별 소요 시간을 돌려줍니다.</li>
+</ol><h3>3. 설계 고민과 결정</h3><h4>셀 위치를 어떻게 정할 것인가</h4><ul>
+  <li>고민: 셀이 나오는 순서와 열 수로 위치를 계산하면 병합 셀에서 한 칸씩 밀립니다.</li>
+  <li>선택지: 순서로 계산하기, 파일에 저장된 좌표 읽기.</li>
+  <li>결정: 좌표를 그대로 읽었습니다. 값이 이미 있는데 계산할 이유가 없었습니다. 모든 칸이 내용, 빈칸, 병합, 누락 중 하나로 정해집니다.</li>
+</ul><h4>어떤 형식을 기본 출력으로 둘 것인가</h4><ul>
+  <li>고민: LLM은 Markdown을 잘 읽지만, Markdown 표는 병합 셀을 표현하지 못합니다.</li>
+  <li>선택지: Markdown 하나로 통일, JSON 기본에 Markdown 보조.</li>
+  <li>결정: JSON에 머리글, 행, 병합 정보를 모두 담았습니다. Markdown 표 밑에는 병합 정보를 주석으로 붙였습니다.</li>
+</ul><h4>RAG 청크를 어디서 자를 것인가</h4><ul>
+  <li>고민: 글자 수로 자르면 표의 머리글과 값이 다른 청크로 갈립니다.</li>
+  <li>선택지: 고정 길이 분할, 구조 기준 분할.</li>
+  <li>결정: 표는 한 청크로 두고, 청크마다 제목 경로를 붙였습니다. 출력은 한 줄에 청크 하나인 JSONL로 썼습니다. 결과 전체를 하나의 문자열로 만들지 않고 줄 단위로 쓰고 읽을 수 있게 했습니다.</li>
+</ul><h4>웹 서버와 엔진을 어떻게 이을 것인가</h4><ul>
+  <li>고민: Node 네이티브 애드온은 빌드 부담이 크고, 엔진을 따로 띄우면 인프라 비용이 듭니다.</li>
+  <li>선택지: 네이티브 애드온, 별도 서비스, CLI 실행.</li>
+  <li>결정: 변환 서버가 엔진을 CLI로 실행하는 방식을 골랐습니다. 큰 파일이 몰리면 메모리가 넘칠 수 있어 동시 실행을 3개로 제한했습니다. 한 건당 60초 제한도 걸었습니다.</li>
+</ul><h4>법률 문서의 의미를 무엇으로 붙일 것인가 (2026.05)</h4><ul>
+  <li>고민: 당사자와 금액을 LLM으로 뽑으면 환각 위험과 외부 API 비용이 생깁니다.</li>
+  <li>선택지: LLM 추출, 규칙 추출.</li>
+  <li>결정: 1차는 규칙으로 만들었습니다. 분류 신뢰도가 기준에 못 미치면 상위 분류로 대체하게 했습니다.</li>
+</ul><h3>4. 구현 상세</h3><h4>Rust 엔진과 CLI</h4><ul>
+  <li>변환 서버가 오류를 처리할 수 있도록 CLI가 실패 원인을 JSON으로 출력하게 했습니다.</li>
+  <li>큰 출력은 64KB 버퍼를 거쳐 파일에 바로 썼습니다.</li>
+  <li>수식은 HWP 수식 문법을 따로 해석했습니다.</li>
+</ul><h4>배포와 Python 연결</h4><ul>
+  <li>Docker 이미지 하나에 Rust 정적 바이너리와 NestJS를 넣었습니다. root가 아닌 사용자 권한으로 실행했습니다.</li>
+  <li>Railway에는 배포 때 /api/health로 상태를 확인하게 했습니다. 프로세스가 비정상 종료하면 최대 5회 다시 띄우게 했습니다.</li>
+  <li>Python에서는 PyO3 바인딩으로 파일 경로 대신 바이트를 바로 넘길 수 있게 했습니다.</li>
+</ul><h4>평가 도구</h4><ul>
+  <li>국가법령정보센터의 법령 별표와 서식 HWP를 모으는 수집기를 만들었습니다. 중복 파일과 개인정보 패턴을 걸렀습니다.</li>
+  <li>표가 있는 파일 28,851개에서 표 크기와 병합 밀도로 나눠 검수 샘플 186건을 뽑았습니다.</li>
+  <li>검수자가 한글 프로그램에서 원본을 열고 결과를 Perfect, Minor, Partial, Fail로 판정하게 했습니다.</li>
+</ul>
+          </section>
+          <section id="d-result" aria-labelledby="d-result-h">
+            <h2 class="sechead" id="d-result-h"><span class="sechead__no">03</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+<ul>
+  <li>상명대학교 2026학년도 창업아이디어경진대회에서 최우수상을 공동 수상했습니다. (2026.05)</li>
+  <li>표 구조를 보존하는 중간 표현 생성 방법을 자문 교수와 함께 특허 출원했습니다. (2026.03, 출원 단계)</li>
+  <li>웹 변환기(hwptorag.site)와 변환 서버를 배포해 누구나 쓸 수 있게 공개했습니다. 2026년 10월 현재 변환 서버는 중단된 상태입니다.</li>
+  <li>엔진은 HWP 5.0, HWPX, HWPML을 읽고 7가지 형식으로 낼 수 있었습니다. 웹에서는 그중 6가지를 고를 수 있었습니다.</li>
+  <li>법령 별표와 서식 HWP 38,652건을 읽지 못한 파일 없이 처리했습니다. 표는 약 33,000개였습니다. (자체 측정, 2026.03)</li>
+  <li>원본 대조 검수 60건 중 56건이 완전히 일치했습니다. (팀원 검수, 2026.03)</li>
+  <li>2026년 5월에는 M&A 계약서의 당사자, 금액, 기간을 찾는 법률 문서 처리층을 1차로 만들었습니다. 고객 적용은 하지 않았습니다.</li>
+</ul>
+          </section>
+          <section id="d-ts" aria-labelledby="d-ts-h">
+            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">04</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+<article class="ts"><header class="ts__head"><span class="ts__id">T-01</span><h3>실제 HWP 파일에서 표가 잡히지 않았습니다</h3></header><dl class="ts__rows">
+<div><dt>문제</dt><dd>라이브러리로 만든 테스트 파일에서는 표가 잡혔습니다. 실제 파일에서는 표와 문단이 빠졌습니다.</dd></div>
+<div><dt>원인</dt><dd>레코드 종류를 나타내는 태그 번호가 기반 라이브러리(hwpers)와 공식 명세에서 달랐습니다. 실제 파일은 공식 명세를 따랐습니다. 테스트 파일은 같은 라이브러리로 만들어서 테스트에서는 문제가 드러나지 않았습니다. 엔진은 표 레코드가 층층이 중첩돼 있다고 가정했는데, 실제 파일에서는 같은 level에 나란히 놓여 있었습니다.</dd></div>
+<div><dt>해결</dt><dd>명세 번호로 된 태그를 라이브러리 번호로 바꿔 읽게 했습니다. 나란히 놓인 레코드에서는 셀 헤더가 나올 때마다 새 셀을 열어 트리를 다시 세웠습니다.</dd></div>
+<div><dt>결과</dt><dd>실제 HWP 파일로 통합 테스트를 추가했습니다.</dd></div>
+<div class="is-key"><dt>남긴 규칙</dt><dd>라이브러리 상수와 그 라이브러리로 만든 테스트 파일은 공식 명세와 실제 파일로 다시 확인해야 합니다.</dd></div>
+</dl></article><article class="ts"><header class="ts__head"><span class="ts__id">T-02</span><h3>"정확도 100%"가 실제 정확도가 아니었습니다</h3></header><dl class="ts__rows">
+<div><dt>문제</dt><dd>초기 보고서의 머리글 F1(머리글 행 판정 정확도)이 100%였습니다. 38,652건 전수 평가의 TEDS-S도 1.0이었습니다.</dd></div>
+<div><dt>원인</dt><dd>머리글 F1은 머리글이 없는 문서로 잰 값이었습니다. 전수 평가는 엔진 출력끼리 비교한 내부 일관성 값이었습니다.</dd></div>
+<div><dt>해결</dt><dd>원본과 대조하려고 검수 샘플 186건과 검수 도구를 만들었습니다.</dd></div>
+<div><dt>결과</dt><dd>팀원이 검수 도구로 60건을 원본과 대조했습니다. 56건은 완전히 일치했습니다. 4건은 숫자 특수문자가 한자로 깨지거나 띄어쓰기가 빠졌습니다. 숫자 특수문자 문제는 엔진을 고쳤습니다(다음 사례).</dd></div>
+<div class="is-key"><dt>남긴 규칙</dt><dd>지표는 무엇과 무엇을 비교한 값인지 먼저 확인해야 합니다.</dd></div>
+</dl></article><article class="ts"><header class="ts__head"><span class="ts__id">T-03</span><h3>숫자 특수문자 자리에 뜻 없는 한자가 나왔습니다</h3></header><dl class="ts__rows">
+<div><dt>문제</dt><dd>①, ② 같은 숫자 특수문자 자리에 뜻 없는 한자(灳瑣)가 나왔습니다. 파일 내부 경로도 텍스트로 섞였습니다. 팀원이 원본 대조 검수에서 찾았습니다.</dd></div>
+<div><dt>원인</dt><dd>처음에는 직인 이미지 자리에 남은 글자로 보고, 평가 스크립트에서 HWP 전용 기호 코드와 함께 지웠습니다. 검수에서 숫자 특수문자 자리에 한자가 나온 것을 보고 엔진을 다시 봤습니다. 글자 겹침 같은 확장 제어 문자는 문단 텍스트에서 8칸을 차지합니다. 엔진의 제어 문자 분류표는 이를 1칸으로 읽었습니다. 그래서 나머지 칸에 든 제어 이름이 한자로 출력됐습니다.</dd></div>
+<div><dt>해결</dt><dd>분류표를 고쳐 8칸을 건너뛰게 했습니다. 원문자 숫자는 제어 코드에 담긴 번호로 되살렸습니다. 파일 내부 경로와 제어 문자만 있는 줄은 걸렀습니다.</dd></div>
+<div><dt>결과</dt><dd>같은 제어 문자를 넣은 회귀 테스트를 엔진에 추가했습니다. 고친 뒤 검수 샘플을 다시 대조한 기록은 없습니다.</dd></div>
+<div class="is-key"><dt>남긴 규칙</dt><dd>깨진 글자를 출력 뒤에서 지우기 전에, 엔진이 그 글자를 왜 만들었는지 먼저 확인해야 합니다.</dd></div>
+</dl></article>
+          </section>
+          <section id="d-learn" aria-labelledby="d-learn-h">
+            <h2 class="sechead" id="d-learn-h"><span class="sechead__no">05</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+<p>라이브러리로 직접 만든 테스트 파일만 믿으면 안 된다는 것을, 실제 파일에서 표가 통째로 빠지는 일로 알았습니다. 같은 이름의 지표도 무엇과 비교했는지에 따라 뜻이 다릅니다. 그래서 내부 일관성 값과 원본 대조 값을 나눠 적었습니다.</p>
+          </section>
+          <section id="d-kw" aria-labelledby="d-kw-h">
+            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">06</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+<ol class="keywords">
+<li><span class="kw__n">01</span><span class="kw__t">바이너리 파일 형식 해석</span></li>
+<li><span class="kw__n">02</span><span class="kw__t">표 구조 복원과 RAG 출력 설계</span></li>
+<li><span class="kw__n">03</span><span class="kw__t">측정 기준을 나눈 품질 검증</span></li>
+</ol>
+          </section>
+          <section id="d-links" aria-labelledby="d-links-h">
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+<ul>
+  <li><a href="https://hwptorag.site" target="_blank" rel="noopener">웹 변환기</a> (화면만 열림, 변환 서버는 2026.10 현재 중단)</li>
+  <li><a href="https://github.com/HWP2RAG" target="_blank" rel="noopener">GitHub 조직</a></li>
+  <li><a href="https://www.newsis.com/view/NISX20260507_0003620011" target="_blank" rel="noopener">수상 보도</a></li>
+</ul>
+          </section>
+
+          <nav class="pager" aria-label="다른 프로젝트">
+            <a class="prev" href="pbft.html"><span class="k">이전 프로젝트</span><span class="t">PBFT 합의 엔진과 Go P2P 라이브러리</span></a>
+            <a class="next" href="../index.html#side"><span class="k">마지막 프로젝트</span><span class="t">포트폴리오 목록으로</span></a>
+          </nav>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="shell foot">
+  <span>© 2026 모진영</span>
+  <a href="../index.html#side">← 포트폴리오</a>
+</footer>
+</body>
+</html>

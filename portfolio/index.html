@@ -110,9 +110,9 @@
           <p class="profile__role">Backend <b>/</b> Data <b>/</b> Infra <b>·</b> Blockchain</p>
           <h1 class="profile__name">모진영</h1>
           <p class="profile__lead">
-            <span>데이터가 들어오는 길부터 그 데이터를 담는 클러스터까지 직접 구축하고 운영하는 개발자입니다.</span>
-            <span>수파리드에서 수집 파이프라인과 ClickHouse, GKE 인프라를 맡고 있습니다.</span>
-            <span>학부 때부터 Besu와 Hyperledger Fabric 노드를 Kubernetes에 직접 띄우고 고쳐 왔습니다.</span>
+            <span>저는 몰입을 즐기는 개발자입니다.</span>
+            <span>여러 노드가 하나의 상태에 합의하는 분산 시스템이 재미있어서 블록체인 공부를 시작했습니다.</span>
+            <span>기술을 원리부터 파고들어 실제 비즈니스 문제를 푸는 데서 큰 보람을 느낍니다.</span>
           </p>
           <div class="profile__links">
             <a class="btn" href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GITHUB <span class="ext" aria-hidden="true">↗</span></a>
@@ -130,11 +130,11 @@
         <div>
           <h3 class="label">핵심 역량</h3>
           <ol class="caps">
-            <li>복구 리허설과 데이터 대조를 거친 GKE, ClickHouse 자체 운영 이전</li>
-            <li>롤백 경로를 먼저 확인하는 트래픽 전환과 Argo CD, Kargo 기반 GitOps</li>
-            <li>system 테이블과 로그, 지표로 장애 원인을 좁히고 재발 방지까지 넣는 운영</li>
-            <li>Go 노드 SDK를 통한 GPU 머신의 Kubernetes 워커 편입</li>
-            <li>Kafka와 Flink 수집 경로 설계와 미러링 대조 뒤 전환</li>
+            <li>ClickHouse 저장과 조회 원리에 근거한 테이블, 조회 경로 최적화</li>
+            <li>방문자 신원과 CDP 데이터 모델 설계</li>
+            <li>Kafka와 Flink 기반 실시간 수집 경로 설계와 전환</li>
+            <li>AI 에이전트와 함께 일하는 개발, 검증, 배포 체계</li>
+            <li>Blue/Green 설계와 되돌리는 길을 먼저 확인한 안전한 이관</li>
           </ol>
         </div>
         <div>
@@ -151,8 +151,8 @@
 
       <div class="about-block intro">
         <h3 class="label">소개</h3>
-        <p>저는 문제를 추측으로 넘기지 않고 로그와 시스템 테이블로 원인을 좁혀 가는 방식을 좋아합니다. 수파리드에는 초기 멤버로 들어가, 브라우저 이벤트가 ClickHouse에 쌓이고 화면에 보이기까지의 경로를 맡았습니다. ClickHouse를 자체 운영 클러스터로 옮길 때는 복구 리허설과 데이터 대조를 먼저 끝낸 뒤 읽기를 넘겼습니다.</p>
-        <p>월드랜드에서는 GPU 머신을 Kubernetes 워커로 붙이고, 결제가 확인된 렌탈에만 GPU Pod를 내주는 노드 SDK와 Hub를 만들었습니다. 학부 때는 Besu와 Hyperledger Fabric 노드를 Kubernetes에 띄우며 동기화와 인증서 문제를 풀었습니다. BAY에서는 학회원 온보딩을 이끌고 합의 알고리즘을 발표했습니다. 코드 작성에는 AI 코딩 에이전트를 함께 쓰고, 설계와 검증, 장애 판단은 직접 합니다.</p>
+        <p>저는 대규모 데이터 처리와 분산 시스템에 관심이 많습니다. 학부 때는 Besu와 Hyperledger Fabric 노드를 Kubernetes에 띄우며 동기화와 인증서 문제를 풀었고, BAY에서 합의 알고리즘을 발표했습니다. 월드랜드에서는 GPU 머신을 Kubernetes 워커로 붙이는 Go 노드 SDK를 만들었습니다.</p>
+        <p>수파리드에서는 방문자 신원과 이벤트를 한 사람의 여정으로 잇는 CDP 데이터 모델을 설계했습니다. ClickHouse는 MergeTree가 데이터를 저장하고 읽는 방식을 먼저 확인한 뒤 파티션과 정렬 키를 다시 정했습니다. 수집 경로는 이벤트를 순서대로 쌓아 두는 Kafka와 Flink 구조로 다시 설계해 주 경로로 전환했습니다. 여러 AI 에이전트가 함께 일하는 개발 환경에서도 상태를 어디에 둘지, 누가 무엇을 바꿀지, 틀렸을 때 어떻게 멈출지를 정해 작업 방식과 검사 규칙을 만들었습니다. 코드 작성에는 AI 코딩 에이전트를 함께 쓰고, 설계와 검증, 장애 판단은 직접 합니다.</p>
       </div>
     </section>
 
@@ -171,47 +171,54 @@
         </div>
         <p class="career__desc">웹사이트 방문 행동과 광고 데이터를 연결해 방문 여정과 채널 성과를 보여 주는 B2B 분석 제품입니다.</p>
         <ol class="rows" id="projects">
-          <li><a class="row" href="projects/platform.html">
+          <li><a class="row" href="projects/cdp.html">
             <span class="row__no">01</span>
-            <span class="row__main"><span class="row__title">인프라 이전: GKE, GitOps, ClickHouse 자체 운영</span>
-              <span class="row__sum">롤백 경로를 먼저 확인하고, 복구 리허설과 과거 데이터 1.3억 행 대조를 마친 뒤 Cloud Run과 관리형 ClickHouse를 GKE로 옮긴 인프라 이전</span>
-              <ul class="chips"><li class="chip">GKE</li><li class="chip">Terraform</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">External Secrets</li><li class="chip">ClickHouse Keeper</li><li class="chip">clickhouse-backup</li></ul></span>
-            <span class="row__when">2026.09 – 2026.10</span>
-            <span class="row__go" aria-hidden="true">→</span></a></li>
-          <li><a class="row" href="projects/stream.html">
-            <span class="row__no">02</span>
-            <span class="row__main"><span class="row__title">실시간 스트림 파이프라인 (Kafka + Flink)</span>
-              <span class="row__sum">브라우저 이벤트 수집 경로를 Kafka와 Flink 구조로 새로 설계하고, 운영 트래픽 미러링으로 두 경로를 대조한 뒤 주 경로로 전환</span>
-              <ul class="chips"><li class="chip">Go</li><li class="chip">Kafka</li><li class="chip">Flink</li><li class="chip">ClickHouse</li><li class="chip">GKE</li><li class="chip">Cloudflare Workers</li><li class="chip">Terraform</li></ul></span>
-            <span class="row__when">2026.09 – 2026.10</span>
-            <span class="row__go" aria-hidden="true">→</span></a></li>
-          <li><a class="row" href="projects/sre.html">
-            <span class="row__no">03</span>
-            <span class="row__main"><span class="row__title">SRE 에이전트 플랫폼</span>
-              <span class="row__sum">지표를 5분마다 읽어 사건을 기록하고, AI 1차 진단을 남기며 P0가 아니면 사람을 부르지 않는 사내 SRE 서비스</span>
-              <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Durable Object</li><li class="chip">Cloudflare Queues</li><li class="chip">Cloud Run Job</li><li class="chip">Managed Prometheus</li><li class="chip">Slack</li></ul></span>
-            <span class="row__when">2026.09 – 2026.10</span>
+            <span class="row__main"><span class="row__title">CDP 방문자 신원과 데이터 모델 설계와 개발</span>
+              <span class="row__sum">익명 방문과 재방문, 여러 탭을 한 사람의 여정으로 잇는 방문자 신원 모델 설계와 개발</span>
+              <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Go</li><li class="chip">ClickHouse</li><li class="chip">IndexedDB</li><li class="chip">Kafka</li><li class="chip">Flink</li></ul></span>
+            <span class="row__when">2026.04 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/clickhouse.html">
-            <span class="row__no">04</span>
+            <span class="row__no">02</span>
             <span class="row__main"><span class="row__title">ClickHouse 저장 구조와 조회 경로 최적화</span>
               <span class="row__sum">MergeTree 동작을 근거로 테이블마다 파티션과 정렬 키를 다시 정하고, 화면별 조회 경로 설계</span>
               <ul class="chips"><li class="chip">ClickHouse</li><li class="chip">ReplacingMergeTree</li><li class="chip">Projection</li><li class="chip">Refreshable MV</li><li class="chip">EXPLAIN</li><li class="chip">system.query_log</li></ul></span>
             <span class="row__when">2026.08 – 2026.09</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
+          <li><a class="row" href="projects/stream.html">
+            <span class="row__no">03</span>
+            <span class="row__main"><span class="row__title">실시간 스트림 파이프라인 (Kafka + Flink)</span>
+              <span class="row__sum">브라우저 이벤트 수집 경로를 Kafka와 Flink 구조로 새로 설계하고, 운영 트래픽 미러링으로 두 경로를 대조한 뒤 주 경로로 전환</span>
+              <ul class="chips"><li class="chip">Go</li><li class="chip">Kafka</li><li class="chip">Flink</li><li class="chip">ClickHouse</li><li class="chip">GKE</li><li class="chip">Cloudflare Workers</li><li class="chip">Terraform</li></ul></span>
+            <span class="row__when">2026.09 – 2026.10</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/elt.html">
-            <span class="row__no">05</span>
+            <span class="row__no">04</span>
             <span class="row__main"><span class="row__title">수집과 ELT 파이프라인 0→1</span>
               <span class="row__sum">브라우저 이벤트를 받아 ClickHouse 원본부터 조회용 테이블까지 잇는 수집과 ELT 경로 신규 구축</span>
               <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Cloudflare Queues</li><li class="chip">ClickHouse</li><li class="chip">PostgreSQL</li><li class="chip">R2</li></ul></span>
             <span class="row__when">2026.04 – 2026.09</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
-          <li><a class="row" href="projects/cdp.html">
+          <li><a class="row" href="projects/sdlc.html">
+            <span class="row__no">05</span>
+            <span class="row__main"><span class="row__title">AI 네이티브 SDLC: AI 에이전트와 함께 일하는 개발, 검증, 배포 체계</span>
+              <span class="row__sum">AI 에이전트가 만든 변경도 사람의 변경과 같은 검사를 거치게 한 개발, 검증, 배포 체계</span>
+              <ul class="chips"><li class="chip">Linear</li><li class="chip">GitHub Actions</li><li class="chip">OIDC</li><li class="chip">Infisical</li><li class="chip">Atlas</li><li class="chip">Terraform</li></ul></span>
+            <span class="row__when">2026.04 – 2026.09</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
+          <li><a class="row" href="projects/sre.html">
             <span class="row__no">06</span>
-            <span class="row__main"><span class="row__title">CDP 방문자 신원과 데이터 모델 설계와 개발</span>
-              <span class="row__sum">익명 방문과 재방문, 여러 탭을 한 사람의 여정으로 잇는 방문자 신원 모델 설계와 개발</span>
-              <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Go</li><li class="chip">ClickHouse</li><li class="chip">IndexedDB</li><li class="chip">Kafka</li><li class="chip">Flink</li></ul></span>
-            <span class="row__when">2026.04 – 2026.10</span>
+            <span class="row__main"><span class="row__title">SRE 에이전트 플랫폼</span>
+              <span class="row__sum">지표를 5분마다 읽어 사건을 기록하고, AI 1차 진단을 남기며 P0가 아니면 사람을 부르지 않는 사내 SRE 서비스</span>
+              <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Durable Object</li><li class="chip">Cloudflare Queues</li><li class="chip">Cloud Run Job</li><li class="chip">Managed Prometheus</li><li class="chip">Slack</li></ul></span>
+            <span class="row__when">2026.09 – 2026.10</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
+          <li><a class="row" href="projects/platform.html">
+            <span class="row__no">07</span>
+            <span class="row__main"><span class="row__title">Blue/Green 설계와 안전한 전환: Cloud Run과 관리형 ClickHouse를 GKE로 이관</span>
+              <span class="row__sum">기존 환경을 그대로 두고 GKE에 새 환경을 나란히 세운 뒤, 되돌리는 길을 먼저 확인하고 트래픽과 읽기를 옮긴 이관</span>
+              <ul class="chips"><li class="chip">GKE</li><li class="chip">Terraform</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">External Secrets</li><li class="chip">ClickHouse Keeper</li><li class="chip">clickhouse-backup</li></ul></span>
+            <span class="row__when">2026.09 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
         </ol>
 
@@ -225,26 +232,26 @@
             <span class="row__go" aria-hidden="true"></span></div></li>
           <li><div class="row row--static">
             <span class="row__no">—</span>
-            <span class="row__main"><span class="row__title">배포 경로와 시크릿, 비용 정리</span>
-              <span class="row__sum">staging에서 검증한 이미지를 다시 빌드하지 않고 운영에 올리는 배포 경로, Infisical과 OIDC 기반 시크릿 관리, Cloud Run 일 비용 약 86% 절감</span></span>
-            <span class="row__when">2026.06 – 2026.08</span>
+            <span class="row__main"><span class="row__title">Cloud Run 비용 정리</span>
+              <span class="row__sum">Cloud Run의 scale-to-zero와 CPU 할당 설정을 정리해 일별 청구 약 86% 절감</span></span>
+            <span class="row__when">2026.06 – 2026.07</span>
             <span class="row__go" aria-hidden="true"></span></div></li>
         </ul>
       </div>
 
       <div class="career">
         <div class="career__head">
-          <span class="career__org">리버벤스 (월드랜드)</span>
+          <span class="career__org">리버밴스 (월드랜드)</span>
           <span class="career__role">계약직 인턴, 블록체인 백엔드</span>
           <span class="career__when">2026.01 – 2026.04</span>
         </div>
         <ol class="rows">
           <li><a class="row" href="projects/worldland.html">
-            <span class="row__no">07</span>
-            <span class="row__main"><span class="row__title">월드랜드 GPU 노드 플랫폼</span>
-              <span class="row__sum">GPU 머신을 Kubernetes 워커로 붙이고 결제가 확인된 렌탈에만 GPU Pod를 내주는 노드 SDK와 Hub 개발</span>
-              <ul class="chips"><li class="chip">Go</li><li class="chip">kubeadm</li><li class="chip">client-go</li><li class="chip">containerd</li><li class="chip">mTLS</li><li class="chip">NVML</li><li class="chip">Solidity</li></ul></span>
-            <span class="row__when">2026.01 – 2026.02</span>
+            <span class="row__no">08</span>
+            <span class="row__main"><span class="row__title">월드랜드 GPU 렌탈 마켓</span>
+              <span class="row__sum">공급자 GPU 머신을 명령 한 줄로 붙이고 결제가 확인된 렌탈에만 GPU를 내주는 마켓 개발</span>
+              <ul class="chips"><li class="chip">Go</li><li class="chip">client-go</li><li class="chip">kubeadm</li><li class="chip">containerd</li><li class="chip">mTLS</li><li class="chip">go-ethereum</li><li class="chip">Solidity</li></ul></span>
+            <span class="row__when">2026.01 – 2026.04</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
         </ol>
         <h3 class="label sublabel">그 밖의 작업</h3>
@@ -269,52 +276,36 @@
 
         <article class="card">
           <span class="badge badge--plain card__kind">Team</span>
-          <div class="card__visual"><span class="mono">Besu / QBFT</span></div>
+          <div class="card__visual"><span class="mono">Besu / QBFT · DID</span></div>
           <div class="card__body">
-            <h3>멍멍포 Besu on Kubernetes</h3>
-            <p class="card__sum">반려동물 DID 서비스의 Besu 노드 3개를 Kubernetes StatefulSet으로 띄웠습니다. 재시작하면 바뀌는 bootnode Pod IP를 DNS 조회로 바꾸고, 블록을 만들지 않는 노드에도 켜져 있던 miner-enabled 옵션을 끄는 등 동기화가 안 되던 원인 4개를 로그로 하나씩 좁혀 고쳤습니다. Clique의 블록 간격을 5초로 바꿔도 15초마다 블록이 나와서, 합의를 QBFT로 바꿔 5초로 줄였습니다.</p>
-            <ul class="chips"><li class="chip">Besu</li><li class="chip">QBFT</li><li class="chip">Kubernetes</li><li class="chip">Go</li><li class="chip">NestJS</li></ul>
+            <h3><a href="projects/dogdogpaw.html">멍멍포(DogDogPaw)</a></h3>
+            <p class="card__sum">유기견에게 비문 사진으로 DID를 만들고, 입양으로 보호자가 바뀌는 순간을 블록체인에 남기는 입양과 후원 서비스입니다. Besu 네트워크와 컨트랙트, 서버 간 연동, Kubernetes 배포를 맡았습니다.</p>
+            <ul class="chips"><li class="chip">Hyperledger Besu</li><li class="chip">QBFT</li><li class="chip">Solidity</li><li class="chip">NestJS</li><li class="chip">Go</li><li class="chip">Kubernetes</li></ul>
           </div>
           <div class="card__foot">
-            <span class="card__links"><a href="https://velog.io/@ahwlsqja/Kubernetes에서-Besu-프라이빗-네트워크-삽질기" target="_blank" rel="noopener">글 ↗</a><a href="https://github.com/DogDogPaw/dogdogpaw-api-gateway" target="_blank" rel="noopener">GitHub ↗</a></span>
-            <span class="card__tags"><span class="badge badge--accent">수상</span><span class="card__when">2025.09 – 2025.12</span></span>
+            <span class="card__links"><a href="projects/dogdogpaw.html">상세 보기 →</a><a href="https://github.com/DogDogPaw" target="_blank" rel="noopener">GitHub ↗</a></span>
+            <span class="card__tags"><span class="badge badge--accent">학술제 최우수상</span><span class="card__when">2025.09 – 2025.12</span></span>
           </div>
         </article>
-
         <article class="card">
           <span class="badge badge--plain card__kind">Team</span>
           <div class="card__visual"><span class="mono">Fabric / etcdraft</span></div>
           <div class="card__body">
-            <h3>Hyperledger Fabric on Kubernetes</h3>
-            <p class="card__sum">캡스톤에서 학생회 장부용 허가형 체인의 블록체인과 인프라를 맡았습니다. 오더러 3대와 조직 2개, CA 3대를 Kubernetes에 올렸고, CA 인증서 이름이 서비스 이름과 달라 생긴 등록 오류를 찾아 고쳤습니다.</p>
-            <ul class="chips"><li class="chip">Hyperledger Fabric</li><li class="chip">Kubernetes</li><li class="chip">minikube</li><li class="chip">CouchDB</li><li class="chip">Fabric CA</li></ul>
+            <h3><a href="projects/fabric.html">Scholarly Chain: Hyperledger Fabric 학생회 장부</a></h3>
+            <p class="card__sum">학생이 낸 회비는 학생회가 승인하고, 학생회가 쓴 돈은 학생이 투표로 허가하는 장부 서비스입니다. Fabric 네트워크를 Kubernetes에 띄우고, 서비스와 블록체인을 잇는 NestJS 서버를 만들었습니다.</p>
+            <ul class="chips"><li class="chip">Hyperledger Fabric</li><li class="chip">Kubernetes</li><li class="chip">NestJS</li><li class="chip">Redis Streams</li><li class="chip">CouchDB</li></ul>
           </div>
           <div class="card__foot">
-            <span class="card__links"><a href="https://velog.io/@ahwlsqja/minikube-환경에서의-하이퍼레저패브릭-네트워크-배포-그리고-여러가지-인증서-문제들" target="_blank" rel="noopener">글 ↗</a><a href="https://github.com/ahwlsqja/Hyperledgerfabric-Capston" target="_blank" rel="noopener">GitHub ↗</a></span>
-            <span class="card__when">2025.03 – 2025.06</span>
+            <span class="card__links"><a href="projects/fabric.html">상세 보기 →</a><a href="https://github.com/Capstone-scholarly-chain" target="_blank" rel="noopener">GitHub ↗</a></span>
+            <span class="card__tags"><span class="badge badge--accent">캡스톤</span><span class="card__when">2025.03 – 2025.06</span></span>
           </div>
         </article>
-
-        <article class="card">
-          <span class="badge badge--plain card__kind">Team</span>
-          <div class="card__visual"><span class="mono">Prysm / 2-hop relay</span></div>
-          <div class="card__body">
-            <h3>masque-eth</h3>
-            <p class="card__sum">밸리데이터가 attestation을 직접 퍼뜨리면 IP와 신원이 이어지는 문제를 다룬 3인 연구입니다. 이더리움 합의 클라이언트 Prysm의 송신 경로를 고쳐 attestation을 2-hop 릴레이로 보내게 했고, 릴레이 첫 구현과 geth, beacon, validator가 도는 Docker Compose 데브넷 연동, 시뮬레이션을 맡았습니다.</p>
-            <ul class="chips"><li class="chip">Go</li><li class="chip">Prysm</li><li class="chip">geth</li><li class="chip">HPKE</li><li class="chip">OHTTP</li><li class="chip">Docker Compose</li></ul>
-          </div>
-          <div class="card__foot">
-            <span class="card__links"><span class="muted">비공개 저장소 (요청 시 설명)</span></span>
-            <span class="card__when">2026.03 – 2026.04</span>
-          </div>
-        </article>
-
         <article class="card">
           <span class="badge badge--plain card__kind">Team</span>
           <div class="card__visual"><span class="mono">K3s + Sui Move</span></div>
           <div class="card__body">
             <h3><a href="projects/daas.html">DAAS-Vader</a></h3>
-            <p class="card__sum">Sui 컨트랙트로 워커 스테이킹과 배포 요청을 받고, 체인 이벤트를 K3s 작업으로 바꾸는 해커톤 프로젝트입니다. 아이디어를 내고 팀을 이끌었고, K3s 컨트롤 플레인과 워커 등록 Move 컨트랙트, agent의 join 경로 수정을 맡았습니다.</p>
+            <p class="card__sum">남는 컴퓨터를 가진 사람이 SUI를 맡기면 그 컴퓨터를 Kubernetes 워커로 받는 서버리스 플랫폼입니다. 아이디어를 내고, 워커 참여 경로와 마스터, 컨트랙트, 이벤트 처리를 직접 설계하고 개발했습니다.</p>
             <ul class="chips"><li class="chip">Go</li><li class="chip">K3s</li><li class="chip">Sui Move</li><li class="chip">Sui JSON-RPC</li><li class="chip">Docker</li></ul>
           </div>
           <div class="card__foot">
@@ -322,74 +313,30 @@
             <span class="card__tags"><span class="badge badge--accent">수상</span><span class="card__when">2025.09</span></span>
           </div>
         </article>
-
         <article class="card">
           <span class="badge badge--plain card__kind">Personal</span>
-          <div class="card__visual"><span class="mono">PBFT / gossip</span></div>
+          <div class="card__visual"><span class="mono">PBFT / P2P</span></div>
           <div class="card__body">
-            <h3>PBFT 합의 모듈과 Go P2P 라이브러리</h3>
-            <p class="card__sum">Cosmos SDK에 붙는 PBFT 합의 모듈을 구현했습니다. 새 노드가 블록을 따라잡는 state sync와, 라운드와 view change, 블록 높이를 보는 Prometheus 지표, 4노드 e2e 테스트를 넣었습니다. TCP 핸드셰이크와 gossip 탐색을 갖춘 P2P 라이브러리도 따로 작성했습니다.</p>
-            <ul class="chips"><li class="chip">Go</li><li class="chip">Cosmos SDK</li><li class="chip">ABCI</li><li class="chip">Prometheus</li></ul>
+            <h3><a href="projects/pbft.html">PBFT 합의 엔진과 Go P2P 라이브러리</a></h3>
+            <p class="card__sum">BFT 합의가 코드에서 어떻게 돌아가는지 확인하려고 만든 학습 구현입니다. PBFT 엔진은 Cosmos SDK가 쓰는 ABCI 2.0에 맞췄고, 노드 사이 연결을 맡는 P2P 라이브러리는 TCP부터 따로 만들었습니다.</p>
+            <ul class="chips"><li class="chip">Go</li><li class="chip">PBFT</li><li class="chip">ABCI 2.0</li><li class="chip">gRPC</li><li class="chip">Prometheus</li></ul>
           </div>
           <div class="card__foot">
-            <span class="card__links"><a href="https://github.com/consensus-study/PBFT-for-cosmos" target="_blank" rel="noopener">PBFT ↗</a><a href="https://github.com/ahwlsqja/LockFree-p2p-go" target="_blank" rel="noopener">P2P ↗</a></span>
-            <span class="card__when">2025.11 – 2025.12</span>
+            <span class="card__links"><a href="projects/pbft.html">상세 보기 →</a><a href="https://github.com/consensus-study/PBFT-for-cosmos" target="_blank" rel="noopener">GitHub ↗</a></span>
+            <span class="card__tags"><span class="card__when">2025.11 – 2025.12</span></span>
           </div>
         </article>
-
-        <article class="card">
-          <span class="badge badge--plain card__kind">Personal</span>
-          <div class="card__visual"><span class="mono">net/http / ConnState</span></div>
-          <div class="card__body">
-            <h3>go-server-liveness-lab</h3>
-            <p class="card__sum">Go net/http 서버 코드를 읽고 연결 수명을 실험으로 확인했습니다. ReadHeaderTimeout이 0이면 Slowloris 연결이 계속 남는 것과, 종료 제한 시간이 짧으면 처리 중인 요청이 끊기는 것을 재현했습니다.</p>
-            <ul class="chips"><li class="chip">Go</li><li class="chip">net/http</li><li class="chip">ConnState</li><li class="chip">curl</li></ul>
-          </div>
-          <div class="card__foot">
-            <span class="card__links"><a href="https://github.com/ahwlsqja/go-server-liveness-lab" target="_blank" rel="noopener">GitHub ↗</a><a href="https://velog.io/@ahwlsqja/Go-nethttp.Server-내부-구조-분석" target="_blank" rel="noopener">글 ↗</a></span>
-            <span class="card__when">2026.01</span>
-          </div>
-        </article>
-
-        <article class="card">
-          <span class="badge badge--plain card__kind">Team</span>
-          <div class="card__visual"><span class="mono">Chainlink / Pyth / RedStone</span></div>
-          <div class="card__body">
-            <h3>RWA Sentinel</h3>
-            <p class="card__sum">Chainlink, Pyth, RedStone의 가격을 1분마다 비교해 편차와 지연을 알리는 오라클 감시 서비스입니다. 4인 팀에서 검증 엔진과 알림 큐, API를 맡았습니다.</p>
-            <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Hono</li><li class="chip">D1</li><li class="chip">Queues</li></ul>
-          </div>
-          <div class="card__foot">
-            <span class="card__links"><a href="https://github.com/Oclix-Labs/The-Sentinel" target="_blank" rel="noopener">GitHub ↗</a></span>
-            <span class="card__when">2026.04</span>
-          </div>
-        </article>
-
-        <article class="card">
-          <span class="badge badge--plain card__kind">Team</span>
-          <div class="card__visual"><span class="mono">8x8 canvas → NFT</span></div>
-          <div class="card__body">
-            <h3>pixel_canvas_nft</h3>
-            <p class="card__sum">여러 사람이 8x8 캔버스를 함께 칠하면 SVG NFT로 만들어 24시간 경매에 올리고, 기여도에 따라 보상을 나누는 dApp입니다. 팀장을 맡아 Move 모듈을 구현하고 Sui 테스트넷에 배포했습니다.</p>
-            <ul class="chips"><li class="chip">Sui Move</li><li class="chip">React</li><li class="chip">Vite</li><li class="chip">Sui dApp Kit</li></ul>
-          </div>
-          <div class="card__foot">
-            <span class="card__links"><a href="https://github.com/ahwlsqja/pixel_canvas_nft" target="_blank" rel="noopener">GitHub ↗</a></span>
-            <span class="card__tags"><span class="badge badge--accent">BLOCKTHON 1등</span><span class="card__when">2025.08</span></span>
-          </div>
-        </article>
-
         <article class="card">
           <span class="badge badge--plain card__kind">Team</span>
           <div class="card__visual"><span class="mono">HWP → Markdown, JSON</span></div>
           <div class="card__body">
-            <h3>HWPtoRAG</h3>
-            <p class="card__sum">한글(HWP) 바이너리 레코드를 PDF로 바꾸지 않고 직접 읽어, 표 구조를 지킨 채 Markdown과 JSON으로 바꾸는 엔진입니다. 3인 팀의 대표로 시스템 설계와 개발을 맡았습니다.</p>
-            <ul class="chips"><li class="chip">Rust</li><li class="chip">PyO3</li><li class="chip">FastAPI</li><li class="chip">Next.js</li></ul>
+            <h3><a href="projects/hwptorag.html">HWPtoRAG (글목)</a></h3>
+            <p class="card__sum">한글(HWP) 문서를 PDF로 바꾸지 않고 파일 안의 레코드를 직접 읽어, 표 구조를 살린 Markdown과 JSON으로 바꾸는 엔진과 변환 서비스입니다. 엔진, 변환 서버, API, 평가 도구를 직접 설계하고 개발했습니다.</p>
+            <ul class="chips"><li class="chip">Rust</li><li class="chip">PyO3</li><li class="chip">Python</li><li class="chip">FastAPI</li><li class="chip">NestJS</li></ul>
           </div>
           <div class="card__foot">
-            <span class="card__links"><a href="https://hwptorag.site" target="_blank" rel="noopener">사이트 ↗</a><a href="https://github.com/HWP2RAG" target="_blank" rel="noopener">GitHub ↗</a></span>
-            <span class="card__tags"><span class="badge badge--accent">특허 출원</span><span class="badge badge--accent">최우수상</span></span>
+            <span class="card__links"><a href="projects/hwptorag.html">상세 보기 →</a><a href="https://hwptorag.site" target="_blank" rel="noopener">사이트 ↗</a></span>
+            <span class="card__tags"><span class="badge badge--accent">특허 출원</span><span class="badge badge--accent">최우수상</span><span class="card__when">2026.02 – 2026.05</span></span>
           </div>
         </article>
 
@@ -438,7 +385,7 @@
           </ul>
         </div>
         <div>
-          <h3 class="label">글 (velog 137편)</h3>
+          <h3 class="label">글</h3>
           <ul class="facts">
             <li><span class="when">2025.12</span><span class="what"><a href="https://velog.io/@ahwlsqja/Kubernetes에서-Besu-프라이빗-네트워크-삽질기" target="_blank" rel="noopener">Kubernetes에서 Besu 프라이빗 네트워크 삽질기 ↗</a><span class="fact-note">노드 동기화 실패 원인 4개를 kubectl과 로그로 가른 기록</span></span></li>
             <li><span class="when">2025.12</span><span class="what"><a href="https://velog.io/@ahwlsqja/Besu-블록-타임-5초로-못-줄이겠어서-합의-알고리즘을-바꿔버린-슬픈-이야기" target="_blank" rel="noopener">Besu 블록 타임 5초로 못 줄이겠어서 합의 알고리즘을 바꿔버린 슬픈 이야기 ↗</a><span class="fact-note">Clique에서 QBFT로, PUSH0와 EVM 버전</span></span></li>

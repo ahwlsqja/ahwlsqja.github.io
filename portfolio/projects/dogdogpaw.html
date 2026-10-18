@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>멍멍포(DogDogPaw), 비문으로 유기견에게 DID를 발급하는 입양과 후원 플랫폼 · 모진영</title>
+<meta name="description" content="유기견에게 비문 사진으로 DID를 발급하고, 입양 때 바뀌는 보호자를 블록체인에 남기는 서비스입니다. Besu 네트워크와 컨트랙트, 서버 간 연동, Kubernetes 배포를 맡았습니다.">
+<meta name="color-scheme" content="dark light">
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js" defer></script>
+<style>
+.shot { margin: var(--s-5, 20px) 0; border: 1px solid var(--line); border-radius: var(--r-lg, 14px); background: var(--surface-2); overflow: hidden; }
+.shot a { display: block; line-height: 0; }
+.shot img { display: block; width: 100%; height: auto; }
+.shot figcaption { padding: 10px 14px; border-top: 1px solid var(--line); font-family: var(--f-mono); font-size: var(--fs-xs, 12px); line-height: 1.55; color: var(--text-3); }
+.shot--logo { max-width: 420px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+
+<header class="topbar">
+  <div class="shell topbar__row">
+    <a class="brand" href="../index.html">mojinyeong<b>/</b>portfolio</a>
+    <nav class="topnav" aria-label="이동">
+      <a href="../index.html#side"><span class="t">← 포트폴리오</span></a>
+      <a class="ext" href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <button class="icon-btn theme-btn" type="button" aria-label="테마 바꾸기">
+      <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <section class="sec" id="detail" aria-labelledby="detail-h">
+    <div class="doc-head">
+      <div class="shell">
+        <nav class="trail" aria-label="위치"><a href="../index.html#side">← 포트폴리오</a><span aria-hidden="true">/</span><span>dogdogpaw</span></nav>
+        <div class="doc-head__badges"><span class="badge badge--plain">Team</span><span class="badge badge--plain">학술제 최우수상</span></div>
+        <h1 class="doc-title" id="detail-h">멍멍포(DogDogPaw), 비문으로 유기견에게 DID를 발급하는 입양과 후원 플랫폼</h1>
+        <p class="doc-lede">유기견에게는 고유한 식별번호가 없습니다. 멍멍포는 비문 사진으로 유기견마다 DID를 만들고, 입양으로 보호자가 바뀌는 순간을 블록체인에 남기는 입양과 후원 서비스입니다. 이 중 블록체인, 서버 간 연동, 배포를 맡았습니다.</p>
+        <dl class="spec">
+          <div><dt>기간</dt><dd class="num">2025.09 – 2025.12</dd></div>
+          <div><dt>구분</dt><dd>3명 팀 (팀장, 백엔드 1명, 프런트엔드 1명)</dd></div>
+          <div class="wide"><dt>수상과 출품</dt><dd>상명대학교 핀테크·빅데이터융합·스마트생산 학술제 최우수상 (2026.01) / 제9회 K-PaaS 활용 공모전 서비스 개발 부문 출품 (2025.10)</dd></div>
+          <div class="wide"><dt>역할</dt><dd>팀장. 기획을 이끌고 아키텍처를 설계. 블록체인(Besu 네트워크, 컨트랙트), 서버 간 연동(API Gateway, VC 서버, ML 서버, 인덱서, Faucet), 배포를 직접 설계하고 개발</dd></div>
+          <div class="wide"><dt>상태</dt><dd>공모전 시연 (NCP Kubernetes 배포, 현재 서비스 종료)</dd></div>
+          <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Hyperledger Besu(Clique → QBFT)</li><li class="chip">Solidity</li><li class="chip">OpenZeppelin</li><li class="chip">NestJS</li><li class="chip">ethers v6</li><li class="chip">Bull 큐</li><li class="chip">Socket.io</li><li class="chip">Go</li><li class="chip">FastAPI</li><li class="chip">ONNX Runtime</li><li class="chip">gRPC</li><li class="chip">PostgreSQL</li><li class="chip">Redis</li><li class="chip">Kubernetes(NCP NKS)</li></ul></dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="shell">
+      <div class="doc-body">
+        <aside class="toc" aria-label="이 페이지">
+          <ol>
+            <li><a href="#d-situation"><span class="n">01</span>상황</a></li>
+            <li><a href="#d-task"><span class="n">02</span>과제와 역할</a></li>
+            <li><a href="#d-process"><span class="n">03</span>해결 과정</a></li>
+            <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
+            <li><a href="#d-result"><span class="n">05</span>결과</a></li>
+            <li><a href="#d-learn"><span class="n">06</span>배운 점</a></li>
+            <li><a href="#d-kw"><span class="n">07</span>핵심 역량</a></li>
+            <li><a href="#d-links"><span class="n">08</span>관련 링크</a></li>
+          </ol>
+        </aside>
+
+        <article class="doc-main">
+          <section id="d-situation" aria-labelledby="d-situation-h">
+            <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황: 어떤 프로젝트이고 무엇을 해결하는가</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+
+<figure class="shot shot--logo"><a href="../assets/side/dogdogpaw/logo.png" target="_blank" rel="noopener"><img src="../assets/side/dogdogpaw/logo.png" alt="멍멍포 로고" loading="lazy"></a><figcaption>멍멍포 로고</figcaption></figure>
+
+            <p>멍멍포는 유기견의 존재를 기록하고 입양과 후원을 잇는 웹 서비스입니다. 팀 README의 첫 문장은 "한 마리의 유기견도 잊히지 않도록"입니다.</p>
+            <p>2024년 한 해 동안 보호센터에 들어온 유실·유기동물은 약 10만 7천 마리입니다. 그중 18.5%가 안락사됐습니다(농림축산검역본부 2024년 반려동물 보호·복지 실태조사). 팀은 문제를 세 가지로 정리했습니다.</p>
+            <dl class="scope">
+              <dt>문제 1. 신원</dt><dd>유기견에게는 고유한 식별번호가 없습니다.</dd>
+              <dt>문제 2. 입양</dt><dd>정보가 적고 절차가 불편합니다.</dd>
+              <dt>문제 3. 후원</dt><dd>보호소에 관리 비용이 모자라 안락사로 이어집니다.</dd>
+              <dt>해결 방식</dt><dd>비문(코 무늬) 사진으로 반려동물마다 고유한 신원을 줍니다. 실시간 채팅과 입양 후기로 입양 문턱을 낮춥니다. 충전식 화폐 '뼈다귀'(1뼈다귀 = 1,000원)로 후원을 받습니다.</dd>
+            </dl>
+            <p>신원은 DID로 만들었습니다. DID는 중앙 기관 대신 블록체인에 등록하는 식별자입니다. 반려동물마다 만든 DID를 이 글에서는 펫 DID라고 부릅니다. VC는 누가 이 반려동물의 보호자인지 담은 증명서입니다. VP는 로그인할 때 자기가 가진 VC를 묶어 내는 제출물입니다.</p>
+
+<figure class="shot"><a href="../assets/side/dogdogpaw/home.jpg" target="_blank" rel="noopener"><img src="../assets/side/dogdogpaw/home.jpg" alt="서비스 홈 화면. 입양 공고와 후원 공고(목표액, 진행률)를 한 화면에 보여 줍니다. 시연용 입양 카드의 사진과 공고번호는 공개된 유기동물 공고에서 가져왔습니다 (팀원 제작 화면)" loading="lazy"></a><figcaption>서비스 홈 화면. 입양 공고와 후원 공고(목표액, 진행률)를 한 화면에 보여 줍니다. 시연용 입양 카드의 사진과 공고번호는 공개된 유기동물 공고에서 가져왔습니다 (팀원 제작 화면)</figcaption></figure>
+
+            <h3>사용자</h3>
+            <ul>
+              <li>보호자(보호소 포함)는 반려동물을 등록하고 입양 공고를 올립니다. 입양 상대가 정해지면 입양을 승인하고 보호자 변경에 서명합니다.</li>
+              <li>입양 희망자는 1:1 채팅으로 상담합니다. 승인이 나면 VC에 서명하고 비문 사진을 올립니다. 입양이 끝나면 새 보호자로 VC를 받습니다.</li>
+              <li>후원자는 뼈다귀를 충전해 후원 공고에 보냅니다.</li>
+            </ul>
+
+            <h3>블록체인에 맡긴 일</h3>
+            <p>팀 README는 블록체인을 쓴 이유로 '투명한 신원'과 '투명한 소유권 이전'을 듭니다. 그래서 설계를 다음과 같이 잡았습니다.</p>
+            <ul>
+              <li>펫 DID와 현재 보호자는 컨트랙트에 둡니다.</li>
+              <li>컨트랙트에서 보호자는 현재 보호자의 지갑 서명으로만 바뀝니다.</li>
+              <li>개인정보는 해시만 체인에 올립니다.</li>
+              <li>체인은 직접 띄운 Besu 프라이빗 체인입니다. 새로 가입한 지갑에는 Faucet 서버가 테스트 코인을 보내, 사용자가 실제 돈 없이 트랜잭션을 보낼 수 있게 했습니다.</li>
+            </ul>
+            <p>검증 노드가 1개인 시연용 체인이라, 운영자와 독립된 기록이라고까지 하지는 않습니다.</p>
+          </section>
+
+          <section id="d-task" aria-labelledby="d-task-h">
+            <h2 class="sechead" id="d-task-h"><span class="sechead__no">02</span><span class="sechead__title">과제와 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>팀 목표는 회원가입부터 반려동물 등록, 입양, 후원까지 실제로 동작하는 서비스를 클라우드에 올려 시연하는 것이었습니다. K-PaaS 공모전 출품작이라 NCP Kubernetes에 올렸습니다. 저는 팀장으로 기획을 이끌고 전체 구조를 그렸습니다.</p>
+            <dl class="scope">
+              <dt>직접 설계하고 개발</dt><dd>Besu 노드 3개를 NCP Kubernetes에 띄워 운영하고 합의를 Clique에서 QBFT로 변경 / 컨트랙트 2개(PetDIDRegistry, GuardianRegistry) 개발과 배포 / NestJS API Gateway(이하 게이트웨이): 지갑 로그인과 VP 검증, 트랜잭션 확정 확인, 큐, Spring 프록시, 채팅 소켓 / 내부 gRPC 서버 4개(VC 서버, ML 서버, 인덱서, Faucet) / 서비스별 Dockerfile과 Kubernetes 매니페스트</dd>
+              <dt>팀원이 맡은 부분</dt><dd>입양 공고, 후원과 결제, 스토리, 채팅 메시지 저장을 맡는 Spring 서버(백엔드 팀원), 화면(Next.js, 프런트엔드 팀원)</dd>
+            </dl>
+            <h3>풀어야 할 기술 과제</h3>
+            <ol>
+              <li>비문 사진으로 DID를 만들고, 다시 찍은 사진으로 같은 강아지인지 확인하기</li>
+              <li>체인과 여러 서버의 DB가 어긋나지 않게 순서 정하기</li>
+              <li>지갑 서명으로 로그인하고, 세션이 가진 VC를 증명하게 하기</li>
+              <li>Besu 노드 3개를 Kubernetes에서 OOMKilled 없이 돌리기</li>
+            </ol>
+          </section>
+
+          <section id="d-process" aria-labelledby="d-process-h">
+            <h2 class="sechead" id="d-process-h"><span class="sechead__no">03</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+
+            <h3>1. 아키텍처</h3>
+
+<figure class="shot"><a href="../assets/side/dogdogpaw/architecture.jpg" target="_blank" rel="noopener"><img src="../assets/side/dogdogpaw/architecture.jpg" alt="직접 그린 최종 아키텍처. NCP Kubernetes 안에 게이트웨이, 내부 gRPC 서버 4개, Spring 서버, Besu 노드 3개를 두고 NCP 빌드 파이프라인으로 배포했습니다" loading="lazy"></a><figcaption>직접 그린 최종 아키텍처. NCP Kubernetes 안에 게이트웨이, 내부 gRPC 서버 4개, Spring 서버, Besu 노드 3개를 두고 NCP 빌드 파이프라인으로 배포했습니다</figcaption></figure>
+
+            <p>아래 목록에서 표시가 없는 항목은 직접 설계하고 개발했습니다. 팀원이 맡은 항목은 "(팀원 개발)"로 적었습니다.</p>
+            <ul>
+              <li>Ingress 2개: 서비스용은 <code>/</code>를 화면으로, <code>/api</code>를 게이트웨이로 보냅니다. 다른 하나는 사용자 지갑이 Besu RPC로 트랜잭션을 보내는 입구입니다.</li>
+              <li>게이트웨이 (NestJS): 모든 요청의 입구입니다. 로그인, 컨트랙트 호출 데이터 준비, 트랜잭션 확정 확인, 큐 처리를 맡습니다.</li>
+              <li>VC 서버 (NestJS): 보호자와 보호소 정보, 펫 VC를 저장하고 무효화합니다.</li>
+              <li>ML 서버 (FastAPI): 비문 사진을 512차원 벡터로 바꾸고 유사도를 계산합니다.</li>
+              <li>인덱서 (Go): 체인의 보호자 변경 이벤트를 모아 반려동물별 이력으로 저장하도록 만든 서버입니다.</li>
+              <li>Faucet (NestJS): 새로 가입한 지갑에 테스트 코인을 보냅니다.</li>
+              <li>Spring 서버 (MySQL, 팀원 개발): 입양 공고, 후원, 결제, 스토리, 채팅 메시지를 저장합니다.</li>
+              <li>Besu 노드 3개: 블록 생성 노드 1개와 RPC 노드 2개를 StatefulSet과 PVC로 띄웠습니다.</li>
+              <li>Redis 2개: 클러스터 안 Redis는 큐 전용입니다. 외부 관리형 Redis는 로그인 토큰과 VP, 채팅 메시지 전달에 씁니다.</li>
+            </ul>
+            <p>게이트웨이와 내부 gRPC 서버 4개는 gRPC로 연결하고 proto 파일로 형식을 고정했습니다. 팀원이 만든 Spring 서버만 HTTP로 연결했습니다.</p>
+
+            <h3>2. 주요 흐름</h3>
+            <h4>흐름 1. 반려동물 등록하기</h4>
+            <ol>
+              <li>화면이 비문 사진을 저장소 임시 폴더에 올립니다.</li>
+              <li>게이트웨이가 사진을 ML 서버로 보내 512차원 벡터를 받습니다.</li>
+              <li>게이트웨이가 벡터를 keccak256으로 해시해 <code>did:ethr:besu:&lt;해시&gt;</code>를 펫 DID로 정합니다.</li>
+              <li>게이트웨이가 트랜잭션 2개의 호출 데이터와 VC 서명 데이터를 돌려줍니다. 트랜잭션 2개는 반려동물 등록과 보호자-펫 연결입니다.</li>
+              <li>사용자가 지갑으로 두 트랜잭션을 보내고 VC에 서명합니다.</li>
+              <li>게이트웨이가 반려동물 등록 트랜잭션의 확정을 기다린 뒤 바로 응답합니다.</li>
+              <li>사진 이동, 보호자-펫 연결 트랜잭션 확인, VC 저장은 큐로 넘깁니다. Spring 동기화는 사진 이동이 끝난 뒤 이어서 합니다.</li>
+            </ol>
+
+<figure class="dg" id="dg-dogdogpaw" data-step-ms="3400"
+  data-idle="등록 트랜잭션 확정이 실패하면 5단계로 넘어가지 않습니다. 사진은 임시 폴더에 남고 다른 서버는 바뀌지 않습니다."
+  data-steps='[
+  {"t":"화면이 비문 사진을 사진 저장소의 임시 폴더에 올리고, 게이트웨이에 등록을 요청합니다."},
+  {"t":"게이트웨이가 사진을 ML 서버로 보내고, ML 서버가 512차원 벡터로 바꿔 돌려줍니다."},
+  {"t":"게이트웨이가 벡터를 해시해 펫 DID를 정하고, 지갑이 서명할 데이터를 돌려줍니다."},
+  {"t":"지갑이 트랜잭션 2개를 체인에 보내고, 게이트웨이는 등록 트랜잭션이 확정되기를 최대 30초 기다립니다.", "d": 4200},
+  {"t":"확정되면 화면에 바로 응답하고, 나머지 작업 3개를 Bull 큐에 넣습니다."},
+  {"t":"큐가 사진 이동, 보호자-펫 연결 확인, VC 저장을 처리하고, Spring 동기화는 사진 이동 뒤에 이어집니다. 실패하면 최대 3번까지 시도합니다.", "d": 5000}
+]'>
+  <figcaption><span class="n">그림 1</span>반려동물 등록, 체인 먼저 확정하고 나머지는 큐로</figcaption>
+  <div class="dg__canvas">
+    <svg viewBox="0 0 728 636" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="dg-dogdogpaw-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" fill="var(--text-3)" d="M0 0L8 4L0 8z"/></marker>
+      </defs>
+
+      <!-- 구역 -->
+      <rect class="zone" fill="none" x="24" y="24" width="336" height="112" rx="10"/>
+      <text class="m" x="38" y="44">사용자</text>
+      <rect class="zone" fill="none" x="440" y="24" width="264" height="112" rx="10"/>
+      <text class="m" x="454" y="44">Besu 체인</text>
+      <rect class="zone" fill="none" x="72" y="344" width="336" height="108" rx="10"/>
+      <text class="m" x="394" y="364" text-anchor="end">내부 gRPC 서버</text>
+      <rect class="zone" fill="none" x="24" y="496" width="680" height="116" rx="10"/>
+      <text class="m" x="690" y="516" text-anchor="end">큐와 동기화 대상</text>
+
+      <!-- 사용자 -->
+      <g data-step="1,5"><rect class="box" fill="var(--surface-2)" x="40" y="56" width="134" height="60" rx="8"/><text class="t" x="54" y="82">화면</text><text class="s" x="54" y="102">비문 사진, 정보 입력</text></g>
+      <g data-step="3,4"><rect class="box" fill="var(--surface-2)" x="208" y="56" width="136" height="60" rx="8"/><text class="t" x="222" y="82">MetaMask 지갑</text><text class="s" x="222" y="102">트랜잭션 전송, 서명</text></g>
+
+      <!-- Besu 체인 -->
+      <g data-step="4,6"><rect class="box" fill="var(--surface-2)" x="456" y="56" width="232" height="60" rx="8"/><text class="t" x="470" y="82">컨트랙트 2개</text><text class="s" x="470" y="102">펫 DID 등록, 보호자-펫 연결</text></g>
+
+      <!-- 게이트웨이 -->
+      <g data-step="1-5"><rect class="box" fill="var(--surface-2)" x="88" y="224" width="352" height="60" rx="8"/><text class="t" x="102" y="250">게이트웨이</text><text class="s" x="102" y="270">DID 계산, 호출 데이터 준비, 확정 대기</text></g>
+
+      <!-- 내부 gRPC 서버 -->
+      <g data-step="2"><rect class="box" fill="var(--surface-2)" x="88" y="376" width="144" height="60" rx="8"/><text class="t" x="102" y="402">ML 서버</text><text class="s" x="102" y="422">사진 → 512차원 벡터</text></g>
+      <g data-step="6"><rect class="box" fill="var(--surface-2)" x="268" y="376" width="124" height="60" rx="8"/><text class="t" x="282" y="402">VC 서버</text><text class="s" x="282" y="422">펫 VC 저장</text></g>
+
+      <!-- 큐와 동기화 대상 -->
+      <g data-step="1,6"><rect class="box" fill="var(--surface-2)" x="40" y="528" width="152" height="60" rx="8"/><text class="t" x="54" y="554">사진 저장소</text><text class="s" x="54" y="574">임시 폴더 → 정식 경로</text></g>
+      <g data-step="5,6"><rect class="box" fill="var(--surface-2)" x="312" y="528" width="128" height="60" rx="8"/><text class="t" x="326" y="554">Bull 큐</text><text class="s" x="326" y="574">최대 3번 시도</text></g>
+      <g data-step="6"><rect class="box" fill="var(--surface-2)" x="544" y="528" width="144" height="60" rx="8"/><text class="t" x="558" y="554">Spring 서버</text><text class="s" x="558" y="574">화면용 정보 (팀원)</text></g>
+
+      <!-- 1단계: 사진 업로드, 등록 요청 -->
+      <path id="dg-dogdogpaw-a1" class="flow" fill="none" data-step="1" d="M56 116V522" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <path id="dg-dogdogpaw-a2" class="flow" fill="none" data-step="1" d="M128 116V218" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <text class="m" x="120" y="158" text-anchor="end">등록 요청</text>
+      <text class="m" x="64" y="474">비문 사진 (임시 폴더)</text>
+
+      <!-- 2단계: 벡터 추출 -->
+      <path id="dg-dogdogpaw-a3" class="flow" fill="none" data-step="2" d="M152 284V370" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <path id="dg-dogdogpaw-a4" class="flow" fill="none" data-step="2" d="M168 376V290" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <text class="m" x="144" y="324" text-anchor="end">벡터 추출</text>
+      <text class="m" x="176" y="324">512차원 벡터</text>
+
+      <!-- 3단계: 펫 DID와 서명할 데이터 -->
+      <path id="dg-dogdogpaw-a5" class="flow" fill="none" data-step="3" d="M328 224V122" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <text class="m" x="336" y="158">펫 DID</text>
+      <text class="m" x="336" y="174">서명할 데이터</text>
+
+      <!-- 4단계: 지갑이 보내고 게이트웨이가 확정을 기다림 -->
+      <path id="dg-dogdogpaw-a6" class="flow" fill="none" data-step="4" d="M344 86H450" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <text class="m" x="400" y="78" text-anchor="middle">트랜잭션 2개</text>
+      <path id="dg-dogdogpaw-a7" class="flow" fill="none" data-step="4" d="M312 116V218" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <text class="m" x="304" y="158" text-anchor="end">트랜잭션 해시</text>
+      <text class="m" x="304" y="174" text-anchor="end">VC 서명</text>
+      <path id="dg-dogdogpaw-a8" class="flow edge--dash" fill="none" data-step="4" d="M440 240H472V122" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <text class="m" x="464" y="196" text-anchor="end">등록 확정 대기</text>
+      <text class="m" x="464" y="212" text-anchor="end">최대 30초</text>
+
+      <!-- 5단계: 바로 응답, 큐에 넣기 -->
+      <path id="dg-dogdogpaw-a9" class="flow" fill="none" data-step="5" d="M144 224V122" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <text class="m" x="152" y="158">바로 응답</text>
+      <path id="dg-dogdogpaw-a10" class="flow" fill="none" data-step="5" d="M424 284V522" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <text class="m" x="432" y="404">작업 3개</text>
+
+      <!-- 6단계: 큐가 나머지를 맞춤 -->
+      <path id="dg-dogdogpaw-a11" class="flow" fill="none" data-step="6" d="M312 558H198" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <text class="m" x="252" y="550" text-anchor="middle">사진 이동</text>
+      <path id="dg-dogdogpaw-a12" class="flow" fill="none" data-step="6" d="M440 568H538" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <text class="m" x="492" y="586" text-anchor="middle">이동 뒤 동기화</text>
+      <path id="dg-dogdogpaw-a13" class="flow" fill="none" data-step="6" d="M336 528V442" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <text class="m" x="344" y="474">VC 저장</text>
+      <path id="dg-dogdogpaw-a14" class="flow edge--dash" fill="none" data-step="6" d="M440 540H504V122" marker-end="url(#dg-dogdogpaw-ah)"/>
+      <text class="m" x="512" y="324">연결 트랜잭션 확인</text>
+
+      <!-- 움직이는 점: data-step은 감싼 g에 둔다. 재생 중 흐려지는 규칙이 점 자체에 걸리지 않게 -->
+      <g data-step="1"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a1"/></animateMotion></circle></g>
+      <g data-step="1"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a2"/></animateMotion></circle></g>
+      <g data-step="2"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a3"/></animateMotion></circle></g>
+      <g data-step="2"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="1.2s" begin="0.6s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a4"/></animateMotion></circle></g>
+      <g data-step="3"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a5"/></animateMotion></circle></g>
+      <g data-step="4"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a6"/></animateMotion></circle></g>
+      <g data-step="4"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="1.2s" begin="0.4s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a7"/></animateMotion></circle></g>
+      <g data-step="4"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="1.6s" begin="0.8s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a8"/></animateMotion></circle></g>
+      <g data-step="5"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a9"/></animateMotion></circle></g>
+      <g data-step="5"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a10"/></animateMotion></circle></g>
+      <g data-step="6"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a11"/></animateMotion></circle></g>
+      <g data-step="6"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="1.2s" begin="0.7s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a12"/></animateMotion></circle></g>
+      <g data-step="6"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a13"/></animateMotion></circle></g>
+      <g data-step="6"><circle class="pkt" fill="var(--accent)" r="4"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#dg-dogdogpaw-a14"/></animateMotion></circle></g>
+    </svg>
+  </div>
+</figure>
+
+
+<figure class="shot"><a href="../assets/side/dogdogpaw/demo-adopt-did.jpg" target="_blank" rel="noopener"><img src="../assets/side/dogdogpaw/demo-adopt-did.jpg" alt="배포 환경의 입양 공고 화면. 펫 DID가 비문 벡터 해시로 만든 did:ethr:besu 형식으로 보입니다" loading="lazy"></a><figcaption>배포 환경의 입양 공고 화면. 펫 DID가 비문 벡터 해시로 만든 did:ethr:besu 형식으로 보입니다</figcaption></figure>
+
+            <h4>흐름 2. 입양으로 보호자 바꾸기</h4>
+            <ol>
+              <li>입양 희망자가 공고에서 1:1 채팅으로 상담합니다.</li>
+              <li>현재 보호자가 채팅방에서 입양을 승인합니다. 게이트웨이가 체인에서 현재 보호자를 확인하고, 새 보호자가 서명할 VC 데이터를 만듭니다.</li>
+              <li>현재 보호자가 지갑으로 보호자 변경 트랜잭션을 보냅니다. 확정되면 진행 상태를 Redis에 24시간 둡니다.</li>
+              <li>입양자가 VC 데이터에 서명합니다.</li>
+              <li>입양자가 비문 사진을 올립니다. ML 서버가 저장한 벡터와 비교해 기준값을 넘는지 봅니다.</li>
+              <li>입양자가 입양을 마치면, 게이트웨이가 10분 안에 받은 비문 검증 결과가 있는지 봅니다. 이어서 보호자 변경 트랜잭션의 확정을 다시 확인합니다.</li>
+              <li>이전 보호자 VC 무효화, 새 보호자 VC 생성, Spring 반영은 큐로 넘깁니다.</li>
+              <li>입양자는 다음 로그인부터 이 반려동물의 VC를 담은 VP를 냅니다.</li>
+            </ol>
+
+            <h3>3. 설계 고민과 결정</h3>
+
+            <h4>체인과 여러 서버 DB 중 무엇을 먼저 바꿀까</h4>
+            <ul>
+              <li>고민: 반려동물 하나를 등록하면 체인, VC 서버, Spring, 사진 저장소 네 곳이 바뀝니다. 중간에 하나가 실패하면 서로 어긋납니다.</li>
+              <li>선택지: 모든 서버를 동기 호출로 묶는 방법, 실패하면 앞 단계를 되돌리는 방법(보상 트랜잭션), 체인을 먼저 확정하는 방법이 있었습니다.</li>
+              <li>결정: 체인을 먼저 확정하고 나머지는 큐로 맞췄습니다. 체인에 남은 기록은 되돌릴 수 없어서 보상 트랜잭션은 성립하지 않았습니다. 동기 호출은 서버 수만큼 사용자가 기다립니다. 큐는 용도별로 나눴습니다. 실패하면 간격을 늘려 가며 최대 3번까지 시도하게 했습니다. 끝내 실패한 작업은 지우지 않고 남겼습니다. 대신 응답 직후에는 Spring 화면에 반려동물이 늦게 보일 수 있습니다.</li>
+            </ul>
+
+            <h4>트랜잭션 서명을 누가 할까</h4>
+            <ul>
+              <li>고민: 서버 키로 대신 등록하면 흐름이 단순합니다. 하지만 체인 기록의 주체가 서버가 됩니다.</li>
+              <li>선택지: 서버가 대신 서명하는 방법, 사용자 지갑이 서명하는 방법이 있었습니다.</li>
+              <li>결정: 사용자 지갑이 서명하게 했습니다. 게이트웨이는 호출 데이터만 만들어 줍니다. 컨트랙트에서 보호자 변경은 현재 보호자만 호출할 수 있게 막았습니다. GuardianRegistry의 보호자-펫 연결도 보호자 본인만 바꿀 수 있습니다. 그래서 입양 뒤 이 연결은 서버 큐가 대신 고칠 수 없었습니다. 입양 때 기준은 PetDIDRegistry의 현재 보호자 하나로 정했습니다.</li>
+            </ul>
+
+            <h4>로그인 세션에 무엇을 담을까</h4>
+            <ul>
+              <li>고민: 지갑 주소만으로 로그인하면 이 사람이 어떤 반려동물의 보호자인지 매번 따로 조회해야 합니다.</li>
+              <li>선택지: 주소만 담은 토큰, 보유한 VC를 모두 담은 VP를 묶은 토큰이 있었습니다.</li>
+              <li>결정: 토큰에 VP를 묶어 VP 하나를 세션 하나로 삼았습니다. 매 요청의 서명 검증 비용은 결과를 1시간 캐시해 줄였습니다. 지갑은 메시지 앞에 이더리움 접두사를 붙여 서명합니다. VC와 VP 서명 검증은 표준 라이브러리 대신 이 서명 방식에 맞춰 직접 만들었습니다.</li>
+            </ul>
+
+            <h4>펫 DID를 무엇으로 만들까</h4>
+            <ul>
+              <li>고민: 같은 강아지라도 사진을 찍을 때마다 벡터가 조금씩 다릅니다.</li>
+              <li>선택지: 처음 계획은 비슷한 벡터에서 항상 같은 키를 다시 만드는 Fuzzy Extractor였습니다.</li>
+              <li>결정: 최종 구현은 첫 벡터의 해시를 DID로 쓰고, 같은 강아지인지는 서버에서 유사도로 판정하는 방식입니다. 대가로 같은 강아지를 다른 사진으로 등록하면 다른 DID가 나와, 이중 등록을 막지 못합니다.</li>
+            </ul>
+
+            <h4>보호자 변경 이력을 어디서 읽을까</h4>
+            <ul>
+              <li>고민: 이력을 매번 체인에서 조회하면 노드에 부담이 가고 RPC 조회 범위 제한에 걸립니다.</li>
+              <li>선택지: 체인을 직접 조회하는 방법, 별도 인덱서가 이벤트를 DB에 모으는 방법이 있었습니다.</li>
+              <li>결정: Go 인덱서를 따로 두었습니다. 반려동물별 이전 순번을 매기려면 이벤트가 순서대로 들어와야 합니다. 그래서 인덱서는 하나만 뜨게 했습니다(replicas 1, Recreate). 인덱서가 멈추면 게이트웨이가 체인을 직접 조회합니다. 그것도 실패하면 현재 보호자만 돌려줍니다.</li>
+            </ul>
+
+            <h3>4. 구현 상세</h3>
+            <h4>게이트웨이</h4>
+            <ul>
+              <li>트랜잭션 해시를 받으면 1블록 확정을 30초까지 기다립니다.</li>
+              <li>되돌려진 트랜잭션은 같은 호출을 <code>eth_call</code>로 다시 실행해 실패 이유를 로그에 남깁니다.</li>
+              <li>오류 메시지로 종류를 나누고 재시도 가능 여부를 붙였습니다. 네트워크 오류, RPC 오류, 시간 초과는 재시도할 수 있게 두었습니다. 되돌려진 트랜잭션은 재시도하지 않습니다.</li>
+              <li>되돌려진 이유(이미 등록됨, 권한 없음)는 오류 메시지 문자열로 추측해 나눴습니다. 지갑이 직접 보낸 트랜잭션이 되돌려지면 '알 수 없는 오류'로만 분류됩니다.</li>
+              <li>사진은 임시 폴더로 받고, 체인 확정 뒤 큐가 정식 경로로 옮깁니다. 체인이 실패하면 정식 경로에 불필요한 파일이 남지 않습니다.</li>
+              <li>큐 Redis는 디스크에 기록(AOF)하고 PVC에 두어 Pod가 다시 떠도 작업이 남게 했습니다.</li>
+            </ul>
+            <h4>컨트랙트와 Besu 네트워크</h4>
+            <ul>
+              <li>PetDIDRegistry는 펫 DID, 비문 벡터 해시, 현재 보호자, VC 해시를 저장합니다. 보호자가 바뀌면 <code>ControllerChanged</code> 이벤트를 냅니다.</li>
+              <li>GuardianRegistry는 보호자 개인정보 해시와 보호자-펫 연결을 저장합니다.</li>
+              <li>Besu 노드는 노드마다 StatefulSet과 PVC를 두었습니다. RPC 노드는 시작할 때 DNS로 블록 생성 노드를 찾아 연결합니다.</li>
+            </ul>
+            <h4>내부 gRPC 서버</h4>
+            <ul>
+              <li>ML 서버는 사진을 224×224로 맞추고, 학습된 임베딩 모델(ONNX)로 512차원 벡터를 만듭니다. 비교는 코사인 유사도로 합니다.</li>
+              <li>인덱서는 마지막으로 처리한 블록부터 1,000블록씩 끊어 따라잡습니다. 그다음 WebSocket으로 구독합니다. 구독에 실패하면 5초 간격 조회로 바꿉니다. 같은 이벤트는 UNIQUE 제약으로 한 번만 저장합니다.</li>
+            </ul>
+          </section>
+
+          <section id="d-ts" aria-labelledby="d-ts-h">
+            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">04</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">T-01</span><h3>Besu 노드 2개가 계속 죽던 문제</h3></header>
+              <dl class="ts__rows">
+                <div><dt>문제</dt><dd>노드 2와 3을 붙이자 메모리 400Mi에서 OOMKilled가 반복됐습니다. 살아 있을 때도 "Waiting for 5 peers minimum" 로그만 남기고 동기화하지 않았습니다. 메모리를 1Gi까지 올려도 계속 죽었습니다.</dd></div>
+                <div><dt>원인</dt><dd>Pod IP, 로그, 노드별 메모리 사용량을 하나씩 확인하며 좁혀 보니 네 가지가 겹쳐 있었습니다. 재시작하면 바뀌는 Pod IP를 bootnode 주소로 고정해 두었습니다. 최소 피어 수 기본값은 5인데 노드는 3개였습니다. 15일치 데이터(약 9만 블록)를 한 번에 따라잡으면서 메모리가 넘쳤습니다. 공통 설정에 블록 생성 옵션이 켜져 있었습니다.</dd></div>
+                <div><dt>해결</dt><dd>원인마다 하나씩 고쳤습니다. bootnode는 시작할 때 DNS로 찾게 바꿨습니다. 최소 피어 수는 1로 낮췄습니다. 데이터는 비우고 처음부터 다시 받았습니다. 블록을 만들지 않는 노드 2, 3은 블록 생성 옵션을 껐습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>노드 2의 메모리는 392Mi에서 189Mi로, 노드 3은 388Mi에서 243Mi로 줄었습니다. 두 노드 모두 400Mi 제한 안에 들어왔습니다.</dd></div>
+              </dl>
+            </article>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">T-02</span><h3>블록 시간을 줄이려다 합의를 바꾼 문제</h3></header>
+              <dl class="ts__rows">
+                <div><dt>문제</dt><dd>블록이 15초마다 나와서, 반려동물 등록 트랜잭션이 확정되기까지 약 30초가 걸렸습니다. Clique의 블록 주기를 5초로 바꿔 다시 띄웠지만 블록은 계속 15초마다 나왔습니다.</dd></div>
+                <div><dt>원인</dt><dd>당시에는 Clique 구현의 제한으로 판단했습니다. 다시 확인해 보니 genesis에 넣은 키(<code>period</code>)는 Geth에서 쓰는 이름이었습니다. Besu가 읽는 Clique 키는 <code>blockperiodseconds</code>이고, 기본값이 15초입니다. 키가 읽히지 않아 기본값이 그대로 적용된 것으로 봅니다.</dd></div>
+                <div><dt>해결</dt><dd>합의를 QBFT로 바꾸고 <code>blockperiodseconds</code>를 5로 두었습니다. 이어서 생긴 문제도 풀었습니다. 합의 설정 값(extraData)은 손으로 인코딩하다 계속 틀려서 Besu 내장 도구로 만들었습니다. 체인을 처음부터 다시 만들고 컨트랙트를 다시 배포하자 <code>Invalid opcode: 0x5f</code>(PUSH0)로 실패했습니다. 이 체인은 London 하드포크까지만 켜져 있어서, 컴파일러 대상을 london으로 맞췄습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>블록 생성은 15초에서 5초로, 트랜잭션 확정은 약 30초에서 약 10초로 줄었습니다 (블로그 기록값).</dd></div>
+              </dl>
+            </article>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">T-03</span><h3>MetaMask가 서명만 하는 요청을 받지 않던 문제</h3></header>
+              <dl class="ts__rows">
+                <div><dt>문제</dt><dd>처음 설계는 사용자가 서명한 트랜잭션을 게이트웨이가 받아 보내는 방식이었습니다. 그런데 MetaMask는 서명만 하고 보내지 않는 요청을 지원하지 않았습니다.</dd></div>
+                <div><dt>원인</dt><dd>MetaMask는 트랜잭션에 서명하면 바로 네트워크로 보냅니다. 그래서 게이트웨이는 서명된 원본을 받을 수 없었습니다.</dd></div>
+                <div><dt>해결</dt><dd>게이트웨이가 트랜잭션 해시도 받게 바꿨습니다. 해시가 오면 1블록 확정을 30초까지 직접 기다립니다. 되돌려진 트랜잭션은 같은 호출을 <code>eth_call</code>로 다시 실행해 실패 이유를 로그에 남겼습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>지갑의 제약 안에서도 "체인 확정 뒤에만 큐에 작업을 넣는다"는 순서를 지켰습니다.</dd></div>
+              </dl>
+            </article>
+          </section>
+
+          <section id="d-result" aria-labelledby="d-result-h">
+            <h2 class="sechead" id="d-result-h"><span class="sechead__no">05</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ul>
+              <li>상명대학교 핀테크·빅데이터융합·스마트생산 학술제 최우수상 (2026.01)</li>
+              <li>제9회 K-PaaS 활용 공모전 서비스 개발 부문 출품 (2025.10)</li>
+              <li>NCP Kubernetes에 게이트웨이, 내부 gRPC 서버 4개, Spring 서버, 화면, Besu 노드 3개, 큐용 Redis, PostgreSQL을 올렸습니다.</li>
+              <li>회원가입과 로그인, 반려동물 등록, 채팅 상담과 입양까지 시연 영상으로 남겼습니다. 배포 화면에 비문 벡터 해시로 만든 펫 DID가 표시됩니다.</li>
+              <li>블록 생성 15초 → 5초, 트랜잭션 확정 약 30초 → 약 10초 (프라이빗 체인, 블로그 기록값)</li>
+            </ul>
+            <h3>마치지 못한 것</h3>
+            <ul>
+              <li>비문 검증 결과를 ML 서버 서명으로 체인에 기록하는 함수는 컨트랙트에 만들었습니다. 시연에서는 서버에서만 검증했습니다.</li>
+              <li>보호자 변경 트랜잭션이 입양 승인 때 먼저 확정되어, 비문 검증이 체인의 보호자 변경을 막지는 못했습니다.</li>
+              <li>같은 강아지의 이중 등록은 막지 못했습니다.</li>
+              <li>인덱서가 트랜잭션 입력에서 펫 DID를 읽는 부분에 함수 정의가 빠져 있어, 이력이 실제로 쌓였는지는 확인하지 못했습니다.</li>
+            </ul>
+
+<figure class="shot"><a href="../assets/side/dogdogpaw/erd.jpg" target="_blank" rel="noopener"><img src="../assets/side/dogdogpaw/erd.jpg" alt="팀 ERD. 입양, 후원, 채팅을 저장하는 Spring 서버의 DB입니다. pet 테이블의 did 칸이 체인의 펫 DID와 이어집니다" loading="lazy"></a><figcaption>팀 ERD. 입양, 후원, 채팅을 저장하는 Spring 서버의 DB입니다. pet 테이블의 did 칸이 체인의 펫 DID와 이어집니다</figcaption></figure>
+          </section>
+
+          <section id="d-learn" aria-labelledby="d-learn-h">
+            <h2 class="sechead" id="d-learn-h"><span class="sechead__no">06</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>체인에 확정된 기록은 되돌릴 수 없어서, 여러 서버를 맞추는 순서부터 정해야 했습니다. 같은 이름의 설정도 클라이언트마다 키가 달랐습니다. 이제는 쓰는 클라이언트의 문서로 genesis 키를 먼저 확인합니다. 배포 전에는 체인의 하드포크 설정과 컴파일러 대상 버전도 함께 확인합니다.</p>
+          </section>
+
+          <section id="d-kw" aria-labelledby="d-kw-h">
+            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">07</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ol class="keywords">
+              <li><span class="kw__n">01</span><span class="kw__t">체인 확정 뒤 큐로 맞추는 서버 간 연동 설계</span></li>
+              <li><span class="kw__n">02</span><span class="kw__t">Kubernetes 위 Besu 네트워크 구축과 장애 분석</span></li>
+              <li><span class="kw__n">03</span><span class="kw__t">지갑 서명, DID, VC/VP 기반 인증</span></li>
+            </ol>
+          </section>
+
+          <section id="d-links" aria-labelledby="d-links-h">
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">08</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ul>
+              <li><a href="https://github.com/DogDogPaw/dogdogpaw-api-gateway" target="_blank" rel="noopener">게이트웨이와 아키텍처 설명</a></li>
+              <li><a href="https://github.com/DogDogPaw/blockchain-contract" target="_blank" rel="noopener">컨트랙트</a></li>
+              <li><a href="https://github.com/DogDogPaw/dogdogpaw-indexer-server" target="_blank" rel="noopener">인덱서</a></li>
+              <li><a href="https://github.com/DogDogPaw/ml-server" target="_blank" rel="noopener">ML 서버</a></li>
+              <li><a href="https://github.com/DogDogPaw/vc-server" target="_blank" rel="noopener">VC 서버</a></li>
+              <li><a href="https://velog.io/@ahwlsqja/Kubernetes에서-Besu-프라이빗-네트워크-삽질기" target="_blank" rel="noopener">노드 장애 기록 (velog)</a></li>
+              <li><a href="https://velog.io/@ahwlsqja/Besu-블록-타임-5초로-못-줄이겠어서-합의-알고리즘을-바꿔버린-슬픈-이야기" target="_blank" rel="noopener">합의 변경 기록 (velog)</a></li>
+              <li><a href="https://youtu.be/_ttPlAIccy0" target="_blank" rel="noopener">시연 영상, 반려동물 등록과 입양</a></li>
+            </ul>
+          </section>
+
+          <nav class="pager" aria-label="다른 프로젝트">
+            <a class="prev" href="../index.html#side"><span class="k">첫 프로젝트</span><span class="t">포트폴리오 목록으로</span></a>
+            <a class="next" href="fabric.html"><span class="k">다음 프로젝트</span><span class="t">Scholarly Chain, Hyperledger Fabric 학생회 장부</span></a>
+          </nav>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="shell foot">
+  <span>© 2026 모진영</span>
+  <a href="../index.html#side">← 포트폴리오</a>
+</footer>
+</body>
+</html>
