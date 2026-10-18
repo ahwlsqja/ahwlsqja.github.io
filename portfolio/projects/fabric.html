@@ -47,9 +47,9 @@
         <p class="doc-lede">학생이 낸 회비는 학생회가 승인하고, 학생회가 쓴 돈은 학생이 투표로 허가하는 블록체인 장부 서비스입니다. 그중 Hyperledger Fabric 네트워크를 로컬 Kubernetes에 띄우고, 서비스 서버와 블록체인을 잇는 NestJS 서버를 만들었습니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2025.03 – 2025.06</dd></div>
-          <div><dt>구분</dt><dd>학과 캡스톤디자인 과제, 4명 (기획과 디자인 1, 프론트엔드 1, 백엔드 1, 블록체인과 인프라 1)</dd></div>
-          <div class="wide"><dt>역할</dt><dd>블록체인과 인프라 담당. Fabric 네트워크와 NestJS 블록체인 연동 서버를 직접 설계하고 개발. 체인코드 배포</dd></div>
-          <div class="wide"><dt>상태</dt><dd>완료. 로컬 Kubernetes(k3s, 이후 minikube)에 직접 띄워 운영</dd></div>
+          <div><dt>구분</dt><dd>학과 캡스톤디자인 과제입니다. 4명이 기획과 디자인, 프론트엔드, 백엔드, 블록체인과 인프라를 한 명씩 나눠 맡았습니다.</dd></div>
+          <div class="wide"><dt>역할</dt><dd>블록체인과 인프라를 맡았습니다. Fabric 네트워크와, 서비스 서버의 요청을 블록체인으로 전달하는 NestJS 연동 서버를 직접 설계하고 개발했습니다. 체인코드 배포도 제가 했습니다.</dd></div>
+          <div class="wide"><dt>상태</dt><dd>완료</dd></div>
           <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Hyperledger Fabric 2.3</li><li class="chip">Kubernetes</li><li class="chip">NestJS</li><li class="chip">Redis Streams</li><li class="chip">Firebase</li><li class="chip">CouchDB</li></ul></dd></div>
         </dl>
       </div>
@@ -72,14 +72,14 @@
         <article class="doc-main">
           <section id="d-situation" aria-labelledby="d-situation-h">
             <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황: 어떤 프로젝트이고 무엇을 해결하는가</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <p>학과 캡스톤디자인에서 4명이 만든 학생회비 장부 서비스입니다. 조직 README에 적힌 주제는 "학생회비 장부를 학과 구성원들과 투명하게 공개하는 블록체인 기반 클라우드 네이티브 웹 서비스"입니다.</p>
-            <p>학생회비는 학생이 내고 학생회가 씁니다. 그런데 장부는 학생회만 기록합니다. 학생은 기록이 맞는지 확인할 방법이 없습니다. 조직 README에 적힌 목표는 학생회 공금 횡령 문제를 예방하는 것입니다.</p>
+            <p>학과 캡스톤디자인에서 4명이 만든 학생회비 장부 서비스입니다. 주제는 "학생회비 장부를 학과 구성원들과 투명하게 공개하는 블록체인 기반 클라우드 네이티브 웹 서비스"입니다.</p>
+            <p>학생회비는 학생이 내고 학생회가 씁니다. 그런데 장부는 학생회만 기록합니다. 학생은 기록이 맞는지 확인할 방법이 없습니다. 목표는 학생회 공금 횡령 문제를 예방하는 것입니다.</p>
             <dl class="scope">
               <dt>해결하려는 문제</dt><dd>학생회만 기록하는 학생회비 장부를 학생이 확인할 수 없습니다.</dd>
               <dt>해결 방식</dt><dd>입금은 학생회가 승인하고, 출금은 학생이 투표로 허가합니다. 승인된 기록은 블록체인 원장에 남깁니다.</dd>
             </dl>
 
-<figure class="shot"><a href="../assets/side/fabric/service-flow.png" target="_blank" rel="noopener"><img src="../assets/side/fabric/service-flow.png" alt="서비스 개념. 학생이 입금을 기입하면 학생회가 승인하고, 학생회가 출금을 기입하면 학생이 투표합니다. 결과는 블록체인에 남습니다. (조직 README)" loading="lazy"></a><figcaption>서비스 개념. 학생이 입금을 기입하면 학생회가 승인하고, 학생회가 출금을 기입하면 학생이 투표합니다. 결과는 블록체인에 남습니다. (조직 README)</figcaption></figure>
+<figure class="shot"><a href="../assets/side/fabric/service-flow.png" target="_blank" rel="noopener"><img src="../assets/side/fabric/service-flow.png" alt="서비스 개념. 학생이 입금을 기입하면 학생회가 승인하고, 학생회가 출금을 기입하면 학생이 투표합니다. 결과는 블록체인에 남습니다." loading="lazy"></a><figcaption>서비스 개념. 학생이 입금을 기입하면 학생회가 승인하고, 학생회가 출금을 기입하면 학생이 투표합니다. 결과는 블록체인에 남습니다.</figcaption></figure>
 
             <h3>서비스 기능</h3>
             <ul>
@@ -103,8 +103,8 @@
             <h2 class="sechead" id="d-task-h"><span class="sechead__no">02</span><span class="sechead__title">과제와 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p>팀 목표는 가입, 입금 승인, 출금 투표를 원장에 남기는 서비스를 한 학기 안에 만드는 것이었습니다. 팀은 기획과 디자인, 프론트엔드, 백엔드, 블록체인과 인프라 각 1명입니다. 저는 블록체인과 인프라를 맡았습니다.</p>
             <dl class="scope">
-              <dt>직접 설계하고 개발</dt><dd>Fabric 네트워크 구성(오더러 3대, 조직 2개의 피어와 CouchDB, CA 3대, 설정 파일 44개 중 Kubernetes 리소스 27개), 체인코드 배포(체인코드 이미지를 피어 밖의 별도 Deployment로 띄우는 외부 서비스 방식), NestJS 연동 서버(CA 인증서 발급, 체인코드 호출, 결과 응답), 서버 사이 메시지 규약(백엔드 담당 팀원과 함께 정하고 NestJS 쪽을 구현)</dd>
-              <dt>팀원이 맡은 부분</dt><dd>Spring Boot API 서버(로그인, 학번 검증, MySQL, FCM 알림, 증빙 이미지 업로드), Next.js 화면과 Vercel 배포, 서비스 기획과 디자인</dd>
+              <dt>직접 설계하고 개발</dt><dd>Fabric 네트워크를 구성했습니다. 거래를 블록으로 묶는 오더러 3대, 학생과 학생회 두 조직의 피어와 피어가 상태 데이터를 두는 CouchDB, 인증서를 발급하는 CA 3대로 이루어져 있습니다. 네트워크 설정 파일은 44개이고, 그중 27개가 Kubernetes에 올리는 리소스 정의입니다. 체인코드는 이미지로 만들어 피어 밖의 별도 Deployment로 띄우고, 피어가 여기에 접속해 실행을 맡기는 외부 서비스 방식으로 배포했습니다. NestJS 연동 서버는 CA에서 사용자 인증서를 발급받고, 체인코드를 호출하고, 실행 결과를 Spring 서버에 돌려줍니다. 서버끼리 주고받는 메시지 형식은 백엔드 담당 팀원과 함께 정했고, 그중 NestJS 쪽 구현을 맡았습니다.</dd>
+              <dt>팀원이 맡은 부분</dt><dd>로그인, 학번 검증, MySQL 저장, Firebase 푸시 알림(FCM), 증빙 이미지 업로드를 맡는 Spring Boot API 서버는 팀원이 만들었습니다. Next.js 화면과 Vercel 배포, 서비스 기획과 디자인도 팀원들이 맡았습니다.</dd>
             </dl>
           </section>
 
@@ -222,24 +222,24 @@
 
             <p>초기 구조에서는 Spring 서버가 Fabric과 직접 통신했습니다. 최종 구조에서는 블록체인 통신을 NestJS 서버로 떼어 냈습니다. 두 서버 사이에는 Redis Streams를 두었습니다.</p>
 
-<figure class="shot"><a href="../assets/side/fabric/eks-architecture-plan.png" target="_blank" rel="noopener"><img src="../assets/side/fabric/eks-architecture-plan.png" alt="클라우드 배포 설계도. 서울 리전 가용영역 2개에 EKS 워커 노드를 두고 EFS로 PV를 공유하는 구성입니다. 실제 네트워크는 로컬 Kubernetes에 띄워 운영했습니다. (조직 README)" loading="lazy"></a><figcaption>클라우드 배포 설계도. 서울 리전 가용영역 2개에 EKS 워커 노드를 두고 EFS로 PV를 공유하는 구성입니다. 실제 네트워크는 로컬 Kubernetes에 띄워 운영했습니다. (조직 README)</figcaption></figure>
+<figure class="shot"><a href="../assets/side/fabric/eks-architecture-plan.png" target="_blank" rel="noopener"><img src="../assets/side/fabric/eks-architecture-plan.png" alt="클라우드 배포 설계도. 서울 리전 가용영역 2개에 EKS 워커 노드를 두고 EFS로 PV를 공유하는 구성입니다. 실제 네트워크는 로컬 Kubernetes에 띄워 운영했습니다." loading="lazy"></a><figcaption>클라우드 배포 설계도. 서울 리전 가용영역 2개에 EKS 워커 노드를 두고 EFS로 PV를 공유하는 구성입니다. 실제 네트워크는 로컬 Kubernetes에 띄워 운영했습니다.</figcaption></figure>
 
             <ul>
-              <li>화면 (Next.js, 팀원): 입출금 등록, 승인, 투표, 조회</li>
-              <li>API 서버 (Spring Boot, 팀원): 로그인, 학번 검증, 요청을 스트림에 넣고 응답 대기, FCM 알림</li>
-              <li>메시지 (Redis Streams): 요청 스트림과 응답 스트림 2개</li>
-              <li>연동 서버 (NestJS, Fabric SDK): 요청을 체인코드 호출로 바꾸고 결과를 응답 스트림으로 돌려줌</li>
-              <li>키 저장소 (Firebase): 사용자별 인증서와 개인키 보관</li>
-              <li>원장 (Fabric 2.3): 오더러 3대(Raft), 학생과 학생회 조직의 피어와 CouchDB, CA 3대, 채널 1개</li>
-              <li>인프라 (Kubernetes): 로컬 k3s에서 minikube로 옮겨 운영</li>
+              <li>화면은 팀원이 Next.js로 만들었습니다. 학생과 학생회가 입출금 내역을 올리고, 승인하고, 투표하고, 조회하는 곳입니다.</li>
+              <li>API 서버는 팀원이 Spring Boot로 만들었습니다. 로그인과 학번 검증을 하고, 블록체인이 필요한 요청은 요청 스트림에 넣은 뒤 응답 스트림에서 결과를 기다립니다. 사용자에게 가는 푸시 알림(FCM)도 이 서버가 보냅니다.</li>
+              <li>두 서버 사이의 메시지는 Redis Streams로 주고받습니다. Spring 서버가 요청을 넣는 요청 스트림과, NestJS 서버가 결과를 돌려주는 응답 스트림 두 개를 두었습니다.</li>
+              <li>연동 서버는 제가 NestJS와 Fabric SDK로 만들었습니다. 요청 스트림에서 읽은 메시지를 체인코드 호출로 바꾸고, 실행 결과를 응답 스트림으로 돌려줍니다.</li>
+              <li>키 저장소로는 Firebase를 썼습니다. 사용자마다 발급한 인증서와 개인키를 여기에 보관합니다.</li>
+              <li>원장은 Fabric 2.3 네트워크에 남습니다. 네트워크는 Raft 방식으로 합의하는 오더러 3대, 학생 조직과 학생회 조직의 피어와 CouchDB, CA 3대로 이루어져 있고, 원장을 함께 쓰는 단위인 채널은 하나만 두었습니다.</li>
+              <li>인프라는 로컬 Kubernetes입니다. 처음에는 k3s에 띄웠다가 minikube로 옮겨 운영했습니다.</li>
             </ul>
 
             <h3>2. 주요 흐름</h3>
             <h4>흐름 1. 가입과 인증서 발급</h4>
             <ol>
-              <li>Spring 서버가 실제 학생인지 확인하고 요청 스트림에 가입 메시지를 넣습니다(팀원).</li>
+              <li>팀원이 만든 Spring 서버가 가입하려는 사람이 실제 학생인지 확인하고, 요청 스트림에 가입 메시지를 넣습니다.</li>
               <li>NestJS 서버가 요청 스트림에서 메시지를 읽습니다.</li>
-              <li>조직 CA에 사용자를 등록하고 인증서와 개인키를 받습니다.</li>
+              <li>NestJS 서버가 사용자가 속한 조직의 CA에 사용자를 등록하고, 인증서와 개인키를 발급받습니다.</li>
               <li>받은 인증서와 개인키를 Firebase에 저장합니다.</li>
               <li>그 인증서로 가입 요청 체인코드를 실행합니다. 원장에는 대기(PENDING) 상태가 남습니다.</li>
               <li>체인코드 실행이 끝나면 응답 스트림에 결과를 넣습니다.</li>
@@ -265,10 +265,10 @@
             <ol>
               <li>학생회가 출금 내역을 올리면 체인코드가 1시간짜리 투표를 엽니다.</li>
               <li>출금 체인코드 실행이 끝나면 NestJS 서버가 결과를 응답 스트림에 넣습니다.</li>
-              <li>Spring 서버가 이 응답을 받아 학생들에게 투표 알림을 보냅니다(팀원).</li>
+              <li>팀원이 만든 Spring 서버가 이 응답을 받아 학생들에게 투표 알림을 보냅니다.</li>
               <li>학생이 투표하면 투표 체인코드가 집계를 바꿉니다.</li>
               <li>투표 마감은 마감 확인 체인코드로 처리합니다. 1시간이 지난 투표는 찬반 비율로 결과가 정해져 원장에 남습니다.</li>
-              <li>이 체인코드는 NestJS 서버 안의 작업이 10분마다 부릅니다.</li>
+              <li>마감 확인 체인코드는 NestJS 서버 안에 등록한 작업이 10분마다 호출합니다.</li>
               <li>마감 확인은 NestJS 서버에 HTTP 요청을 보내 실행할 수도 있습니다.</li>
             </ol>
 
@@ -277,17 +277,17 @@
             <h4>계좌 자동 연동인가, 직접 입력과 상호 확인인가</h4>
             <ul>
               <li>고민: 처음에는 학생회 계좌 거래 내역을 API로 받아 블록체인에 넣으려 했습니다. 계좌 조회 API는 마이데이터 사업자만 쓸 수 있었습니다.</li>
-              <li>선택지: 모의 데이터를 계속 넣어 실시간처럼 보이게 하기, 또는 학생과 학생회가 직접 입력하고 상대가 확인하기.</li>
+              <li>선택지: 두 가지였습니다. 모의 데이터를 계속 넣어 실시간으로 연동되는 것처럼 보이게 하는 방법과, 학생과 학생회가 직접 입력하고 상대가 확인하는 방법입니다.</li>
               <li>결정: 팀 회의에서 직접 입력 방식으로 정했습니다. 모의 데이터 방식은 사용자가 할 일이 없었습니다. 이에 따라 입금은 학생회가, 출금은 학생이 확인하는 구조가 됐습니다.</li>
             </ul>
 
             <h4>퍼블릭 체인인가, 허가형 Fabric인가</h4>
             <ul>
               <li>고민: 학과 밖 사람은 장부를 볼 수 없어야 했습니다. 학생과 학생회 소속도 구분해야 했습니다.</li>
-              <li>선택지: 누구나 참여하는 퍼블릭 체인, 또는 미리 허가된 참여자만 들어오는 Hyperledger Fabric.</li>
+              <li>선택지: 누구나 참여할 수 있는 퍼블릭 체인과, 미리 허가된 참여자만 들어올 수 있는 Hyperledger Fabric을 비교했습니다.</li>
               <li>결정: Fabric을 골랐습니다. 체인코드는 Go로, 연동 서버는 TypeScript로 쓸 수 있어 새 언어를 배울 부담이 적었습니다.</li>
-              <li>구성: 학생 조직과 학생회 조직을 나누었습니다(<code>StudentMSP</code>, <code>Student-councilMSP</code>). 조직마다 CA를 두었습니다.</li>
-              <li>보증 정책: Fabric 기본값인 과반(MAJORITY)입니다. 조직이 2개라 두 조직이 모두 보증해야 기록이 남습니다.</li>
+              <li>구성: 학생 조직과 학생회 조직을 나누었습니다. Fabric이 조직 구성원의 신원을 확인할 때 쓰는 조직 식별자(MSP)는 각각 <code>StudentMSP</code>와 <code>Student-councilMSP</code>입니다. 조직마다 인증서를 발급하는 CA를 따로 두었습니다.</li>
+              <li>보증 정책: 거래 하나를 원장에 남기려면 몇 개 조직의 보증(서명)을 받아야 하는지 정하는 규칙입니다. Fabric 기본값인 과반(MAJORITY)을 그대로 썼습니다. 조직이 2개뿐이라 과반을 넘으려면 두 조직이 모두 보증해야 기록이 남습니다.</li>
             </ul>
 
             <h4>체인코드 이벤트를 누가 받을 것인가</h4>
@@ -300,51 +300,51 @@
 
             <ul>
               <li>고민: 가입 요청이 원장에 남으면 학생회 구성원에게 알려야 했습니다.</li>
-              <li>선택지: 1안은 클라이언트가 1,000개면 이벤트 하나에 요청이 1,000개 들어옵니다. 2안은 연결이 늘수록 서버 부담이 커집니다. 3안은 로그인한 클라이언트만 채널을 구독합니다.</li>
-              <li>결정: 당시 글에서는 3안을 절충안으로 적고, 팀원과 정하기로 했습니다.</li>
-              <li>최종 구조: 블록체인과 통신하는 서버를 NestJS 한 곳으로 모았습니다. 사용자 알림은 Spring 서버가 FCM으로 보냅니다(팀원).</li>
+              <li>선택지: 세 가지 안을 비교했습니다. 1안은 각 클라이언트가 체인코드 이벤트를 감지해 API 서버에 다시 알리는 구조라, 클라이언트가 1,000개면 이벤트 하나에 API 서버로 요청이 1,000개 들어옵니다. 2안은 WebSocket 연결을 계속 유지하는 구조라 연결이 늘수록 서버 부담이 커집니다. 3안은 로그인 상태를 Redis에 두고, 로그인한 클라이언트만 알림 채널을 구독하게 합니다.</li>
+              <li>결정: 당시 블로그 글에서는 3안을 절충안으로 적어 두고, 최종안은 팀원과 함께 정하기로 했습니다.</li>
+              <li>최종 구조: 블록체인과 통신하는 서버를 NestJS 서버 한 곳으로 모았습니다. 사용자 알림은 팀원이 만든 Spring 서버가 FCM 푸시로 보냅니다.</li>
             </ul>
 
             <h4>Redis Pub/Sub인가, Redis Streams인가</h4>
             <ul>
               <li>고민: 요청 하나가 여러 서버를 거칩니다. 중간에 NestJS 서버가 멈추면 Pub/Sub 메시지는 사라집니다.</li>
-              <li>선택지: Redis Pub/Sub, Redis Streams, Kafka.</li>
+              <li>선택지: Redis Pub/Sub, Redis Streams, Kafka 세 가지를 비교했습니다.</li>
               <li>결정: Redis Streams를 골랐습니다. 메시지가 스트림에 남아 있어, 받는 서버가 잠시 멈춰도 사라지지 않습니다.</li>
-              <li>지연: 블록체인 기록 한 건은 수백 밀리초에서 몇 초가 걸립니다. 그래서 Streams의 추가 지연은 문제가 되지 않는다고 봤습니다.</li>
+              <li>지연: 블록체인에 기록 한 건을 남기는 데 수백 밀리초에서 몇 초가 걸립니다. 그래서 Streams를 한 번 거치며 생기는 지연은 이에 비해 작아 문제가 되지 않는다고 봤습니다.</li>
               <li>제외: Kafka는 운영 부담이 커서 뺐습니다.</li>
             </ul>
 
             <h4>사용자 키를 어디에 둘 것인가</h4>
             <ul>
               <li>고민: Fabric SDK의 기본 지갑은 키를 서버 디스크 파일로 둡니다. NestJS Pod가 여러 개면 한 Pod에서 가입한 사용자의 키가 다른 Pod에는 없습니다.</li>
-              <li>선택지: 파일 지갑, CouchDB 지갑, Firebase.</li>
+              <li>선택지: 키를 서버 디스크에 두는 파일 지갑, CouchDB에 두는 CouchDB 지갑, Firebase에 두는 방법을 비교했습니다.</li>
               <li>결정: Firebase를 골랐습니다. CouchDB 지갑은 별도 인프라가 필요했습니다. Firebase는 알림 때문에 이미 쓰고 있었습니다.</li>
-              <li>구현: 요청마다 Firebase에서 꺼낸 인증서와 개인키를 메모리 지갑에 넣어 체인코드를 실행합니다.</li>
+              <li>구현: 요청이 올 때마다 Firebase에서 해당 사용자의 인증서와 개인키를 꺼내, 메모리에만 두는 지갑에 넣고 그 사용자의 신원으로 체인코드를 실행합니다.</li>
             </ul>
 
             <h3>4. 구현 상세</h3>
             <h4>Fabric 네트워크를 Kubernetes에 올리기</h4>
             <ul>
-              <li>오더러는 etcdraft(Raft 합의) 3대입니다. 3대 중 2대가 살아 있으면 합의가 유지됩니다.</li>
-              <li>블록은 2초가 지나거나 거래가 10건 모이면 만들어집니다(Fabric 샘플 기본값).</li>
+              <li>오더러는 Raft 합의 방식으로 3대를 두었습니다. Fabric 설정에서는 이 방식을 etcdraft라고 부릅니다. 3대 중 2대만 살아 있어도 거래 순서를 정하는 합의가 계속 이루어집니다.</li>
+              <li>블록은 2초가 지나거나 거래가 10건 모이면 만들어집니다. Fabric 샘플 설정의 기본값을 그대로 썼습니다.</li>
               <li>피어와 CouchDB를 한 Pod에 두었습니다.</li>
               <li>피어는 Prometheus가 지표를 읽어 갈 수 있게 9443 포트를 열었습니다.</li>
-              <li>띄우는 순서는 PV, CA 3대, 인증서 발급 Job, 초기 블록과 채널 설정 파일을 만드는 Job, 오더러와 피어, 채널 가입, 체인코드 설치와 조직별 승인입니다.</li>
+              <li>네트워크는 다음 순서로 띄웁니다. 먼저 데이터를 보관할 저장 공간(PV)을 만들고 CA 3대를 띄웁니다. 이어서 한 번 실행하고 끝나는 Kubernetes 작업(Job)으로 인증서를 발급하고, 또 다른 Job으로 첫 블록과 채널 설정 파일을 만듭니다. 그다음 오더러와 피어를 띄워 피어를 채널에 가입시키고, 마지막으로 체인코드를 설치해 조직마다 승인합니다.</li>
             </ul>
             <h4>체인코드를 피어 밖에서 실행하기</h4>
             <ul>
               <li>체인코드를 이미지로 만들어 조직마다 별도 Deployment로 띄웠습니다.</li>
-              <li>피어에는 외부 빌더 스크립트를 넣었습니다. 피어는 체인코드를 직접 빌드하지 않고 체인코드 서버에 연결합니다.</li>
-              <li>체인코드 소스는 공개 레포에 없습니다. 배포에 쓴 이미지는 제 Docker Hub 계정에 있습니다.</li>
-              <li>NestJS 서버가 호출하는 체인코드 함수는 22개입니다(기록 11개, 조회 11개).</li>
+              <li>피어에는 외부 빌더 스크립트를 넣었습니다. 그래서 피어는 체인코드를 직접 빌드하지 않고, 따로 떠 있는 체인코드 서버에 접속해 실행을 맡깁니다.</li>
+              <li>체인코드 소스는 공개 저장소에 올라가 있지 않습니다. 배포에 쓴 이미지는 제 Docker Hub 계정에 있습니다.</li>
+              <li>NestJS 서버가 호출하는 체인코드 함수는 22개입니다. 원장에 기록을 남기는 함수가 11개, 조회만 하는 함수가 11개입니다.</li>
             </ul>
             <h4>NestJS 연동 서버</h4>
             <ul>
-              <li>요청 스트림을 한 번에 10개씩 읽고, 요청 종류 17종을 각 처리기로 넘깁니다.</li>
-              <li>메시지를 처리기에 넘긴 뒤 처리 완료 표시(ACK)를 남깁니다.</li>
+              <li>요청 스트림에서 메시지를 한 번에 10개씩 읽습니다. 가입, 입금, 투표처럼 요청 종류가 17가지이고, 종류마다 맡는 처리 함수로 나눠 넘깁니다.</li>
+              <li>메시지를 처리 함수에 넘긴 뒤 Redis에 처리 완료 표시(ACK)를 남깁니다.</li>
               <li>체인코드 실행이 실패하면 오류 응답을 응답 스트림에 넣어 Spring 서버에 알립니다.</li>
               <li>응답에 원래 요청의 ID를 넣어 Spring 서버가 요청과 응답을 짝짓게 했습니다.</li>
-              <li>체인코드 이벤트를 받는 처리기와 10분 주기 마감 확인 작업을 서버에 등록했습니다.</li>
+              <li>체인코드가 보내는 이벤트를 받는 처리 함수와, 10분마다 투표 마감을 확인하는 작업을 서버에 등록했습니다.</li>
             </ul>
           </section>
 
@@ -354,18 +354,18 @@
               <header class="ts__head"><span class="ts__id">T-01</span><h3>CA 인증서에 Pod 이름이 들어가 접속에 실패한 문제</h3></header>
               <dl class="ts__rows">
                 <div><dt>문제</dt><dd>인증서 발급 스크립트가 CA에 접속하면 <code>x509: certificate is valid for ca-orderer-549bd75db5-xxg95, localhost, not ca-orderer</code> 오류가 났습니다. 12시간 넘게 막혀 있었습니다.</dd></div>
-                <div><dt>원인</dt><dd>CA가 처음 뜰 때 만든 TLS 인증서의 이름(CN)에 Pod 이름이 들어갔습니다. 클라이언트는 Service 이름으로 접속해 호스트명 검증에서 실패했습니다.</dd></div>
-                <div><dt>해결</dt><dd>CA 3대의 설정 파일에 Service 이름을 적어 두고, CA가 뜨기 전에 적용했습니다. 피어 인증서도 Service 이름으로 발급했습니다.</dd></div>
-                <div class="is-key"><dt>결과</dt><dd>CA, 오더러, 피어가 Service 이름으로 TLS 연결을 맺었습니다.</dd></div>
+                <div><dt>원인</dt><dd>CA는 처음 뜰 때 TLS 인증서를 만들면서 인증서의 이름(CN)에 자기 Pod 이름을 넣었습니다. Pod 이름은 Kubernetes가 붙이는 이름이라 <code>ca-orderer-549bd75db5-xxg95</code>처럼 뒤에 무작위 문자가 붙습니다. 클라이언트는 고정된 Service 이름인 <code>ca-orderer</code>로 접속했기 때문에, 접속한 주소와 인증서에 적힌 이름이 달라 호스트명 검증에서 실패했습니다.</dd></div>
+                <div><dt>해결</dt><dd>CA 3대의 설정 파일에 인증서에 넣을 이름으로 Service 이름을 적어 두고, CA가 처음 뜨기 전에 이 설정이 적용되게 했습니다. 피어 인증서도 Service 이름으로 발급했습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>인증서에 적힌 이름과 접속하는 Service 이름이 같아지면서, CA와 오더러와 피어가 서로 Service 이름으로 접속해 TLS 연결을 맺었습니다.</dd></div>
               </dl>
             </article>
             <article class="ts">
               <header class="ts__head"><span class="ts__id">T-02</span><h3>WSL2 위 k3s에서 CA에 닿지 않던 문제</h3></header>
               <dl class="ts__rows">
-                <div><dt>문제</dt><dd><code>localhost:10054</code>로 CA에 접속하면 해당 프로세스를 찾지 못했습니다.</dd></div>
-                <div><dt>원인</dt><dd>k3s와 WSL2의 네트워크가 분리돼 있었습니다. 포트포워딩으로 우회할 수는 있었지만, WSL2 IP가 실행할 때마다 바뀌어 번거로웠습니다.</dd></div>
-                <div><dt>해결</dt><dd>별도 VM으로 클러스터를 만드는 minikube로 옮겼습니다. minikube VM은 Windows와 같은 호스트 네트워크를 씁니다.</dd></div>
-                <div class="is-key"><dt>결과</dt><dd>오더러와 피어의 볼륨 설정을 minikube 기준으로 맞췄습니다.</dd></div>
+                <div><dt>문제</dt><dd>k3s에 띄운 CA에 <code>localhost:10054</code>로 접속하면, 그 주소에서 응답하는 프로세스를 찾지 못했습니다.</dd></div>
+                <div><dt>원인</dt><dd>k3s가 쓰는 네트워크와 WSL2의 네트워크가 분리돼 있어 localhost로는 CA에 닿지 않았습니다. 포트포워딩으로 우회할 수는 있었지만, WSL2의 IP 주소가 실행할 때마다 바뀌어 쓰기 번거로웠습니다.</dd></div>
+                <div><dt>해결</dt><dd>클러스터를 별도 가상 머신(VM)에 만드는 minikube로 옮겼습니다. minikube의 VM은 Windows와 같은 호스트 네트워크를 씁니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>minikube로 옮기면서 오더러와 피어가 데이터를 저장하는 볼륨 설정을 minikube 환경에 맞게 고쳤습니다.</dd></div>
               </dl>
             </article>
           </section>
@@ -373,15 +373,15 @@
           <section id="d-result" aria-labelledby="d-result-h">
             <h2 class="sechead" id="d-result-h"><span class="sechead__no">05</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
-              <li>오더러 3대, 조직 2개, CA 3대로 된 Fabric 네트워크를 로컬 Kubernetes에 직접 띄워 운영했습니다.</li>
-              <li>가입, 입금 승인, 출금 투표에 쓰는 체인코드 함수 22개(기록 11개, 조회 11개)를 NestJS 서버에서 호출하게 만들었습니다.</li>
+              <li>거래 순서를 정하는 오더러 3대, 학생과 학생회 두 조직, 인증서를 발급하는 CA 3대로 이루어진 Fabric 네트워크를 로컬 Kubernetes에 직접 띄워 운영했습니다.</li>
+              <li>가입, 입금 승인, 출금 투표에 쓰는 체인코드 함수 22개를 NestJS 서버에서 호출할 수 있게 만들었습니다. 원장에 기록을 남기는 함수와 조회만 하는 함수가 11개씩입니다.</li>
               <li>구성과 문제 해결 과정은 블로그로 남겼습니다.</li>
             </ul>
             <h3>한계</h3>
             <ul>
               <li>개인키를 Firebase에 암호화하지 않고 저장했습니다.</li>
               <li>서버가 모든 사용자의 키를 대신 보관했습니다. 그래서 서버를 운영하는 사람은 누구의 이름으로도 서명할 수 있었습니다.</li>
-              <li>NestJS 서버는 메시지를 처리기에 넘긴 직후 ACK를 남깁니다. 그래서 체인코드 실행 중 서버가 멈추면 그 요청은 다시 처리되지 않습니다.</li>
+              <li>NestJS 서버는 메시지를 처리 함수에 넘기자마자 처리 완료 표시(ACK)를 남깁니다. 그래서 체인코드를 실행하는 도중에 서버가 멈추면, 그 요청은 이미 끝난 것으로 표시돼 있어 다시 처리되지 않습니다.</li>
             </ul>
           </section>
 
@@ -393,7 +393,7 @@
           <section id="d-links" aria-labelledby="d-links-h">
             <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
-              <li><a href="https://github.com/Capstone-scholarly-chain/.github/blob/main/profile/README.md" target="_blank" rel="noopener">조직 README</a></li>
+              <li><a href="https://github.com/Capstone-scholarly-chain/.github/blob/main/profile/README.md" target="_blank" rel="noopener">GitHub 조직 소개</a></li>
               <li><a href="https://github.com/Capstone-scholarly-chain/Fabric-Network-Backend" target="_blank" rel="noopener">Fabric 네트워크와 NestJS 서버</a></li>
               <li><a href="https://velog.io/@ahwlsqja/캡스톤-프로젝트-아키텍쳐-구성과-서비스-흐름도" target="_blank" rel="noopener">블로그, 캡스톤 아키텍처와 서비스 흐름도</a></li>
               <li><a href="https://velog.io/@ahwlsqja/local-k3s-환경에서-hyperlegder-fabric-deploy하기-1" target="_blank" rel="noopener">블로그, local k3s 환경에서 Fabric 배포</a></li>
