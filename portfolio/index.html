@@ -175,51 +175,59 @@
               <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Go</li><li class="chip">ClickHouse</li><li class="chip">IndexedDB</li><li class="chip">Kafka</li><li class="chip">Flink</li></ul></span>
             <span class="row__when">2026.04 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
-          <li><a class="row" href="projects/clickhouse.html">
+          <li><a class="row" href="projects/ads.html">
             <span class="row__no">03</span>
+            <span class="row__main"><span class="row__title">광고 연동 코어(ADS-CORE) 설계: 수집, 정합, 여정 스티칭, ROAS</span>
+              <span class="row__sum">광고 플랫폼마다 다르게 늦게 바뀌는 성과 데이터를 하나의 코어로 모으고, 사이트 여정 속 광고 접점에 꿰어 실제 리드와 구매로 ROAS를 계산하는 구조 설계와 운영</span>
+              <ul class="chips"><li class="chip">Go</li><li class="chip">Kafka</li><li class="chip">ClickHouse</li><li class="chip">PostgreSQL</li><li class="chip">GKE</li><li class="chip">GCS</li><li class="chip">Flink</li><li class="chip">Cloudflare Images·Stream</li></ul></span>
+            <span class="row__when">2026.06 – 2026.10</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
+          <li><a class="row" href="projects/platform.html">
+            <span class="row__no">04</span>
+            <span class="row__main"><span class="row__title">Blue/Green 설계와 안전한 전환: Cloud Run과 관리형 ClickHouse를 GKE로 이관</span>
+              <span class="row__sum">기존 환경을 그대로 두고 GKE에 새 환경을 나란히 세운 뒤, 되돌리는 길을 먼저 확인하고 트래픽과 읽기를 옮긴 이관</span>
+              <ul class="chips"><li class="chip">GKE</li><li class="chip">Terraform</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">External Secrets</li><li class="chip">ClickHouse Keeper</li><li class="chip">clickhouse-backup</li></ul></span>
+            <span class="row__when">2026.09 – 2026.10</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
+          <li><a class="row" href="projects/clickhouse.html">
+            <span class="row__no">05</span>
             <span class="row__main"><span class="row__title">ClickHouse 저장 구조와 조회 경로 최적화</span>
               <span class="row__sum">MergeTree 동작을 근거로 테이블마다 파티션과 정렬 키를 다시 정하고, 화면별 조회 경로 설계</span>
               <ul class="chips"><li class="chip">ClickHouse</li><li class="chip">ReplacingMergeTree</li><li class="chip">Projection</li><li class="chip">Refreshable MV</li><li class="chip">EXPLAIN</li><li class="chip">system.query_log</li></ul></span>
             <span class="row__when">2026.08 – 2026.09</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/elt.html">
-            <span class="row__no">04</span>
+            <span class="row__no">06</span>
             <span class="row__main"><span class="row__title">수집과 ELT 파이프라인 0→1</span>
               <span class="row__sum">브라우저 이벤트를 받아 ClickHouse 원본부터 조회용 테이블까지 잇는 수집과 ELT 경로 신규 구축</span>
               <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Cloudflare Queues</li><li class="chip">ClickHouse</li><li class="chip">PostgreSQL</li><li class="chip">R2</li></ul></span>
             <span class="row__when">2026.04 – 2026.09</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/sdlc.html">
-            <span class="row__no">05</span>
+            <span class="row__no">07</span>
             <span class="row__main"><span class="row__title">AI 네이티브 SDLC: AI 에이전트와 함께 일하는 개발, 검증, 배포 체계</span>
-              <span class="row__sum">AI 에이전트가 만든 변경도 사람의 변경과 같은 검사를 거치게 한 개발, 검증, 배포 체계</span>
+              <span class="row__sum">AI 에이전트의 변경도 사람의 변경과 같은 검사를 거치게 한 개발, 검증, 배포 체계</span>
               <ul class="chips"><li class="chip">Linear</li><li class="chip">GitHub Actions</li><li class="chip">OIDC</li><li class="chip">Infisical</li><li class="chip">Atlas</li><li class="chip">Terraform</li></ul></span>
             <span class="row__when">2026.04 – 2026.09</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
+          <li><a class="row" href="projects/deploy.html">
+            <span class="row__no">08</span>
+            <span class="row__main"><span class="row__title">AI 네이티브 개발을 위한 배포 파이프라인 설계와 GitOps 전환</span>
+              <span class="row__sum">한 번 빌드한 이미지를 staging에서 검증하고 같은 digest로 운영에 올리는 파이프라인을 만들고, Argo CD와 Kargo 기반 GitOps로 옮긴 배포 체계</span>
+              <ul class="chips"><li class="chip">GitHub Actions</li><li class="chip">Terraform</li><li class="chip">Infisical</li><li class="chip">GKE Autopilot</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">External Secrets Operator</li></ul></span>
+            <span class="row__when">2026.05 – 2026.10</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/sre.html">
-            <span class="row__no">06</span>
+            <span class="row__no">09</span>
             <span class="row__main"><span class="row__title">SRE 에이전트 플랫폼</span>
               <span class="row__sum">지표를 5분마다 읽어 사건을 기록하고, AI 1차 진단을 남기며 P0가 아니면 사람을 부르지 않는 사내 SRE 서비스</span>
               <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Durable Object</li><li class="chip">Cloudflare Queues</li><li class="chip">Cloud Run Job</li><li class="chip">Managed Prometheus</li><li class="chip">Slack</li></ul></span>
-            <span class="row__when">2026.09 – 2026.10</span>
-            <span class="row__go" aria-hidden="true">→</span></a></li>
-          <li><a class="row" href="projects/platform.html">
-            <span class="row__no">07</span>
-            <span class="row__main"><span class="row__title">Blue/Green 설계와 안전한 전환: Cloud Run과 관리형 ClickHouse를 GKE로 이관</span>
-              <span class="row__sum">기존 환경을 그대로 두고 GKE에 새 환경을 나란히 세운 뒤, 되돌리는 길을 먼저 확인하고 트래픽과 읽기를 옮긴 이관</span>
-              <ul class="chips"><li class="chip">GKE</li><li class="chip">Terraform</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">External Secrets</li><li class="chip">ClickHouse Keeper</li><li class="chip">clickhouse-backup</li></ul></span>
             <span class="row__when">2026.09 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
         </ol>
 
         <h3 class="label sublabel">그 밖의 작업</h3>
         <ul class="rows">
-          <li><div class="row row--static">
-            <span class="row__no">—</span>
-            <span class="row__main"><span class="row__title">광고 데이터 연동</span>
-              <span class="row__sum">Meta와 Google 광고 계정 연결부터 90일 최초 수집, 시간 단위 재수집까지의 상태 전이와 수집 백엔드 개발</span></span>
-            <span class="row__when">2026.08 – 2026.09</span>
-            <span class="row__go" aria-hidden="true"></span></div></li>
           <li><div class="row row--static">
             <span class="row__no">—</span>
             <span class="row__main"><span class="row__title">Cloud Run 비용 정리</span>
@@ -237,7 +245,7 @@
         </div>
         <ol class="rows">
           <li><a class="row" href="projects/worldland.html">
-            <span class="row__no">08</span>
+            <span class="row__no">10</span>
             <span class="row__main"><span class="row__title">월드랜드 GPU 렌탈 마켓</span>
               <span class="row__sum">공급자 GPU 머신을 명령 한 줄로 붙이고 결제가 확인된 렌탈에만 GPU를 내주는 마켓 개발</span>
               <ul class="chips"><li class="chip">Go</li><li class="chip">client-go</li><li class="chip">kubeadm</li><li class="chip">containerd</li><li class="chip">mTLS</li><li class="chip">go-ethereum</li><li class="chip">Solidity</li></ul></span>
@@ -282,7 +290,7 @@
           <div class="card__visual card__visual--thumb"><img class="card__thumb" src="assets/side/fabric/thumb.png" alt="Scholarly Chain 조직 이미지" loading="lazy"><span class="mono">Fabric / etcdraft</span></div>
           <div class="card__body">
             <h3><a href="projects/fabric.html">Scholarly Chain: Hyperledger Fabric 학생회 장부</a></h3>
-            <p class="card__sum">학생이 낸 회비는 학생회가 승인하고, 학생회가 쓴 돈은 학생이 투표로 허가하는 장부 서비스입니다. Fabric 네트워크를 Kubernetes에 띄우고, 서비스와 블록체인을 잇는 NestJS 서버를 만들었습니다.</p>
+            <p class="card__sum">학생이 낸 회비는 학생회가 승인하고, 학생회가 쓴 돈은 학생이 투표로 허가하는 장부 서비스입니다. Fabric 네트워크를 AWS EKS에 배포해 운영하고, 서비스와 블록체인을 잇는 NestJS 서버를 만들었습니다.</p>
             <ul class="chips"><li class="chip">Hyperledger Fabric</li><li class="chip">Kubernetes</li><li class="chip">NestJS</li><li class="chip">Redis Streams</li><li class="chip">CouchDB</li></ul>
           </div>
           <div class="card__foot">
@@ -357,7 +365,7 @@
         <li><a class="row" href="https://github.com/gsd-build/gsd-2/pulls?q=is%3Amerged+author%3Aahwlsqja" target="_blank" rel="noopener">
           <span class="row__no">OSS</span>
           <span class="row__main"><span class="row__title">gsd-build/gsd-2</span>
-            <span class="row__sum">AI 코딩 도구에서 작업 상태가 파일과 DB 사이에서 어긋나 같은 작업이 계속 다시 배정되던 문제를 고쳐 반영됐습니다.</span></span>
+            <span class="row__sum">스펙 기반 개발 워크플로 도구에서 작업 상태가 파일과 DB 사이에서 어긋나 같은 작업이 계속 다시 배정되던 문제를 고쳐 반영됐습니다.</span></span>
           <span class="row__when">2026.03</span>
           <span class="row__go" aria-hidden="true">↗</span></a></li>
       </ol>

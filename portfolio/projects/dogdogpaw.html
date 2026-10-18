@@ -52,7 +52,7 @@
           <div class="wide"><dt>수상과 출품</dt><dd>상명대학교 핀테크·빅데이터융합·스마트생산 학술제 최우수상 (2026.01) / 제9회 K-PaaS 활용 공모전 서비스 개발 부문 출품 (2025.10)</dd></div>
           <div class="wide"><dt>역할</dt><dd>팀장으로 기획을 이끌고 전체 구조를 설계했습니다. 블록체인 쪽에서는 Besu 네트워크와 컨트랙트를 만들었습니다. 서버 쪽에서는 API Gateway와 내부 서버 4개(VC 서버, ML 서버, 인덱서, Faucet 서버)를 만들고 서로 연결했습니다. 배포도 직접 설계하고 진행했습니다.</dd></div>
           <div class="wide"><dt>상태</dt><dd>완료</dd></div>
-          <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Hyperledger Besu(Clique에서 QBFT로 전환)</li><li class="chip">Solidity</li><li class="chip">OpenZeppelin</li><li class="chip">NestJS</li><li class="chip">ethers v6</li><li class="chip">Bull 큐</li><li class="chip">Socket.io</li><li class="chip">Go</li><li class="chip">FastAPI</li><li class="chip">ONNX Runtime</li><li class="chip">gRPC</li><li class="chip">PostgreSQL</li><li class="chip">Redis</li><li class="chip">Kubernetes(NCP NKS)</li></ul></dd></div>
+          <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Hyperledger Besu(Clique에서 QBFT로 전환)</li><li class="chip">Solidity</li><li class="chip">OpenZeppelin</li><li class="chip">NestJS</li><li class="chip">ethers v6</li><li class="chip">Bull queue</li><li class="chip">Socket.io</li><li class="chip">Go</li><li class="chip">FastAPI</li><li class="chip">ONNX Runtime</li><li class="chip">gRPC</li><li class="chip">PostgreSQL</li><li class="chip">Redis</li><li class="chip">Kubernetes(NCP NKS)</li></ul></dd></div>
         </dl>
       </div>
     </div>
@@ -101,7 +101,7 @@
             <ul>
               <li>펫 DID와 현재 보호자는 체인 위에서 실행되는 프로그램인 컨트랙트에 저장합니다.</li>
               <li>컨트랙트에서 보호자는 현재 보호자의 지갑 서명으로만 바뀝니다.</li>
-              <li>개인정보는 원문 대신 해시값만 체인에 올립니다.</li>
+              <li>개인정보는 원문 대신 hash만 체인에 올립니다.</li>
               <li>체인은 공개 네트워크가 아니라 직접 띄운 프라이빗 체인입니다. 이더리움과 같은 방식으로 동작하는 블록체인을 직접 운영할 수 있게 해 주는 오픈소스 소프트웨어인 Hyperledger Besu를 썼습니다. 새로 가입한 지갑에는 Faucet 서버가 테스트 코인을 보내, 사용자가 실제 돈 없이 트랜잭션을 보낼 수 있게 했습니다.</li>
             </ul>
             <p>다만 블록을 만들고 승인하는 노드가 1개뿐인 시연용 체인이라, 이 기록이 운영자에게서 독립돼 있다고까지 말하지는 않습니다.</p>
@@ -111,7 +111,7 @@
             <h2 class="sechead" id="d-task-h"><span class="sechead__no">02</span><span class="sechead__title">과제와 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p>팀 목표는 회원가입부터 반려동물 등록, 입양, 후원까지 실제로 동작하는 서비스를 클라우드에 올려 시연하는 것이었습니다. K-PaaS 공모전 출품작이라 네이버 클라우드 플랫폼(NCP)의 Kubernetes에 올렸습니다. 저는 팀장으로 기획을 이끌고 전체 구조를 그렸습니다.</p>
             <dl class="scope">
-              <dt>직접 설계하고 개발</dt><dd>Besu 노드 3개를 NCP Kubernetes에 띄워 운영했습니다. 노드들이 다음 블록을 정하는 규칙인 합의 방식은 Clique에서 QBFT로 바꿨습니다. 펫 DID와 현재 보호자를 저장하는 PetDIDRegistry, 보호자 개인정보 해시와 보호자-펫 연결을 저장하는 GuardianRegistry, 이렇게 컨트랙트 2개를 개발하고 배포했습니다. 모든 요청이 처음 들어오는 NestJS API Gateway(이하 게이트웨이)를 만들었습니다. 게이트웨이는 지갑 서명 로그인과 VP 검증, 트랜잭션 확정 확인, 작업 큐, Spring 서버로 요청 넘기기, 채팅 소켓 연결을 맡습니다. 게이트웨이가 gRPC로 호출하는 내부 서버 4개도 만들었습니다. 보호자 증명서를 다루는 VC 서버, 비문 사진을 분석하는 ML 서버, 보호자 변경 이력을 모으는 인덱서, 새 지갑에 테스트 코인을 보내는 Faucet입니다. 서비스마다 Dockerfile과 Kubernetes 배포 설정 파일(매니페스트)도 작성했습니다.</dd>
+              <dt>직접 설계하고 개발</dt><dd>Besu 노드 3개를 NCP Kubernetes에 띄워 운영했습니다. 노드들이 다음 블록을 정하는 규칙인 합의 방식은 Clique에서 QBFT로 바꿨습니다. 펫 DID와 현재 보호자를 저장하는 PetDIDRegistry, 보호자 개인정보 hash와 보호자-펫 연결을 저장하는 GuardianRegistry, 이렇게 컨트랙트 2개를 개발하고 배포했습니다. 모든 요청이 처음 들어오는 NestJS API Gateway(이하 게이트웨이)를 만들었습니다. 게이트웨이는 지갑 서명 로그인과 VP 검증, 트랜잭션 확정 확인, 작업 queue, Spring 서버로 요청 넘기기, 채팅 소켓 연결을 맡습니다. 게이트웨이가 gRPC로 호출하는 내부 서버 4개도 만들었습니다. 보호자 증명서를 다루는 VC 서버, 비문 사진을 분석하는 ML 서버, 보호자 변경 이력을 모으는 인덱서, 새 지갑에 테스트 코인을 보내는 Faucet입니다. 서비스마다 Dockerfile과 Kubernetes 배포 설정 파일(매니페스트)도 작성했습니다.</dd>
               <dt>팀원이 맡은 부분</dt><dd>백엔드 팀원이 입양 공고, 후원과 결제, 스토리, 채팅 메시지 저장을 맡는 Spring 서버를 만들었습니다. 프런트엔드 팀원이 Next.js로 화면을 만들었습니다.</dd>
             </dl>
             <h3>풀어야 할 기술 과제</h3>
@@ -133,14 +133,14 @@
             <p>아래 목록에서 표시가 없는 항목은 직접 설계하고 개발했습니다. 팀원이 맡은 항목은 "(팀원 개발)"로 적었습니다.</p>
             <ul>
               <li>Ingress 2개: 외부 요청을 클러스터 안의 서비스로 보내는 입구입니다. 서비스용 Ingress는 <code>/</code> 주소를 화면으로, <code>/api</code> 주소를 게이트웨이로 보냅니다. 다른 하나는 사용자 지갑이 Besu 노드에 직접 트랜잭션을 보낼 때 쓰는 입구(RPC)입니다.</li>
-              <li>게이트웨이 (NestJS): 모든 요청이 처음 들어오는 곳입니다. 로그인을 처리하고, 지갑이 보낼 컨트랙트 호출 데이터를 준비하고, 트랜잭션이 확정됐는지 확인하고, 큐에 넣은 작업을 처리합니다.</li>
+              <li>게이트웨이 (NestJS): 모든 요청이 처음 들어오는 곳입니다. 로그인을 처리하고, 지갑이 보낼 컨트랙트 호출 데이터를 준비하고, 트랜잭션이 확정됐는지 확인하고, queue에 넣은 작업을 처리합니다.</li>
               <li>VC 서버 (NestJS): 보호자와 보호소 정보, 펫 VC를 저장하고, 보호자가 바뀌면 이전 VC를 무효로 만듭니다.</li>
               <li>ML 서버 (FastAPI): 비문 사진의 특징을 숫자 512개로 요약한 벡터(512차원 벡터)로 바꾸고, 두 벡터가 얼마나 비슷한지 계산합니다.</li>
               <li>인덱서 (Go): 체인의 보호자 변경 이벤트를 모아 반려동물별 이력으로 저장합니다.</li>
               <li>Faucet (NestJS): 새로 가입한 지갑에 테스트 코인을 보냅니다.</li>
               <li>Spring 서버 (MySQL, 팀원 개발): 입양 공고, 후원, 결제, 스토리, 채팅 메시지를 저장합니다.</li>
               <li>Besu 노드 3개: 블록을 만드는 노드 1개와, 블록은 만들지 않고 외부 요청을 받는 RPC 노드 2개입니다. 재시작해도 노드 이름과 데이터가 유지되도록 Kubernetes의 StatefulSet과 PVC(영구 저장 공간)로 띄웠습니다.</li>
-              <li>Redis 2개: 클러스터 안에 띄운 Redis는 작업 큐에만 씁니다. 클라우드에서 관리해 주는 외부 Redis는 로그인 토큰과 VP 보관, 채팅 메시지 전달에 씁니다.</li>
+              <li>Redis 2개: 클러스터 안에 띄운 Redis는 작업 queue에만 씁니다. 클라우드에서 관리해 주는 외부 Redis는 로그인 토큰과 VP 보관, 채팅 메시지 전달에 씁니다.</li>
             </ul>
             <p>게이트웨이와 내부 서버 4개 사이는 gRPC로 연결했습니다. 주고받는 데이터 형식은 proto 파일에 정의해, 양쪽이 같은 형식을 쓰도록 고정했습니다. 팀원이 만든 Spring 서버만 HTTP로 연결했습니다.</p>
 
@@ -149,11 +149,11 @@
             <ol>
               <li>화면이 비문 사진을 저장소 임시 폴더에 올립니다.</li>
               <li>게이트웨이가 사진을 ML 서버로 보내 512차원 벡터를 받습니다.</li>
-              <li>게이트웨이가 벡터를 이더리움에서 쓰는 해시 함수인 keccak256으로 해시하고, 그 값으로 만든 <code>did:ethr:besu:&lt;해시&gt;</code>를 펫 DID로 정합니다.</li>
+              <li>게이트웨이가 벡터를 이더리움에서 쓰는 hash 함수인 keccak256으로 hash하고, 그 값으로 만든 <code>did:ethr:besu:&lt;hash&gt;</code>를 펫 DID로 정합니다.</li>
               <li>게이트웨이가 트랜잭션 2개를 보내는 데 필요한 컨트랙트 호출 데이터와, 사용자가 서명할 VC 데이터를 돌려줍니다. 트랜잭션 2개는 반려동물 등록과 보호자-펫 연결입니다.</li>
               <li>사용자가 지갑으로 두 트랜잭션을 보내고 VC에 서명합니다.</li>
               <li>게이트웨이는 반려동물 등록 트랜잭션이 블록에 담겨 확정되기를 기다렸다가, 확정되면 바로 화면에 응답합니다.</li>
-              <li>사진을 정식 경로로 옮기는 일, 보호자-펫 연결 트랜잭션이 확정됐는지 확인하는 일, VC 저장은 큐로 넘겨 뒤이어 처리합니다. Spring 서버에 정보를 맞추는 일은 사진 이동이 끝난 뒤 이어서 합니다.</li>
+              <li>사진을 정식 경로로 옮기는 일, 보호자-펫 연결 트랜잭션이 확정됐는지 확인하는 일, VC 저장은 queue로 넘겨 뒤이어 처리합니다. Spring 서버에 정보를 맞추는 일은 사진 이동이 끝난 뒤 이어서 합니다.</li>
             </ol>
 
 <figure class="dg" id="dg-dogdogpaw" data-step-ms="3400"
@@ -161,12 +161,12 @@
   data-steps='[
   {"t":"화면이 비문 사진을 사진 저장소의 임시 폴더에 올리고, 게이트웨이에 등록을 요청합니다."},
   {"t":"게이트웨이가 사진을 ML 서버로 보내고, ML 서버가 512차원 벡터로 바꿔 돌려줍니다."},
-  {"t":"게이트웨이가 벡터를 해시해 펫 DID를 정하고, 지갑이 서명할 데이터를 돌려줍니다."},
+  {"t":"게이트웨이가 벡터를 hash해 펫 DID를 정하고, 지갑이 서명할 데이터를 돌려줍니다."},
   {"t":"지갑이 트랜잭션 2개를 체인에 보내고, 게이트웨이는 등록 트랜잭션이 확정되기를 최대 30초 기다립니다.", "d": 4200},
-  {"t":"확정되면 화면에 바로 응답하고, 나머지 작업 3개를 Bull 큐에 넣습니다."},
-  {"t":"큐가 사진 이동, 보호자-펫 연결 확인, VC 저장을 처리하고, Spring 동기화는 사진 이동 뒤에 이어집니다. 실패하면 최대 3번까지 시도합니다.", "d": 5000}
+  {"t":"확정되면 화면에 바로 응답하고, 나머지 작업 3개를 Bull queue에 넣습니다."},
+  {"t":"queue가 사진 이동, 보호자-펫 연결 확인, VC 저장을 처리하고, Spring 동기화는 사진 이동 뒤에 이어집니다. 실패하면 최대 3번까지 retry합니다.", "d": 5000}
 ]'>
-  <figcaption><span class="n">그림 1</span>반려동물 등록, 체인 먼저 확정하고 나머지는 큐로</figcaption>
+  <figcaption><span class="n">그림 1</span>반려동물 등록, 체인 먼저 확정하고 나머지는 queue로</figcaption>
   <div class="dg__canvas">
     <svg viewBox="0 0 728 636" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -181,7 +181,7 @@
       <rect class="zone" fill="none" x="72" y="344" width="336" height="108" rx="10"/>
       <text class="m" x="394" y="364" text-anchor="end">내부 gRPC 서버</text>
       <rect class="zone" fill="none" x="24" y="496" width="680" height="116" rx="10"/>
-      <text class="m" x="690" y="516" text-anchor="end">큐와 동기화 대상</text>
+      <text class="m" x="690" y="516" text-anchor="end">queue와 동기화 대상</text>
 
       <!-- 사용자 -->
       <g data-step="1,5"><rect class="box" fill="var(--surface-2)" x="40" y="56" width="134" height="60" rx="8"/><text class="t" x="54" y="82">화면</text><text class="s" x="54" y="102">비문 사진, 정보 입력</text></g>
@@ -199,7 +199,7 @@
 
       <!-- 큐와 동기화 대상 -->
       <g data-step="1,6"><rect class="box" fill="var(--surface-2)" x="40" y="528" width="152" height="60" rx="8"/><text class="t" x="54" y="554">사진 저장소</text><text class="s" x="54" y="574">임시 폴더 → 정식 경로</text></g>
-      <g data-step="5,6"><rect class="box" fill="var(--surface-2)" x="312" y="528" width="128" height="60" rx="8"/><text class="t" x="326" y="554">Bull 큐</text><text class="s" x="326" y="574">최대 3번 시도</text></g>
+      <g data-step="5,6"><rect class="box" fill="var(--surface-2)" x="312" y="528" width="128" height="60" rx="8"/><text class="t" x="326" y="554">Bull queue</text><text class="s" x="326" y="574">최대 3번 retry</text></g>
       <g data-step="6"><rect class="box" fill="var(--surface-2)" x="544" y="528" width="144" height="60" rx="8"/><text class="t" x="558" y="554">Spring 서버</text><text class="s" x="558" y="574">화면용 정보 (팀원)</text></g>
 
       <!-- 1단계: 사진 업로드, 등록 요청 -->
@@ -223,7 +223,7 @@
       <path id="dg-dogdogpaw-a6" class="flow" fill="none" data-step="4" d="M344 86H450" marker-end="url(#dg-dogdogpaw-ah)"/>
       <text class="m" x="400" y="78" text-anchor="middle">트랜잭션 2개</text>
       <path id="dg-dogdogpaw-a7" class="flow" fill="none" data-step="4" d="M312 116V218" marker-end="url(#dg-dogdogpaw-ah)"/>
-      <text class="m" x="304" y="158" text-anchor="end">트랜잭션 해시</text>
+      <text class="m" x="304" y="158" text-anchor="end">트랜잭션 hash</text>
       <text class="m" x="304" y="174" text-anchor="end">VC 서명</text>
       <path id="dg-dogdogpaw-a8" class="flow edge--dash" fill="none" data-step="4" d="M440 240H472V122" marker-end="url(#dg-dogdogpaw-ah)"/>
       <text class="m" x="464" y="196" text-anchor="end">등록 확정 대기</text>
@@ -265,7 +265,7 @@
 </figure>
 
 
-<figure class="shot"><a href="../assets/side/dogdogpaw/demo-adopt-did.jpg" target="_blank" rel="noopener"><img src="../assets/side/dogdogpaw/demo-adopt-did.jpg" alt="배포 환경의 입양 공고 화면. 펫 DID가 비문 벡터 해시로 만든 did:ethr:besu 형식으로 보입니다" loading="lazy"></a><figcaption>배포 환경의 입양 공고 화면. 펫 DID가 비문 벡터 해시로 만든 did:ethr:besu 형식으로 보입니다</figcaption></figure>
+<figure class="shot"><a href="../assets/side/dogdogpaw/demo-adopt-did.jpg" target="_blank" rel="noopener"><img src="../assets/side/dogdogpaw/demo-adopt-did.jpg" alt="배포 환경의 입양 공고 화면. 펫 DID가 비문 벡터 hash로 만든 did:ethr:besu 형식으로 보입니다" loading="lazy"></a><figcaption>배포 환경의 입양 공고 화면. 펫 DID가 비문 벡터 hash로 만든 did:ethr:besu 형식으로 보입니다</figcaption></figure>
 
             <h4>흐름 2. 입양으로 보호자 바꾸기</h4>
             <ol>
@@ -273,9 +273,9 @@
               <li>현재 보호자가 채팅방에서 입양을 승인합니다. 게이트웨이가 체인에서 현재 보호자를 확인하고, 새 보호자가 서명할 VC 데이터를 만듭니다.</li>
               <li>현재 보호자가 지갑으로 보호자 변경 트랜잭션을 보냅니다. 확정되면 입양 진행 상태를 Redis에 저장해 24시간 동안 보관합니다.</li>
               <li>입양자가 VC 데이터에 서명합니다.</li>
-              <li>입양자가 비문 사진을 올립니다. ML 서버가 이 사진의 벡터를 미리 저장해 둔 벡터와 비교해, 유사도가 정해 둔 기준값을 넘는지 봅니다.</li>
+              <li>입양자가 비문 사진을 올립니다. ML 서버가 이 사진의 벡터를 미리 저장해 둔 벡터와 비교해, similarity score가 정해 둔 threshold를 넘는지 봅니다.</li>
               <li>입양자가 입양을 마치면, 게이트웨이는 그 전 10분 안에 받은 비문 검증 결과가 있는지 확인합니다. 이어서 보호자 변경 트랜잭션이 확정됐는지 다시 확인합니다.</li>
-              <li>이전 보호자의 VC를 무효로 만드는 일, 새 보호자의 VC를 만드는 일, 바뀐 보호자를 Spring 서버에 반영하는 일은 큐로 넘깁니다.</li>
+              <li>이전 보호자의 VC를 무효로 만드는 일, 새 보호자의 VC를 만드는 일, 바뀐 보호자를 Spring 서버에 반영하는 일은 queue로 넘깁니다.</li>
               <li>입양자는 다음 로그인부터 이 반려동물의 VC를 담은 VP를 냅니다.</li>
             </ol>
 
@@ -284,29 +284,29 @@
             <h4>체인과 여러 서버 DB 중 무엇을 먼저 바꿀까</h4>
             <ul>
               <li>고민: 반려동물 하나를 등록하면 체인, VC 서버, Spring, 사진 저장소 네 곳이 바뀝니다. 중간에 하나가 실패하면 서로 어긋납니다.</li>
-              <li>선택지: 모든 서버를 동기 호출로 묶는 방법, 실패하면 앞 단계를 되돌리는 방법(보상 트랜잭션), 체인을 먼저 확정하는 방법이 있었습니다.</li>
-              <li>결정: 체인 기록을 먼저 확정하고, 나머지 세 곳은 큐에 넣은 작업이 뒤따라 맞추게 했습니다. 체인에 남은 기록은 되돌릴 수 없어서, 실패하면 앞 단계를 되돌리는 보상 트랜잭션은 성립하지 않았습니다. 모든 서버를 동기 호출로 묶으면 서버 수만큼 사용자가 응답을 오래 기다립니다. 큐는 용도별로 나눴고, 작업이 실패하면 재시도 간격을 점점 늘려 가며 최대 3번까지 시도하게 했습니다. 끝내 실패한 작업은 지우지 않고 남겨 두었습니다. 대신 응답 직후에는 Spring 서버가 보여 주는 화면에 반려동물이 늦게 나타날 수 있습니다.</li>
+              <li>선택지: 모든 서버를 동기 호출로 묶는 방법, 실패하면 앞 단계를 되돌리는 compensating transaction, 체인을 먼저 확정하는 방법이 있었습니다.</li>
+              <li>결정: 체인 기록을 먼저 확정하고, 나머지 세 곳은 queue에 넣은 작업이 뒤따라 맞추게 했습니다. 체인에 남은 기록은 되돌릴 수 없어서, compensating transaction은 성립하지 않았습니다. 모든 서버를 동기 호출로 묶으면 서버 수만큼 사용자가 응답을 오래 기다립니다. queue는 용도별로 나눴고, 작업이 실패하면 exponential backoff로 최대 3번까지 retry하게 했습니다. 끝내 실패한 작업은 지우지 않고 남겨 두었습니다. 대신 응답 직후에는 Spring 서버가 보여 주는 화면에 반려동물이 늦게 나타날 수 있습니다.</li>
             </ul>
 
             <h4>트랜잭션 서명을 누가 할까</h4>
             <ul>
               <li>고민: 서버 키로 대신 등록하면 흐름이 단순합니다. 하지만 체인 기록의 주체가 서버가 됩니다.</li>
               <li>선택지: 서버가 대신 서명하는 방법, 사용자 지갑이 서명하는 방법이 있었습니다.</li>
-              <li>결정: 사용자 지갑이 서명하게 했습니다. 게이트웨이는 지갑이 보낼 컨트랙트 호출 데이터만 만들어 줍니다. 컨트랙트에서 보호자 변경은 현재 보호자만 호출할 수 있게 막았습니다. GuardianRegistry의 보호자-펫 연결도 보호자 본인만 바꿀 수 있습니다. 그래서 입양 뒤 이 연결은 서버 큐가 대신 고칠 수 없었습니다. 입양 뒤 누가 보호자인지는 PetDIDRegistry에 적힌 현재 보호자 하나만 기준으로 삼았습니다.</li>
+              <li>결정: 사용자 지갑이 서명하게 했습니다. 게이트웨이는 지갑이 보낼 컨트랙트 호출 데이터만 만들어 줍니다. 컨트랙트에서 보호자 변경은 현재 보호자만 호출할 수 있게 막았습니다. GuardianRegistry의 보호자-펫 연결도 보호자 본인만 바꿀 수 있습니다. 그래서 입양 뒤 이 연결은 서버 queue가 대신 고칠 수 없었습니다. 입양 뒤 누가 보호자인지는 PetDIDRegistry에 적힌 현재 보호자 하나만 기준으로 삼았습니다.</li>
             </ul>
 
             <h4>로그인 세션에 무엇을 담을까</h4>
             <ul>
               <li>고민: 지갑 주소만으로 로그인하면 이 사람이 어떤 반려동물의 보호자인지 매번 따로 조회해야 합니다.</li>
               <li>선택지: 주소만 담은 토큰, 보유한 VC를 모두 담은 VP를 묶은 토큰이 있었습니다.</li>
-              <li>결정: 로그인 토큰에 VP를 묶어, 로그인 세션 하나가 VP 하나에 대응하게 했습니다. 요청마다 VP의 서명을 다시 검증하면 비용이 들어서, 검증 결과를 1시간 동안 캐시에 두고 재사용했습니다. 지갑은 서명할 때 메시지 앞에 이더리움 전용 접두사를 붙입니다. 그래서 VC와 VP의 서명 검증은 표준 라이브러리를 쓰지 않고, 이 서명 방식에 맞춰 직접 만들었습니다.</li>
+              <li>결정: 로그인 토큰에 VP를 묶어, 로그인 세션 하나가 VP 하나에 대응하게 했습니다. 요청마다 VP의 서명을 다시 검증하면 비용이 들어서, 검증 결과를 1시간 동안 cache에 두고 재사용했습니다. 지갑은 서명할 때 메시지 앞에 이더리움 전용 prefix를 붙입니다. 그래서 VC와 VP의 서명 검증은 표준 라이브러리를 쓰지 않고, 이 서명 방식에 맞춰 직접 만들었습니다.</li>
             </ul>
 
             <h4>펫 DID를 무엇으로 만들까</h4>
             <ul>
               <li>고민: 같은 강아지라도 사진을 찍을 때마다 벡터가 조금씩 다릅니다.</li>
               <li>선택지: 처음 계획은 비슷한 벡터에서 항상 같은 키를 다시 만드는 Fuzzy Extractor였습니다.</li>
-              <li>결정: 최종 구현은 첫 벡터의 해시를 DID로 쓰고, 같은 강아지인지는 서버에서 유사도로 판정하는 방식입니다. 대가로 같은 강아지를 다른 사진으로 등록하면 다른 DID가 나와, 이중 등록을 막지 못합니다.</li>
+              <li>결정: 최종 구현은 첫 벡터의 hash를 DID로 쓰고, 같은 강아지인지는 서버에서 similarity score로 판정하는 방식입니다. 대가로 같은 강아지를 다른 사진으로 등록하면 다른 DID가 나와, 이중 등록을 막지 못합니다.</li>
             </ul>
 
             <h4>보호자 변경 이력을 어디서 읽을까</h4>
@@ -319,23 +319,23 @@
             <h3>4. 구현 상세</h3>
             <h4>게이트웨이</h4>
             <ul>
-              <li>지갑이 보낸 트랜잭션의 해시를 받으면, 그 트랜잭션이 블록 1개에 담겨 확정될 때까지 최대 30초 기다립니다.</li>
+              <li>지갑이 보낸 트랜잭션의 hash를 받으면, 그 트랜잭션이 블록 1개에 담겨 확정될 때까지 최대 30초 기다립니다.</li>
               <li>컨트랙트가 거부해 되돌려진 트랜잭션은, 같은 호출을 체인에 기록을 남기지 않는 시험 실행(<code>eth_call</code>)으로 다시 돌려 실패 이유를 알아내고 로그에 남깁니다.</li>
-              <li>오류 메시지로 종류를 나누고 재시도 가능 여부를 붙였습니다. 네트워크 오류, RPC 오류, 시간 초과는 재시도할 수 있게 두었습니다. 되돌려진 트랜잭션은 재시도하지 않습니다.</li>
+              <li>오류 메시지로 종류를 나누고 retry 가능 여부를 붙였습니다. 네트워크 오류, RPC 오류, timeout은 retry할 수 있게 두었습니다. 되돌려진 트랜잭션은 retry하지 않습니다.</li>
               <li>되돌려진 이유(이미 등록됨, 권한 없음)는 오류 메시지 문자열로 추측해 나눴습니다. 지갑이 직접 보낸 트랜잭션이 되돌려지면 '알 수 없는 오류'로만 분류됩니다.</li>
-              <li>사진은 임시 폴더로 받고, 체인 확정 뒤 큐가 정식 경로로 옮깁니다. 체인이 실패하면 정식 경로에 불필요한 파일이 남지 않습니다.</li>
-              <li>큐용 Redis는 받은 작업을 디스크 파일에 계속 기록하는 방식(AOF)으로 설정하고, 그 파일을 Kubernetes의 영구 저장 공간(PVC)에 두었습니다. 그래서 Redis가 재시작돼도 큐에 쌓인 작업이 남습니다.</li>
+              <li>사진은 임시 폴더로 받고, 체인 확정 뒤 queue가 정식 경로로 옮깁니다. 체인이 실패하면 정식 경로에 불필요한 파일이 남지 않습니다.</li>
+              <li>queue용 Redis는 받은 작업을 디스크 파일에 계속 기록하는 방식(AOF)으로 설정하고, 그 파일을 Kubernetes의 영구 저장 공간(PVC)에 두었습니다. 그래서 Redis가 재시작돼도 queue에 쌓인 작업이 남습니다.</li>
             </ul>
             <h4>컨트랙트와 Besu 네트워크</h4>
             <ul>
-              <li>PetDIDRegistry는 펫 DID, 비문 벡터 해시, 현재 보호자, VC 해시를 저장합니다. 보호자가 바뀌면 <code>ControllerChanged</code> 이벤트를 냅니다.</li>
-              <li>GuardianRegistry는 보호자 개인정보 해시와 보호자-펫 연결을 저장합니다.</li>
+              <li>PetDIDRegistry는 펫 DID, 비문 벡터 hash, 현재 보호자, VC hash를 저장합니다. 보호자가 바뀌면 <code>ControllerChanged</code> 이벤트를 냅니다.</li>
+              <li>GuardianRegistry는 보호자 개인정보 hash와 보호자-펫 연결을 저장합니다.</li>
               <li>Besu 노드는 노드마다 StatefulSet과 PVC를 두어, 노드별 데이터를 따로 보관했습니다. RPC 노드는 시작할 때 블록 생성 노드를 IP 대신 DNS 이름으로 찾아 연결합니다.</li>
             </ul>
             <h4>내부 gRPC 서버</h4>
             <ul>
-              <li>ML 서버는 사진 크기를 가로세로 224픽셀로 맞춘 뒤, 사진을 벡터로 바꾸도록 학습된 모델(ONNX 형식)로 512차원 벡터를 만듭니다. 두 벡터가 얼마나 비슷한지는 코사인 유사도로 계산합니다.</li>
-              <li>인덱서는 시작하면 마지막으로 처리한 블록부터 지금까지 밀린 블록을 1,000개씩 끊어 읽어 따라잡습니다. 다 따라잡으면 WebSocket으로 새 이벤트를 실시간으로 받습니다. 실시간 연결에 실패하면 5초마다 새 블록을 조회하는 방식으로 바꿉니다. 같은 이벤트가 두 번 들어와도 DB의 UNIQUE 제약 때문에 한 번만 저장됩니다.</li>
+              <li>ML 서버는 사진 크기를 가로세로 224픽셀로 맞춘 뒤, 사진을 벡터로 바꾸도록 학습된 모델(ONNX 형식)로 512차원 벡터를 만듭니다. 두 벡터가 얼마나 비슷한지는 cosine similarity로 계산합니다.</li>
+              <li>인덱서는 시작하면 마지막으로 처리한 블록부터 지금까지 밀린 블록을 1,000개씩 끊어 읽어 따라잡습니다. 다 따라잡으면 WebSocket으로 새 이벤트를 실시간으로 받습니다. 실시간 연결에 실패하면 5초마다 새 블록을 조회하는 polling으로 바꿉니다. 같은 이벤트가 두 번 들어와도 DB의 UNIQUE constraint 때문에 한 번만 저장되어, 저장이 idempotent합니다.</li>
             </ul>
           </section>
 
@@ -345,8 +345,8 @@
               <header class="ts__head"><span class="ts__id">T-01</span><h3>Besu 노드 2개가 계속 죽던 문제</h3></header>
               <dl class="ts__rows">
                 <div><dt>문제</dt><dd>노드 2와 3을 네트워크에 붙이자, 두 노드가 메모리 제한 400Mi를 넘겨 Kubernetes에 강제 종료(OOMKilled)되는 일이 반복됐습니다. 살아 있는 동안에도 다른 노드가 최소 5개 연결되기를 기다린다는 로그("Waiting for 5 peers minimum")만 남기고, 블록을 받아 와 동기화하지 않았습니다. 메모리 제한을 1Gi까지 올려도 계속 죽었습니다.</dd></div>
-                <div><dt>원인</dt><dd>Pod IP, 로그, 노드별 메모리 사용량을 하나씩 확인하며 좁혀 보니 네 가지가 겹쳐 있었습니다. 첫째, 노드가 처음 접속할 상대인 bootnode의 주소를 Pod IP로 고정해 두었는데, 이 IP는 재시작할 때마다 바뀝니다. 둘째, 동기화를 시작하는 데 필요한 최소 연결 노드(피어) 수가 기본값 5 그대로였는데, 노드는 3개뿐이었습니다. 셋째, 15일치 데이터, 약 9만 블록을 한 번에 따라잡으면서 메모리가 넘쳤습니다. 넷째, 모든 노드가 함께 쓰는 공통 설정에 블록 생성 옵션이 켜져 있었습니다.</dd></div>
-                <div><dt>해결</dt><dd>원인마다 하나씩 고쳤습니다. bootnode는 IP 대신, 노드가 시작할 때 DNS 이름으로 찾게 바꿨습니다. 최소 피어 수는 1로 낮췄습니다. 쌓인 데이터는 비우고 처음부터 다시 받았습니다. 블록을 만들지 않는 노드 2, 3에서는 블록 생성 옵션을 껐습니다.</dd></div>
+                <div><dt>원인</dt><dd>Pod IP, 로그, 노드별 메모리 사용량을 하나씩 확인하며 좁혀 보니 네 가지가 겹쳐 있었습니다. 첫째, 노드가 처음 접속할 상대인 bootnode의 주소를 Pod IP로 고정해 두었는데, 이 IP는 재시작할 때마다 바뀝니다. 둘째, 동기화를 시작하는 데 필요한 최소 peer 수가 기본값 5 그대로였는데, 노드는 3개뿐이었습니다. 셋째, 15일치 데이터, 약 9만 블록을 한 번에 따라잡으면서 메모리가 넘쳤습니다. 넷째, 모든 노드가 함께 쓰는 공통 설정에 블록 생성 옵션이 켜져 있었습니다.</dd></div>
+                <div><dt>해결</dt><dd>원인마다 하나씩 고쳤습니다. bootnode는 IP 대신, 노드가 시작할 때 DNS 이름으로 찾게 바꿨습니다. 최소 peer 수는 1로 낮췄습니다. 쌓인 데이터는 비우고 처음부터 다시 받았습니다. 블록을 만들지 않는 노드 2, 3에서는 블록 생성 옵션을 껐습니다.</dd></div>
                 <div class="is-key"><dt>결과</dt><dd>노드 2의 메모리 사용량은 392Mi에서 189Mi로, 노드 3은 388Mi에서 243Mi로 줄었습니다. 두 노드 모두 400Mi 메모리 제한 안에 들어왔습니다.</dd></div>
               </dl>
             </article>
@@ -355,7 +355,7 @@
               <dl class="ts__rows">
                 <div><dt>문제</dt><dd>블록이 15초마다 하나씩 만들어져서, 반려동물 등록 트랜잭션이 확정되기까지 약 30초가 걸렸습니다. 당시 쓰던 합의 방식인 Clique의 블록 간격 설정을 5초로 바꿔 체인을 다시 띄웠지만, 블록은 계속 15초마다 나왔습니다.</dd></div>
                 <div><dt>원인</dt><dd>당시에는 Clique 구현에 제한이 있다고 판단했습니다. 다시 확인해 보니, 체인을 처음 만들 때 쓰는 설정 파일(genesis)에 넣은 키 <code>period</code>는 다른 이더리움 노드 소프트웨어인 Geth에서 쓰는 이름이었습니다. Besu가 읽는 Clique 키는 <code>blockperiodseconds</code>이고, 기본값이 15초입니다. 키 이름이 달라 설정이 읽히지 않았고, 기본값 15초가 그대로 적용된 것으로 봅니다.</dd></div>
-                <div><dt>해결</dt><dd>합의 방식을 Clique에서 QBFT로 바꾸고, 블록 간격 설정 <code>blockperiodseconds</code>를 5로 두었습니다. 이어서 생긴 문제도 풀었습니다. QBFT 합의에 필요한 설정 값(extraData)은 손으로 인코딩하다 계속 틀려서, Besu에 들어 있는 도구로 만들었습니다. 체인을 처음부터 다시 만들고 컨트랙트를 다시 배포하자, 체인이 모르는 명령어라는 <code>Invalid opcode: 0x5f</code> 오류로 실패했습니다. 0x5f는 PUSH0 명령어인데, 이더리움 규칙 업그레이드(하드포크) 가운데 London보다 뒤에 추가된 명령어입니다. 이 체인은 London 하드포크까지만 켜져 있어서, 컴파일러가 London 기준으로 코드를 만들도록 대상 버전을 london으로 맞췄습니다.</dd></div>
+                <div><dt>해결</dt><dd>합의 방식을 Clique에서 QBFT로 바꾸고, 블록 간격 설정 <code>blockperiodseconds</code>를 5로 두었습니다. 이어서 생긴 문제도 풀었습니다. QBFT 합의에 필요한 설정 값(extraData)은 손으로 인코딩하다 계속 틀려서, Besu에 들어 있는 도구로 만들었습니다. 체인을 처음부터 다시 만들고 컨트랙트를 다시 배포하자, 체인이 모르는 명령어라는 <code>Invalid opcode: 0x5f</code> 오류로 실패했습니다. 0x5f는 PUSH0 명령어인데, 이더리움 규칙 업그레이드인 hard fork 가운데 London보다 뒤에 추가된 명령어입니다. 이 체인은 London hard fork까지만 켜져 있어서, 컴파일러가 London 기준으로 코드를 만들도록 대상 버전을 london으로 맞췄습니다.</dd></div>
                 <div class="is-key"><dt>결과</dt><dd>블록이 만들어지는 간격은 15초에서 5초로, 트랜잭션이 확정되기까지 걸리는 시간은 약 30초에서 약 10초로 줄었습니다. 두 수치는 당시 블로그에 기록해 둔 값입니다.</dd></div>
               </dl>
             </article>
@@ -364,8 +364,8 @@
               <dl class="ts__rows">
                 <div><dt>문제</dt><dd>처음 설계는 사용자가 서명한 트랜잭션을 게이트웨이가 받아 보내는 방식이었습니다. 그런데 MetaMask는 서명만 하고 보내지 않는 요청을 지원하지 않았습니다.</dd></div>
                 <div><dt>원인</dt><dd>MetaMask는 트랜잭션에 서명하면 바로 네트워크로 보냅니다. 그래서 게이트웨이는 서명된 원본을 받을 수 없었습니다.</dd></div>
-                <div><dt>해결</dt><dd>서명된 원본 대신, 지갑이 트랜잭션을 보낸 뒤 얻은 트랜잭션 해시를 게이트웨이가 받아도 처리할 수 있게 바꿨습니다. 해시가 오면 게이트웨이가 그 트랜잭션이 블록 1개에 담겨 확정될 때까지 최대 30초 직접 기다립니다. 컨트랙트가 거부해 되돌려진 트랜잭션은 같은 호출을 <code>eth_call</code>로 다시 실행해 실패 이유를 로그에 남겼습니다.</dd></div>
-                <div class="is-key"><dt>결과</dt><dd>지갑이 서명과 동시에 트랜잭션을 보내 버리는 제약이 있어도, 체인에서 확정된 것을 확인한 뒤에만 나머지 작업을 큐에 넣는 순서를 지켰습니다.</dd></div>
+                <div><dt>해결</dt><dd>서명된 원본 대신, 지갑이 트랜잭션을 보낸 뒤 얻은 트랜잭션 hash를 게이트웨이가 받아도 처리할 수 있게 바꿨습니다. hash가 오면 게이트웨이가 그 트랜잭션이 블록 1개에 담겨 확정될 때까지 최대 30초 직접 기다립니다. 컨트랙트가 거부해 되돌려진 트랜잭션은 같은 호출을 <code>eth_call</code>로 다시 실행해 실패 이유를 로그에 남겼습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>지갑이 서명과 동시에 트랜잭션을 보내 버리는 제약이 있어도, 체인에서 확정된 것을 확인한 뒤에만 나머지 작업을 queue에 넣는 순서를 지켰습니다.</dd></div>
               </dl>
             </article>
           </section>
@@ -375,8 +375,8 @@
             <ul>
               <li>상명대학교 핀테크·빅데이터융합·스마트생산 학술제 최우수상 (2026.01)</li>
               <li>제9회 K-PaaS 활용 공모전 서비스 개발 부문 출품 (2025.10)</li>
-              <li>NCP Kubernetes에 게이트웨이, 내부 gRPC 서버 4개, Spring 서버, 화면, Besu 노드 3개, 큐용 Redis, PostgreSQL을 올렸습니다.</li>
-              <li>회원가입과 로그인, 반려동물 등록, 채팅 상담과 입양까지 시연 영상으로 남겼습니다. 배포 화면에 비문 벡터 해시로 만든 펫 DID가 표시됩니다.</li>
+              <li>NCP Kubernetes에 게이트웨이, 내부 gRPC 서버 4개, Spring 서버, 화면, Besu 노드 3개, queue용 Redis, PostgreSQL을 올렸습니다.</li>
+              <li>회원가입과 로그인, 반려동물 등록, 채팅 상담과 입양까지 시연 영상으로 남겼습니다. 배포 화면에 비문 벡터 hash로 만든 펫 DID가 표시됩니다.</li>
               <li>직접 운영한 프라이빗 체인에서 블록이 만들어지는 간격을 15초에서 5초로 줄였습니다. 그 결과 반려동물 등록 트랜잭션이 확정되기까지 걸리는 시간도 약 30초에서 약 10초로 줄었습니다. 두 수치는 당시 블로그에 기록해 둔 값입니다.</li>
             </ul>
 <figure class="shot"><a href="../assets/side/dogdogpaw/erd.jpg" target="_blank" rel="noopener"><img src="../assets/side/dogdogpaw/erd.jpg" alt="팀이 만든 ERD(DB 테이블 관계도)입니다. 입양, 후원, 채팅을 저장하는 Spring 서버의 DB를 그렸습니다. pet 테이블의 did 칸이 체인의 펫 DID와 이어집니다" loading="lazy"></a><figcaption>팀이 만든 ERD(DB 테이블 관계도)입니다. 입양, 후원, 채팅을 저장하는 Spring 서버의 DB를 그렸습니다. pet 테이블의 did 칸이 체인의 펫 DID와 이어집니다</figcaption></figure>
@@ -384,7 +384,7 @@
 
           <section id="d-learn" aria-labelledby="d-learn-h">
             <h2 class="sechead" id="d-learn-h"><span class="sechead__no">06</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <p>체인에 확정된 기록은 되돌릴 수 없어서, 여러 서버를 맞추는 순서부터 정해야 했습니다. 같은 블록 간격 설정이라도 노드 소프트웨어(Besu, Geth)마다 genesis 파일에서 쓰는 키 이름이 달랐습니다. 이제는 쓰는 소프트웨어의 문서에서 genesis 키를 먼저 확인합니다. 배포 전에는 체인의 하드포크 설정과 컴파일러 대상 버전도 함께 확인합니다.</p>
+            <p>체인에 확정된 기록은 되돌릴 수 없어서, 여러 서버를 맞추는 순서부터 정해야 했습니다. 같은 블록 간격 설정이라도 노드 소프트웨어(Besu, Geth)마다 genesis 파일에서 쓰는 키 이름이 달랐습니다. 이제는 쓰는 소프트웨어의 문서에서 genesis 키를 먼저 확인합니다. 배포 전에는 체인의 hard fork 설정과 컴파일러 target 버전도 함께 확인합니다.</p>
           </section>
 
           <section id="d-links" aria-labelledby="d-links-h">

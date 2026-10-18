@@ -42,7 +42,7 @@
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.01 – 2026.04</dd></div>
           <div><dt>소속</dt><dd>리버밴스(월드랜드), 계약직 인턴</dd></div>
-          <div class="wide"><dt>역할</dt><dd>중개 서버(Hub) 백엔드, 노드 SDK(노드 데몬과 설치기), 렌탈 정산 컨트랙트 개발</dd></div>
+          <div class="wide"><dt>역할</dt><dd>중개 서버(Hub) 백엔드, 노드 SDK(노드 데몬과 installer), 렌탈 정산 컨트랙트 개발</dd></div>
           <div class="wide"><dt>상태</dt><dd>완료</dd></div>
           <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Go</li><li class="chip">client-go</li><li class="chip">kubeadm</li><li class="chip">containerd</li><li class="chip">NVML</li><li class="chip">mTLS</li><li class="chip">SIWE</li><li class="chip">go-ethereum</li><li class="chip">Solidity</li><li class="chip">Kind</li></ul></dd></div>
         </dl>
@@ -67,7 +67,7 @@
           <section id="d-situation" aria-labelledby="d-situation-h">
             <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <h3>월드랜드는 무엇인가</h3>
-            <p>월드랜드는 리버밴스가 만든 EVM 호환 블록체인입니다. 리버밴스는 GIST 교원 창업 기업이고, 2023년 8월에 메인넷을 열었습니다. 합의는 오류 정정 부호를 쓰는 작업증명(ECCPoW)입니다. 메인넷(Seoul)의 체인 ID는 103입니다.</p>
+            <p>월드랜드는 리버밴스가 만든 EVM 호환 블록체인입니다. 리버밴스는 GIST 교원 창업 기업이고, 2023년 8월에 메인넷을 열었습니다. 합의 알고리즘은 error-correcting code를 쓰는 Proof of Work인 ECCPoW입니다. 메인넷 Seoul의 chain ID는 103입니다.</p>
             <h3>무엇을 위한 프로젝트인가</h3>
             <p>월드랜드는 스스로를 '탈중앙 AI를 위한 웹3 클라우드'라고 소개합니다. 그 중심이 GPU 렌탈 마켓입니다.</p>
             <ul>
@@ -93,8 +93,8 @@
               <table class="tbl">
                 <thead><tr><th scope="col">비즈니스 요구</th><th scope="col">제가 만든 것</th></tr></thead>
                 <tbody>
-                  <tr><th scope="row">공급자가 머신을 쉽게 붙인다</th><td>공급자 머신에 까는 노드 SDK입니다. Hub와 연결을 유지하는 노드 데몬과, 머신을 Kubernetes 클러스터에 합류(join)시키는 설치기로 나뉩니다.</td></tr>
-                  <tr><th scope="row">대금이 확인된 렌탈에만 GPU를 내준다</th><td>체인에서 결제를 확인한 뒤에만 GPU 컨테이너(Pod)를 만드는 흐름과, 렌탈 종료를 체인에서 받아 GPU를 돌려받는 이벤트 리스너입니다.</td></tr>
+                  <tr><th scope="row">공급자가 머신을 쉽게 붙인다</th><td>공급자 머신에 까는 노드 SDK입니다. Hub와 연결을 유지하는 노드 데몬과, 머신을 Kubernetes 클러스터에 join시키는 installer로 나뉩니다.</td></tr>
+                  <tr><th scope="row">대금이 확인된 렌탈에만 GPU를 내준다</th><td>체인에서 결제를 확인한 뒤에만 GPU 컨테이너(Pod)를 만드는 흐름과, 렌탈 종료를 체인에서 받아 GPU를 돌려받는 event listener입니다.</td></tr>
                   <tr><th scope="row">쓴 만큼만 정산하고 남은 돈은 돌려준다</th><td>예치, 정산, 출금을 처리하는 렌탈 정산 컨트랙트입니다.</td></tr>
                   <tr><th scope="row">여러 클러스터의 GPU를 한곳에서 본다</th><td>여러 클러스터의 노드와 렌탈 Pod를 지켜보면서, 지금 빌려줄 수 있는 GPU 수를 세는 기능입니다.</td></tr>
                   <tr><th scope="row">렌탈이 없을 때는 채굴로 수익을 잇는다</th><td>렌탈이 없는 GPU에 채굴 프로그램을 띄우고 내리는 기능입니다. 채굴에 쓰는 GPU는 공급자별로 따로 셉니다.</td></tr>
@@ -103,7 +103,7 @@
             </div>
             <dl class="scope">
               <dt>맡은 일</dt><dd>Hub 백엔드와 노드 SDK, 렌탈 정산 컨트랙트를 맡았습니다. 같은 기간에 웹 화면을 만들고, NFT 마켓과 Faucet 컨트랙트를 월드랜드 메인넷에 배포했습니다.</dd>
-              <dt>팀원</dt><dd>노드 SDK 첫 원형, kubeadm 컨트롤 플레인 구축 가이드, 마이닝 노드 이미지는 팀원이 만들었습니다.</dd>
+              <dt>팀원</dt><dd>노드 SDK 첫 원형, kubeadm control plane 구축 가이드, 마이닝 노드 이미지는 팀원이 만들었습니다.</dd>
             </dl>
           </section>
 
@@ -113,8 +113,8 @@
 
 <figure class="dg" id="dg-worldland" style="--dg-min: 560px" data-step-ms="3400" data-idle="전체 그림입니다. 재생하거나 아래 단계를 누르면 해당 부분을 강조합니다. 정산 컨트랙트는 Sepolia 테스트넷, 클러스터 경로는 Kind에서 확인했습니다." data-steps='[
   {"t":"노드 데몬이 지갑으로 서명해 로그인하면 Hub CA가 mTLS 인증서를 내줍니다."},
-  {"t":"노드 데몬이 NVML로 읽은 GPU 지표를 담아 30초마다 생존 신호를 보내고, 끊기면 다시 연결합니다.", "d": 3800},
-  {"t":"설치기가 Hub에서 24시간짜리 join 명령을 받아 이 머신을 클러스터의 워커 노드로 붙입니다.", "d": 3800},
+  {"t":"노드 데몬이 NVML로 읽은 GPU metric을 담아 30초마다 heartbeat를 보내고, 끊기면 다시 연결합니다.", "d": 3800},
+  {"t":"installer가 Hub에서 24시간짜리 join 명령을 받아 이 머신을 클러스터의 워커 노드로 붙입니다.", "d": 3800},
   {"t":"Hub가 여러 클러스터의 노드와 렌탈 Pod를 지켜보며 빌려줄 수 있는 GPU를 세고, 재시작하면 클러스터에서 다시 셉니다.", "d": 4000},
   {"t":"사용자가 예치하고 렌탈을 시작하면, Hub가 체인에서 그 거래를 확인한 뒤에만 사용자 Namespace에 GPU Pod를 만듭니다.", "d": 4400}
 ]'>
@@ -140,23 +140,23 @@
       <text class="m" x="542" y="348">체인 (Sepolia)</text>
 
       <!-- 공급자 머신 -->
-      <g data-step="3"><rect class="box" x="36" y="84" width="128" height="60" rx="8"/><text class="t" x="50" y="110">설치기</text><text class="s" x="50" y="130">점검, 설치, join</text></g>
+      <g data-step="3"><rect class="box" x="36" y="84" width="128" height="60" rx="8"/><text class="t" x="50" y="110">installer</text><text class="s" x="50" y="130">점검, 설치, join</text></g>
       <g data-step="2"><rect class="box" x="36" y="176" width="128" height="60" rx="8"/><text class="t" x="50" y="202">NVML</text><text class="s" x="50" y="222">GPU 정보 읽기</text></g>
       <g data-step="1,2"><rect class="box" x="36" y="268" width="128" height="60" rx="8"/><text class="t" x="50" y="294">노드 데몬</text><text class="s" x="50" y="314">Hub와 연결 유지</text></g>
 
       <!-- Hub -->
-      <g data-step="3"><rect class="box" x="294" y="84" width="150" height="60" rx="8"/><text class="t" x="308" y="110">join 토큰 발급</text><text class="s" x="308" y="130">24시간, CA 해시 포함</text></g>
+      <g data-step="3"><rect class="box" x="294" y="84" width="150" height="60" rx="8"/><text class="t" x="308" y="110">join 토큰 발급</text><text class="s" x="308" y="130">24시간, CA hash 포함</text></g>
       <g data-step="4"><rect class="box" x="294" y="176" width="150" height="60" rx="8"/><text class="t" x="308" y="202">가용 GPU 계산</text><text class="s" x="308" y="222">전체 − 렌탈 사용 중</text></g>
       <g data-step="1"><rect class="box" x="294" y="268" width="150" height="60" rx="8"/><text class="t" x="308" y="294">Hub CA</text><text class="s" x="308" y="314">지갑 주소로 발급</text></g>
       <g data-step="5"><rect class="box" x="294" y="360" width="150" height="60" rx="8"/><text class="t" x="308" y="386">결제 확인</text><text class="s" x="308" y="406">거래 확인 뒤 Pod 생성</text></g>
-      <g data-step="2"><rect class="box" x="294" y="452" width="150" height="60" rx="8"/><text class="t" x="308" y="478">mTLS 서버</text><text class="s" x="308" y="498">생존 신호 받음</text></g>
+      <g data-step="2"><rect class="box" x="294" y="452" width="150" height="60" rx="8"/><text class="t" x="308" y="478">mTLS 서버</text><text class="s" x="308" y="498">heartbeat 수신</text></g>
 
       <!-- 클러스터 -->
-      <g data-step="3,4"><rect class="box" x="542" y="84" width="138" height="60" rx="8"/><text class="t" x="556" y="110">API 서버</text><text class="s" x="556" y="130">토큰 보관, 노드 합류</text></g>
+      <g data-step="3,4"><rect class="box" x="542" y="84" width="138" height="60" rx="8"/><text class="t" x="556" y="110">API 서버</text><text class="s" x="556" y="130">토큰 보관, 노드 join</text></g>
       <g data-step="5"><rect class="box" x="542" y="176" width="138" height="60" rx="8"/><text class="t" x="556" y="202">사용자 Namespace</text><text class="s" x="556" y="222">GPU Pod, 자원 제한</text></g>
 
       <!-- 체인과 사용자 -->
-      <g data-step="5"><rect class="box" x="542" y="360" width="138" height="60" rx="8"/><text class="t" x="556" y="386">RPC 1..n</text><text class="s" x="556" y="406">차례로 연결</text></g>
+      <g data-step="5"><rect class="box" x="542" y="360" width="138" height="60" rx="8"/><text class="t" x="556" y="386">RPC 1..n</text><text class="s" x="556" y="406">순차 failover</text></g>
       <g data-step="5"><rect class="box" x="542" y="452" width="138" height="60" rx="8"/><text class="t" x="556" y="478">렌탈 컨트랙트</text><text class="s" x="556" y="498">예치, 시작과 종료</text></g>
       <g data-step="5"><rect class="box" x="542" y="544" width="138" height="60" rx="8"/><text class="t" x="556" y="570">사용자</text><text class="s" x="556" y="590">지갑으로 예치</text></g>
 
@@ -187,12 +187,12 @@
       <text class="m" x="490" y="98" text-anchor="middle">24시간 토큰</text>
       <text class="m" x="108" y="167">GPU 종류</text>
       <text class="m" x="482" y="166">상태 감시</text>
-      <text class="m" x="108" y="253">GPU 지표</text>
+      <text class="m" x="108" y="253">GPU metric</text>
       <text class="m" x="229" y="282" text-anchor="middle">지갑 서명</text>
       <text class="m" x="506" y="300">GPU Pod 생성</text>
       <text class="m" x="229" y="324" text-anchor="middle">mTLS 인증서</text>
       <text class="m" x="493" y="418" text-anchor="middle">거래 확인</text>
-      <text class="m" x="194" y="474" text-anchor="middle">30초마다 생존 신호</text>
+      <text class="m" x="194" y="474" text-anchor="middle">30초마다 heartbeat</text>
       <text class="m" x="194" y="498" text-anchor="middle">끊기면 다시 연결</text>
       <text class="m" x="603" y="539" text-anchor="end">예치, 렌탈 시작</text>
 
@@ -204,32 +204,32 @@
   </div>
 </figure>
 
-            <p>설계 전에 Akash Network의 노드와 공급자 코드를 분석해 비교했습니다. 공급자가 자기 Kubernetes 클러스터와 공급자 데몬을 운영하는 뼈대는 같습니다. Akash는 공급자 입찰, 임대 계약(리스), 맡겨 둔 대금의 정산(에스크로)을 모두 체인 위에서 처리합니다. 월드랜드는 체인 위에 예치와 정산만 두고, 사용자와 GPU를 짝짓는 일과 Pod를 만들고 지우는 일은 Hub가 맡았습니다.</p>
+            <p>설계 전에 Akash Network의 노드와 공급자 코드를 분석해 비교했습니다. 공급자가 자기 Kubernetes 클러스터와 공급자 데몬을 운영하는 뼈대는 같습니다. Akash는 공급자 bid, lease, escrow 정산을 모두 체인 위에서 처리합니다. 월드랜드는 체인 위에 예치와 정산만 두고, 사용자와 GPU의 matching과 Pod를 만들고 지우는 일은 Hub가 맡았습니다.</p>
 
             <h3>1. 공급자가 머신을 쉽게 붙인다</h3>
             <dl class="scope" style="margin-bottom: var(--s-5)">
               <dt>요구</dt><dd>머신을 붙이기 어려우면 공급자가 들어오지 않습니다.</dd>
               <dt>설계</dt><dd>공급자 지갑 하나를 신원으로 삼고, 노드 SDK를 두 역할로 나눴습니다.
                 <ul>
-                  <li><code>node master</code>는 클러스터를 가진 공급자의 노드 데몬입니다. 지갑 서명 로그인(SIWE)을 거치면, Hub 안의 인증서 발급 기관(Hub CA)이 지갑 주소를 기준으로 인증서를 내줍니다. 그다음 클러스터를 등록합니다. 그 뒤로는 양쪽이 서로 인증서를 확인하는 암호화 연결(mTLS)로 30초마다 살아 있다는 신호를 보내고, 연결이 끊기면 다시 붙습니다.</li>
-                  <li><code>node worker</code>는 GPU 머신을 그 클러스터에 붙이는 설치기입니다.</li>
+                  <li><code>node master</code>는 클러스터를 가진 공급자의 노드 데몬입니다. 지갑 서명으로 로그인하는 SIWE를 거치면, Hub 안의 CA인 Hub CA가 지갑 주소로 인증서를 내줍니다. 그다음 클러스터를 등록합니다. 그 뒤로는 양쪽이 서로 인증서를 확인하는 mTLS 연결로 30초마다 heartbeat를 보내고, 연결이 끊기면 reconnect합니다.</li>
+                  <li><code>node worker</code>는 GPU 머신을 그 클러스터에 붙이는 installer입니다.</li>
                 </ul></dd>
-              <dt>구현</dt><dd>설치기 하나로 머신 점검부터 클러스터 합류(join)까지 끝냅니다.</dd>
+              <dt>구현</dt><dd>installer 하나로 머신 점검부터 클러스터 join까지 끝냅니다.</dd>
             </dl>
-            <p>설치기는 명령 한 줄로 시작합니다.</p>
+            <p>installer는 명령 한 줄로 시작합니다.</p>
             <div class="code">
-              <div class="code__bar"><span>설치기 실행</span><span>sh</span></div>
+              <div class="code__bar"><span>installer 실행</span><span>sh</span></div>
 <pre><code>./node worker -hub-http &lt;Hub 주소&gt; -private-key-file &lt;키 파일&gt; -master-wallet &lt;지갑 주소&gt;</code></pre>
             </div>
             <ol>
               <li>구성요소 6개(nvidia-smi, containerd, kubeadm, kubelet, kubectl, nvidia-ctk)를 점검합니다. 드라이버 말고 빠진 것은 바로 설치합니다.</li>
-              <li>containerd에 NVIDIA 런타임을 기본값으로 설정합니다.</li>
-              <li>지갑 서명으로 인증하고, Hub에 클러스터 합류용 토큰(join 토큰)을 요청합니다.</li>
+              <li>containerd의 default runtime을 NVIDIA runtime으로 설정합니다.</li>
+              <li>지갑 서명으로 인증하고, Hub에 join token을 요청합니다.</li>
               <li>Hub가 24시간짜리 토큰으로 <code>kubeadm join</code> 명령을 만들어 돌려줍니다.</li>
-              <li>설치기는 Hub에서 받은 명령이 <code>kubeadm join</code>으로 시작할 때만 실행합니다.</li>
-              <li>NVIDIA 관리 라이브러리(NVML)로 GPU 종류와 VRAM 용량을 읽어 노드 정보에 표시합니다.</li>
+              <li>installer는 Hub에서 받은 명령이 <code>kubeadm join</code>으로 시작할 때만 실행합니다.</li>
+              <li>NVIDIA Management Library(NVML)로 GPU 종류와 VRAM 용량을 읽어 노드 정보에 표시합니다.</li>
             </ol>
-            <p>Hub는 클러스터 CA 공개키의 해시를 join 명령에 넣었습니다. 새 노드는 이 값으로 자기가 붙으려는 API 서버가 맞는지 확인합니다. 설치기는 <code>kubeadm reset</code>을 해도 남는 컨테이너 네트워크 설정(CNI)과 네트워크 인터페이스도 지웁니다. 이것이 남아 있으면, 클러스터에서 빠졌다가 다시 붙는 머신에서 네트워크 플러그인인 flannel이 멈췄습니다.</p>
+            <p>Hub는 클러스터 CA public key의 hash를 join 명령에 넣었습니다. 새 노드는 이 값으로 자기가 붙으려는 API 서버가 맞는지 확인합니다. installer는 <code>kubeadm reset</code>을 해도 남는 CNI 설정과 network interface도 지웁니다. 이것이 남아 있으면, 클러스터에서 빠졌다가 다시 붙는 머신에서 CNI plugin인 flannel이 멈췄습니다.</p>
 
             <h3>2. 대금이 확인된 렌탈에만 GPU를 내준다</h3>
             <dl class="scope" style="margin-bottom: var(--s-5)">
@@ -239,10 +239,10 @@
             </dl>
             <ul>
               <li>렌탈 요청이 오면 사용자가 컨트랙트에 넣어 둔 예치금을 봅니다. 1시간 요금보다 적으면 요청을 받지 않습니다.</li>
-              <li>렌탈 시작 거래는 체인이 남긴 처리 결과인 영수증(receipt)을 읽어 확인합니다. 거래가 성공했는지, 어떤 컨트랙트 함수를 불렀는지, 사용자와 공급자가 누구인지를 봅니다.</li>
-              <li>확인을 통과하면 사용자 지갑마다 따로 둔 격리 공간(Namespace)에 GPU Pod를 만들고 SSH 접속 정보를 줍니다. Namespace마다 쓸 수 있는 자원의 상한(ResourceQuota)과 네트워크 접근 규칙(NetworkPolicy)을 걸었습니다.</li>
+              <li>렌탈 시작 거래는 체인이 남긴 처리 결과인 transaction receipt를 읽어 확인합니다. 거래가 성공했는지, 어떤 컨트랙트 함수를 불렀는지, 사용자와 공급자가 누구인지를 봅니다.</li>
+              <li>확인을 통과하면 사용자 지갑마다 따로 둔 Namespace에 GPU Pod를 만들고 SSH 접속 정보를 줍니다. Namespace마다 ResourceQuota로 자원 상한을, NetworkPolicy로 네트워크 접근 규칙을 걸었습니다.</li>
               <li>공급자 머신에서 아무 이미지나 돌지 않게, 이미지는 미리 정한 목록에서만 고릅니다.</li>
-              <li>체인에서 렌탈 종료 이벤트가 오면 Pod를 지워 GPU를 돌려받습니다. 이벤트 리스너는 체인 접속 주소(RPC) 여러 개를 하나씩 시도해 붙습니다. 연결이 끊겼다 돌아오면 마지막으로 읽은 지점(체크포인트)부터 다시 읽습니다.</li>
+              <li>체인에서 렌탈 종료 이벤트가 오면 Pod를 지워 GPU를 돌려받습니다. event listener는 RPC endpoint 여러 개를 하나씩 시도해 붙습니다. 연결이 끊겼다 돌아오면 마지막으로 읽은 checkpoint부터 다시 읽습니다.</li>
             </ul>
 
             <h3>3. 쓴 만큼만 정산하고 남은 돈은 돌려준다</h3>
@@ -252,23 +252,23 @@
               <dt>구현</dt><dd>Solidity로 예치, 정산, 출금을 만들었습니다.</dd>
             </dl>
             <ul>
-              <li>비용은 사용 시간에 초당 가격을 곱해 정합니다. 사용 시간은 블록에 기록된 시각으로 잽니다.</li>
+              <li>비용은 사용 시간에 초당 가격을 곱해 정합니다. 사용 시간은 block timestamp로 잽니다.</li>
               <li>남은 예치금은 사용자가 언제든 출금합니다.</li>
-              <li>함수가 끝나기 전에 같은 함수를 다시 불러 돈을 여러 번 빼 가는 재진입 공격은 OpenZeppelin의 ReentrancyGuard로 막았습니다.</li>
+              <li>함수가 끝나기 전에 같은 함수를 다시 불러 돈을 여러 번 빼 가는 reentrancy 공격은 OpenZeppelin의 ReentrancyGuard로 막았습니다.</li>
               <li>렌탈을 연장할 때는 Hub가 지금까지 쓴 금액에 연장할 시간의 요금을 더해, 그 합이 예치금 안에 드는지 확인합니다.</li>
             </ul>
 
             <h3>4. 여러 클러스터의 GPU를 한곳에서 본다</h3>
             <dl class="scope" style="margin-bottom: var(--s-5)">
               <dt>요구</dt><dd>사용자에게는 지금 빌릴 수 있는 GPU만 보여야 하는데, GPU는 클러스터마다 흩어져 있었습니다.</dd>
-              <dt>설계</dt><dd>클러스터 상태를 기준으로 삼았습니다. DB는 재시작 뒤 클러스터와 어긋날 수 있어 화면용 읽기 사본으로만 두었습니다.</dd>
-              <dt>구현</dt><dd>클러스터마다 렌탈 Pod를 지켜보고, 가용 GPU는 Hub 메모리에서 셉니다.</dd>
+              <dt>설계</dt><dd>클러스터 상태를 source of truth로 삼았습니다. DB는 재시작 뒤 클러스터와 어긋날 수 있어 화면 조회용 사본으로만 두었습니다.</dd>
+              <dt>구현</dt><dd>클러스터마다 렌탈 Pod를 지켜보고, 가용 GPU는 Hub의 in-memory 값으로 셉니다.</dd>
             </dl>
             <ul>
-              <li>공급자가 등록한 클러스터 접속 설정 파일(kubeconfig)로 클러스터마다 클라이언트를 만듭니다. 그리고 Kubernetes의 변경 알림 기능(Informer)으로 렌탈 Pod의 변화만 받아 봅니다.</li>
+              <li>공급자가 등록한 kubeconfig로 클러스터마다 client를 만듭니다. 그리고 Kubernetes Informer로 렌탈 Pod의 변경 event만 받아 봅니다.</li>
               <li>가용 GPU는 노드의 전체 GPU 수에서 렌탈 Pod가 쓰는 수를 뺀 값입니다. 이 값은 DB가 아니라 Hub 메모리에 둡니다.</li>
               <li>Hub가 재시작하면 클러스터에서 노드와 렌탈 Pod를 다시 읽어 이 값을 처음부터 계산합니다.</li>
-              <li>DB의 값은 2분마다 클러스터 기준으로 다시 맞춥니다. GPU를 빌려주거나 돌려받을 때는 해당 노드의 값만 그 자리에서 바로 맞춥니다.</li>
+              <li>DB 값은 2분마다 클러스터 상태에 맞춰 reconcile합니다. GPU를 빌려주거나 돌려받을 때는 해당 노드의 값만 그 자리에서 바로 맞춥니다.</li>
             </ul>
 
             <h3>5. 렌탈이 없을 때는 채굴로 수익을 잇는다</h3>
@@ -282,7 +282,7 @@
             </ul>
 
             <h3>6. 설계 고민: 실행 경로를 Kubernetes 하나로</h3>
-            <p>클러스터가 없는 개인 공급자를 받으려고, Hub가 공급자 머신의 Docker를 원격 실행하는 경로를 더했습니다. 그러자 이미지 pull 지연과 Hub 재시작에 대비한 보정 로직이 계속 붙었습니다. 보정을 쌓는 대신 스케줄링과 Pod 수명주기를 Kubernetes에 맡기기로 했습니다. 설치기로 개인 머신도 워커 노드로 붙일 수 있었기 때문입니다. Docker 원격 실행 코드 약 1,400줄을 지웠습니다.</p>
+            <p>클러스터가 없는 개인 공급자를 받으려고, Hub가 공급자 머신의 Docker를 원격 실행하는 경로를 더했습니다. 그러자 이미지 pull 지연과 Hub 재시작에 대비한 reconcile 로직이 계속 붙었습니다. 그 로직을 쌓는 대신 scheduling과 Pod lifecycle을 Kubernetes에 맡기기로 했습니다. installer로 개인 머신도 워커 노드로 붙일 수 있었기 때문입니다. Docker 원격 실행 코드 약 1,400줄을 지웠습니다.</p>
           </section>
 
           <section id="d-ts" aria-labelledby="d-ts-h">
@@ -291,8 +291,8 @@
               <header class="ts__head"><span class="ts__id">T-01</span><h3>같은 지갑의 두 번째 머신이 붙지 않는 문제</h3></header>
               <dl class="ts__rows">
                 <div><dt>문제</dt><dd>같은 지갑으로 올린 GPU 머신 2대 중 첫 대만 join 명령을 받았습니다.</dd></div>
-                <div><dt>원인</dt><dd>Hub가 'join 대기' 기록을 머신이 아니라 지갑 주소 단위로 남겼습니다. 그래서 두 번째 머신도 이미 대기 중인 것으로 보고 건너뛰었습니다.</dd></div>
-                <div><dt>해결</dt><dd>노드 데몬은 이미 클러스터에 붙은 머신이면 join 명령을 받아도 건너뜁니다. 그래서 Hub가 접속한 모든 노드에 join 명령을 보내도록 바꿨습니다. 남아 있던 대기 기록은 2분이 지나면 만료되게 했습니다.</dd></div>
+                <div><dt>원인</dt><dd>Hub가 'join 대기' 기록을 머신이 아니라 지갑 주소를 key로 남겼습니다. 그래서 두 번째 머신도 이미 대기 중인 것으로 보고 건너뛰었습니다.</dd></div>
+                <div><dt>해결</dt><dd>노드 데몬은 이미 클러스터에 붙은 머신이면 join 명령을 받아도 건너뜁니다. 그래서 Hub가 접속한 모든 노드에 join 명령을 보내도록 바꿨습니다. 남아 있던 대기 기록에는 2분 TTL을 걸었습니다.</dd></div>
                 <div class="is-key"><dt>결과</dt><dd>같은 지갑으로 올린 머신이 모두 join 명령을 받았습니다.</dd></div>
               </dl>
             </article>
@@ -310,9 +310,9 @@
           <section id="d-result" aria-labelledby="d-result-h">
             <h2 class="sechead" id="d-result-h"><span class="sechead__no">05</span><span class="sechead__title">결과와 임팩트</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
-              <li>전에는 공급자가 GPU 머신을 마켓에 붙이려면 구성요소 설치, 컨테이너 런타임 설정, 합류 토큰 발급, 클러스터 합류(join) 같은 6단계를 사람이 직접 해야 했습니다. 이제는 NVIDIA 드라이버만 깔려 있으면 설치기 명령 한 줄로 이 과정이 끝납니다.</li>
+              <li>전에는 공급자가 GPU 머신을 마켓에 붙이려면 구성요소 설치, container runtime 설정, join token 발급, 클러스터 join 같은 6단계를 사람이 직접 해야 했습니다. 이제는 NVIDIA 드라이버만 깔려 있으면 installer 명령 한 줄로 이 과정이 끝납니다.</li>
               <li>노드 SDK에 넣은 지갑 서명 로그인, 연결용 인증서 자동 발급, NVML을 이용한 GPU 자동 감지 기능이 월드랜드 공식 GitHub 저장소에 반영됐습니다.</li>
-              <li>Hub는 체인에서 결제를 확인하기 전에는 GPU Pod를 만들지 않습니다. 로컬 테스트용 클러스터(Kind)에서 사용자가 예치하는 단계부터 렌탈이 끝나 Pod를 거둬들이는 단계까지 전체 흐름을 자동 테스트로 확인했습니다.</li>
+              <li>Hub는 체인에서 결제를 확인하기 전에는 GPU Pod를 만들지 않습니다. 로컬 Kind 클러스터에서 사용자가 예치하는 단계부터 렌탈이 끝나 Pod를 거둬들이는 단계까지 전체 흐름을 E2E 테스트로 확인했습니다.</li>
               <li>렌탈 정산 컨트랙트는 Sepolia 테스트넷에 배포했고, 컨트랙트 테스트는 약 40개입니다.</li>
               <li>전에는 Hub가 재시작하면 공급자 쪽 노드를 사람이 다시 시작해야 했습니다. 이제는 연결이 끊기면 노드 데몬이 스스로 Hub에 다시 연결합니다.</li>
               <li>렌탈 컨테이너를 실행하는 경로를 Docker 원격 실행과 Kubernetes 두 가지에서 Kubernetes 하나로 줄였습니다. Hub 백엔드 테스트는 약 350개입니다.</li>
@@ -322,9 +322,9 @@
           <section id="d-learn" aria-labelledby="d-learn-h">
             <h2 class="sechead" id="d-learn-h"><span class="sechead__no">06</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p>돈과 자원이 함께 움직이는 시스템에서는 결제를 확인한 뒤에 자원을 내주는 순서를 한곳에서 지켜야 합니다.</p>
-            <p>노드를 구분하는 기준은 지갑이 아니라 머신이어야 합니다. 같은 지갑으로 여러 머신을 올릴 수 있기 때문입니다. 머신을 붙이는 절차도 같은 머신에 두 번 실행해서 결과가 같아야 합니다.</p>
+            <p>노드를 구분하는 기준은 지갑이 아니라 머신이어야 합니다. 같은 지갑으로 여러 머신을 올릴 수 있기 때문입니다. 머신을 붙이는 절차도 idempotent해야 합니다. 같은 머신에 두 번 실행해도 결과가 같아야 합니다.</p>
             <p>빌려줄 수 있는 GPU 수를 셀 때는 그 GPU를 쓰는 작업을 모두 빼야 합니다. 마이닝 Pod도 GPU를 쓰는데, 가용 GPU를 계산할 때는 렌탈 Pod만 뺐습니다.</p>
-            <p>여러 체인 접속 주소(RPC) 가운데 어디에 붙을지는 연결이 되는지만 보고 정하면 안 됩니다. 그 노드가 최신 블록까지 따라왔는지, 즉 블록 높이를 보고 정해야 합니다.</p>
+            <p>여러 RPC endpoint 가운데 어디에 붙을지는 연결이 되는지만 보고 정하면 안 됩니다. 그 노드가 최신 블록까지 따라왔는지, 즉 block height를 보고 정해야 합니다.</p>
           </section>
 
           <section id="d-links" aria-labelledby="d-links-h">
@@ -339,14 +339,14 @@
                 </ul></li>
               <li><a href="https://github.com/ForrestCrew/worldland-sdk" target="_blank" rel="noopener">노드 SDK 작업 저장소</a>
                 <ul>
-                  <li><a href="https://github.com/ForrestCrew/worldland-sdk/commit/e33775c" target="_blank" rel="noopener">Kubernetes 워커 설치기 추가</a></li>
+                  <li><a href="https://github.com/ForrestCrew/worldland-sdk/commit/e33775c" target="_blank" rel="noopener">Kubernetes worker installer 추가</a></li>
                 </ul></li>
               <li><a href="https://github.com/ForrestCrew/worldland-contracts" target="_blank" rel="noopener">렌탈 정산 컨트랙트</a></li>
             </ul>
           </section>
 
           <nav class="pager" aria-label="다른 프로젝트">
-            <a class="prev" href="platform.html"><span class="k">이전 프로젝트</span><span class="t">Blue/Green 설계와 안전한 전환: Cloud Run과 관리형 ClickHouse를 GKE로 이관</span></a>
+            <a class="prev" href="sre.html"><span class="k">이전 프로젝트</span><span class="t">SRE 에이전트 플랫폼</span></a>
             <a class="next" href="../index.html#side"><span class="k">다음</span><span class="t">사이드 프로젝트 목록으로</span></a>
           </nav>
         </article>

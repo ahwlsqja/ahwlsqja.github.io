@@ -48,7 +48,7 @@
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2025.09 (약 1주)</dd></div>
           <div><dt>구분</dt><dd>Sui Suimming Hackathon 2025(서울)에 4명 팀으로 참가했습니다.</dd></div>
-          <div class="wide"><dt>역할</dt><dd>아이디어를 내고 팀장을 맡았습니다. 워커가 클러스터에 참여하는 경로, 클러스터를 관리하는 마스터(K3s 컨트롤 플레인), Sui Move 컨트랙트 2개, 체인 이벤트 처리를 직접 설계하고 개발했습니다.</dd></div>
+          <div class="wide"><dt>역할</dt><dd>아이디어를 내고 팀장을 맡았습니다. 워커가 클러스터에 참여하는 경로, 클러스터를 관리하는 마스터(K3s control plane), Sui Move 컨트랙트 2개, 체인 이벤트 처리를 직접 설계하고 개발했습니다.</dd></div>
           <div class="wide"><dt>상태</dt><dd>완료</dd></div>
           <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Go 1.21</li><li class="chip">K3s v1.28.2</li><li class="chip">Sui Move</li><li class="chip">Sui JSON-RPC</li><li class="chip">Docker</li><li class="chip">containerd</li><li class="chip">kubectl</li></ul></dd></div>
         </dl>
@@ -80,7 +80,7 @@
 
 <figure class="shot"><a href="../assets/side/daas/daas-role-select.jpg" target="_blank" rel="noopener"><img src="../assets/side/daas/daas-role-select.jpg" alt="첫 화면의 역할 선택. 서비스 사용자와 노드 제공자 두 유형으로 나눴습니다" loading="lazy"></a><figcaption>첫 화면의 역할 선택. 서비스 사용자와 노드 제공자 두 유형으로 나눴습니다</figcaption></figure>
 
-            <p>먼저 풀어야 할 기술 문제는 소유자를 알 수 없는 컴퓨터가 클러스터에 참여하는 것이었습니다. 가벼운 Kubernetes 배포판인 K3s는 기본 설정에서, 서버가 만든 참여용 비밀 값(join 토큰) 하나로 워커를 받습니다. 그래서 이 토큰만 있으면 누구나 클러스터에 참여할 수 있고, 참여한 워커가 누구의 컴퓨터인지도 구분하지 못합니다.</p>
+            <p>먼저 풀어야 할 기술 문제는 소유자를 알 수 없는 컴퓨터가 클러스터에 참여하는 것이었습니다. 가벼운 Kubernetes 배포판인 K3s는 기본 설정에서, 서버가 만든 참여용 secret인 join 토큰 하나로 워커를 받습니다. 그래서 이 토큰만 있으면 누구나 클러스터에 참여할 수 있고, 참여한 워커가 누구의 컴퓨터인지도 구분하지 못합니다.</p>
             <p>이 문제를 블록체인으로 풀려고 했습니다. 핵심은 기존의 중앙화된 인증을 블록체인 스테이킹으로 바꾸는 것입니다.</p>
             <ul>
               <li>관리자가 주는 인증 대신 스테이킹을 워커 참여 조건으로 설계했습니다.</li>
@@ -202,10 +202,10 @@
 <figure class="shot"><a href="../assets/side/daas/daas-architecture.png" target="_blank" rel="noopener"><img src="../assets/side/daas/daas-architecture.png" alt="해커톤 당시 직접 정리한 전체 구조" loading="lazy"></a><figcaption>해커톤 당시 직접 정리한 전체 구조</figcaption></figure>
 
             <ul>
-              <li>그림의 "client, walrus, chain: task"는 이미지를 올리는 부분입니다. 개발자가 올린 이미지 파일을 Walrus에 하나의 데이터 덩어리(blob)로 저장하고, 이미지 정보를 컨트랙트에 등록합니다.</li>
+              <li>그림의 "client, walrus, chain: task"는 이미지를 올리는 부분입니다. 개발자가 올린 이미지 파일을 Walrus에 하나의 blob으로 저장하고, 이미지 정보를 컨트랙트에 등록합니다.</li>
               <li>그림의 "chain: worker registry"는 직접 개발한 Worker Registry 컨트랙트입니다. 맡긴 스테이크가 조건을 채우는지 확인하고 워커를 등록합니다. 소유자별 워커 목록과 join 토큰도 여기에 보관합니다.</li>
               <li>그림의 "chain: kubernetes schedule"은 직접 개발한 K8s Scheduler 컨트랙트입니다. 배포 요청이 올바른지 검사한 다음, 요청자의 워커 중 하나를 고릅니다.</li>
-              <li>그림의 "masternode"는 직접 개발한 마스터입니다. K3s 서버를 띄우고, 체인에서 받은 이벤트를 kubectl 명령으로 바꿉니다. 마스터는 Sui Nautilus의 보안 실행 환경(TEE) 안에 두었습니다. TEE는 밖에서 안을 들여다보거나 바꾸기 어렵게 막아 둔 실행 공간입니다.</li>
+              <li>그림의 "masternode"는 직접 개발한 마스터입니다. K3s 서버를 띄우고, 체인에서 받은 이벤트를 kubectl 명령으로 바꿉니다. 마스터는 Sui Nautilus의 TEE(Trusted Execution Environment) 안에 두었습니다. TEE는 밖에서 안을 들여다보거나 바꾸기 어렵게 막아 둔 실행 공간입니다.</li>
               <li>그림의 "operator"는 노드 제공자의 컴퓨터 쪽이고, 워커는 노드 제공자의 컴퓨터에서 K3s agent를 띄워 클러스터에 참여합니다. 그림의 "select task"는 노드 제공자가 작업을 고르는 화면입니다. "run docker images to pods"는 고른 이미지를 워커에서 Pod(Kubernetes가 컨테이너를 실행하는 단위)로 실행하는 단계입니다.</li>
             </ul>
 
@@ -219,12 +219,12 @@
               <li>노드 제공자가 <code>activate_worker</code> 함수로 워커를 활성(active) 상태로 바꿉니다.</li>
               <li>워커가 join 토큰으로 <code>k3s agent</code>를 실행해 클러스터에 참여합니다.</li>
             </ol>
-            <p>1~4단계는 Sui Testnet에 남은 실행 기록으로 실제 동작을 확인했습니다.</p>
+            <p>1~4단계는 Sui Testnet에 남은 transaction으로 실제 동작을 확인했습니다.</p>
 
             <h4>흐름 2. 배포 요청을 컨트랙트로 받아 처리하기</h4>
             <ol>
-              <li>요청자가 <code>submit_k8s_request</code> 함수로 배포 요청을 보냅니다. 요청에는 어떤 동작인지(메서드), 어떤 Kubernetes 객체를 다루는지(리소스), 어느 네임스페이스에 적용하는지, 요청 내용, 우선순위를 담습니다.</li>
-              <li>컨트랙트는 메서드가 GET, POST, PUT, PATCH, DELETE 다섯 가지 중 하나인지, 리소스가 허용한 7종 중 하나인지, 우선순위가 1부터 10 사이인지를 확인합니다.</li>
+              <li>요청자가 <code>submit_k8s_request</code> 함수로 배포 요청을 보냅니다. 요청에는 동작을 뜻하는 method, 다룰 Kubernetes 객체인 resource, 적용할 namespace, 요청 내용, priority를 담습니다.</li>
+              <li>컨트랙트는 method가 GET, POST, PUT, PATCH, DELETE 다섯 가지 중 하나인지, resource가 허용한 7종 중 하나인지, priority가 1부터 10 사이인지를 확인합니다.</li>
               <li>컨트랙트가 요청자 본인의 워커 중 활성 상태인 워커 하나를 고릅니다. 그리고 고른 워커에 기록된 작업 수를 1 늘립니다.</li>
               <li>마스터가 요청 이벤트를 받고, <code>kubectl get nodes</code>로 K3s가 준비됐는지 확인합니다.</li>
               <li>마스터가 요청을 kubectl 명령으로 바꿔 실행합니다. 결과와 실행 시간은 로그에 남깁니다.</li>
@@ -254,21 +254,21 @@
             <ul>
               <li>고민: 처음에는 kubectl 요청을 게이트웨이가 받아 마스터로 넘겼습니다. 권한 검사는 마스터에서 일어났습니다. 그래서 사용자는 마스터를 믿어야 했습니다.</li>
               <li>선택지: 게이트웨이 구조, 쓰기 요청만 컨트랙트로 확인하는 구조, 모든 요청을 컨트랙트로 먼저 받는 구조를 차례로 검토했습니다.</li>
-              <li>결정: 마지막 구조를 골랐습니다. 배포 요청은 Sui 명령줄 도구로 컨트랙트 함수를 부르는 <code>sui client call</code>로 시작하게 했고, 마스터는 체인에 기록된 요청 이벤트를 실행만 하게 했습니다. 권한 검사를 컨트랙트에 두어, 사용자가 믿어야 하는 대상을 마스터에서 컨트랙트로 옮겼습니다. 대신 요청이 체인을 거쳐 마스터에 전달되므로 응답이 몇 초 늦어지고, kubectl을 바로 쓰는 편의도 내려놓았습니다.</li>
+              <li>결정: 마지막 구조를 골랐습니다. 배포 요청은 Sui CLI로 컨트랙트 함수를 부르는 <code>sui client call</code>로 시작하게 했고, 마스터는 체인에 기록된 요청 이벤트를 실행만 하게 했습니다. 권한 검사를 컨트랙트에 두어, 사용자가 믿어야 하는 대상을 마스터에서 컨트랙트로 옮겼습니다. 대신 요청이 체인을 거쳐 마스터에 전달되므로 응답이 몇 초 늦어지고, kubectl을 바로 쓰는 편의도 내려놓았습니다.</li>
             </ul>
 
             <h4>K3s를 어디까지 고칠까</h4>
             <ul>
               <li>고민: join 과정에 스테이크 확인을 넣으려면 K3s 소스를 고쳐야 합니다.</li>
               <li>선택지: K3s 전체를 복사해 따로 관리하는 방법, 워커에 필요한 agent 쪽 코드만 가져오는 방법이 있었습니다.</li>
-              <li>결정: 워커에 필요한 것은 agent뿐이었으므로, agent와 그 의존 패키지만 가져왔습니다. 그리고 Go 모듈 설정 파일(go.mod)의 replace 지시어로, 원래 K3s 패키지 대신 가져와 고친 코드를 쓰도록 연결했습니다.</li>
+              <li>결정: 워커에 필요한 것은 agent뿐이었으므로, agent와 그 의존 패키지만 가져왔습니다. 그리고 Go module 설정 파일인 go.mod의 replace directive로, 원래 K3s 패키지 대신 가져와 고친 코드를 쓰도록 연결했습니다.</li>
             </ul>
 
             <h4>새 토큰과 원래 K3s 토큰을 같이 둘까</h4>
             <ul>
               <li>고민: 고친 agent가 원래 K3s 토큰을 받지 못하면, 스테이킹 없이 일반 K3s 워커로 하는 시험을 할 수 없습니다.</li>
               <li>선택지: 새 토큰만 받는 방법, 두 형식을 모두 받는 방법이 있었습니다.</li>
-              <li>결정: 두 형식을 모두 받게 했습니다. 새 토큰은 직접 정한 형식으로, SEAL이라는 접두어로 시작하고 지갑 주소, 서명, 챌린지(서명할 대상으로 주는 값)를 담습니다. agent는 토큰이 이 형식이면 그 지갑의 스테이크와 서명을 확인하는 분기로 보내고, 그 밖의 토큰은 원래 K3s 검증으로 넘깁니다. 이 규칙은 join을 다시 시도하는 코드와 토큰을 읽어 들이는 코드 두 곳에 똑같이 넣었습니다.</li>
+              <li>결정: 두 형식을 모두 받게 했습니다. 새 토큰은 직접 정한 형식으로, SEAL이라는 prefix로 시작하고 지갑 주소, 서명, 그리고 서명할 대상으로 주는 값인 challenge를 담습니다. agent는 토큰이 이 형식이면 그 지갑의 스테이크와 서명을 확인하는 분기로 보내고, 그 밖의 토큰은 원래 K3s 검증으로 넘깁니다. 이 규칙은 join을 다시 시도하는 코드와 토큰을 읽어 들이는 코드 두 곳에 똑같이 넣었습니다.</li>
             </ul>
 
             <h3>4. 구현 상세</h3>
@@ -276,24 +276,24 @@
             <h4>마스터</h4>
             <ul>
               <li>Go로 만든 마스터 프로그램은 세 부분을 함께 실행합니다. K3s 서버를 관리하는 부분, 외부 요청을 받는 HTTP API, Sui 이벤트를 처리하는 부분입니다.</li>
-              <li>K3s v1.28.2 서버는 가벼운 Linux인 Alpine 기반 컨테이너 안에서 실행합니다. K3s에 기본으로 들어 있는 Traefik(외부 접속을 받아 넘기는 프록시)과 servicelb(서비스용 로드밸런서)는 쓰지 않아서 껐습니다.</li>
-              <li>이벤트는 Sui JSON-RPC의 이벤트 조회 메서드인 <code>suix_queryEvents</code>로 3초마다 가져옵니다. 이때 배포한 컨트랙트 패키지의 ID와 이벤트 이름으로 걸러, 필요한 이벤트만 받습니다.</li>
-              <li>요청 메서드는 kubectl 명령으로 바꿉니다. GET은 <code>get</code>, POST와 PUT은 <code>apply</code>, PATCH는 <code>patch</code>, DELETE는 <code>delete</code>입니다.</li>
-              <li>이벤트가 생기면 바로 받는 WebSocket 구독 코드도 만들었지만, 실제 이벤트 조회는 3초마다 직접 물어보는 폴링 방식으로 돌렸습니다.</li>
+              <li>K3s v1.28.2 서버는 가벼운 Linux인 Alpine 기반 컨테이너 안에서 실행합니다. K3s에 기본으로 들어 있는 Traefik(외부 접속을 받아 넘기는 reverse proxy)과 servicelb(Service용 load balancer)는 쓰지 않아서 껐습니다.</li>
+              <li>이벤트는 Sui JSON-RPC의 이벤트 조회 method인 <code>suix_queryEvents</code>로 3초마다 가져옵니다. 이때 배포한 컨트랙트 패키지의 ID와 이벤트 이름으로 걸러, 필요한 이벤트만 받습니다.</li>
+              <li>요청 method는 kubectl 명령으로 바꿉니다. GET은 <code>get</code>, POST와 PUT은 <code>apply</code>, PATCH는 <code>patch</code>, DELETE는 <code>delete</code>입니다.</li>
+              <li>이벤트가 생기면 바로 받는 WebSocket subscription 코드도 만들었지만, 실제 이벤트 조회는 3초마다 직접 물어보는 polling으로 돌렸습니다.</li>
             </ul>
 
             <h4>컨트랙트</h4>
             <ul>
-              <li>Worker Registry는 워커를 두 표에 나눠 저장합니다. 하나는 노드 이름으로, 다른 하나는 소유자 주소로 찾습니다.</li>
+              <li>Worker Registry는 워커를 두 table에 나눠 저장합니다. 하나는 노드 이름으로, 다른 하나는 소유자 주소로 찾습니다.</li>
               <li>join 토큰 기록은 관리자 주소만 할 수 있게 막았습니다.</li>
               <li>K8s Scheduler는 요청자 본인의 워커 중 활성 상태인 워커만 후보로 둡니다.</li>
-              <li>후보마다 점수를 매겨 워커를 고릅니다. 작업이 없는 워커는 1000점이고, 작업이 있는 워커는 100을 (작업 수 + 1)로 나눈 값입니다. 작업이 하나라도 있으면 100점에도 못 미치므로, 작업이 없는 워커가 먼저 뽑힙니다.</li>
+              <li>후보마다 score를 매겨 워커를 고릅니다. 작업이 없는 워커는 1000점이고, 작업이 있는 워커는 100을 (작업 수 + 1)로 나눈 값입니다. 작업이 하나라도 있으면 100점에도 못 미치므로, 작업이 없는 워커가 먼저 뽑힙니다.</li>
             </ul>
 
             <h4>워커</h4>
             <ul>
-              <li>워커 프로그램은 다음 순서로 동작합니다. 먼저 스테이킹이 되어 있는지 확인하고, K3s agent를 실행해 클러스터에 참여합니다. 그 뒤 30초마다 살아 있다는 신호(하트비트)를 보내고, 워커 상태를 알려 주는 API를 엽니다.</li>
-              <li>컨테이너를 실제로 띄우는 프로그램(컨테이너 런타임)은 설정에서 containerd와 Docker 중 하나로 고를 수 있습니다.</li>
+              <li>워커 프로그램은 다음 순서로 동작합니다. 먼저 스테이킹이 되어 있는지 확인하고, K3s agent를 실행해 클러스터에 참여합니다. 그 뒤 30초마다 살아 있다는 신호인 heartbeat를 보내고, 워커 상태를 알려 주는 API를 엽니다.</li>
+              <li>컨테이너를 실제로 띄우는 container runtime은 설정에서 containerd와 Docker 중 하나로 고를 수 있습니다.</li>
               <li>AWS EC2 서버를 워커로 준비하는 설정 스크립트는, K3s 서버와 워커가 통신하는 데 쓰는 포트 6443, 10250, 8472(UDP), 51820(UDP)을 엽니다.</li>
             </ul>
           </section>
@@ -304,8 +304,8 @@
               <header class="ts__head"><span class="ts__id">T-01</span><h3>Move 빌드가 bridge 모듈 중복으로 멈춘 문제</h3></header>
               <dl class="ts__rows">
                 <div><dt>문제</dt><dd>컨트랙트를 빌드하는 <code>sui move build</code> 명령이, bridge 모듈이 중복으로 있다는 오류(<code>Duplicate module found: ...::bridge</code>)를 내며 멈췄습니다.</dd></div>
-                <div><dt>원인</dt><dd>Sui 프레임워크가 업데이트되면서 bridge 모듈이 중복으로 들어왔습니다. 여기에 이전 빌드 때 정해진 의존성 버전을 적어 두는 Move.lock 파일의 옛 기록과도 충돌했습니다.</dd></div>
-                <div><dt>해결</dt><dd>Move.lock을 지우고 다시 빌드하는 방법과, 의존성 설정을 바꾸는 방법을 정리해 차례로 시도했습니다. 최종적으로 패키지 설정 파일인 Move.toml에서 Sui 프레임워크를 Testnet용 버전(<code>framework/testnet</code>)으로 고정했습니다.</dd></div>
+                <div><dt>원인</dt><dd>Sui 프레임워크가 업데이트되면서 bridge 모듈이 중복으로 들어왔습니다. 여기에 이전 빌드 때 정해진 dependency 버전을 적어 두는 Move.lock 파일의 옛 기록과도 충돌했습니다.</dd></div>
+                <div><dt>해결</dt><dd>Move.lock을 지우고 다시 빌드하는 방법과, dependency 설정을 바꾸는 방법을 정리해 차례로 시도했습니다. 최종적으로 패키지 설정 파일인 Move.toml에서 Sui 프레임워크를 Testnet용 버전(<code>framework/testnet</code>)으로 고정했습니다.</dd></div>
                 <div class="is-key"><dt>결과</dt><dd>빌드가 통과했고 패키지를 Sui Testnet에 배포했습니다.</dd></div>
               </dl>
             </article>
@@ -316,15 +316,15 @@
             <ul>
               <li>2025년 9월 Sui Suimming Hackathon 2025 University Track에서 수상했습니다.</li>
               <li>Sui Testnet에 컨트랙트 패키지 2개를 배포했습니다. 핵심 컨트랙트인 Worker Registry와 K8s Scheduler의 코드는 약 740줄이고, 이와 별도로 시험용 모듈 2개가 들어 있습니다.</li>
-              <li>시험용 SUI를 실제로 맡겨 실행한 기록이 Sui Testnet에 남아 있습니다. 워커 등록이 6건, 워커 활성화가 5건, 마스터가 join 토큰을 기록한 것이 1건, 스케줄러가 배포 요청을 워커에 배정한 것이 8건입니다.</li>
+              <li>시험용 SUI를 실제로 맡겨 실행한 transaction이 Sui Testnet에 남아 있습니다. 워커 등록이 6건, 워커 활성화가 5건, 마스터가 join 토큰을 기록한 것이 1건, 스케줄러가 배포 요청을 워커에 배정한 것이 8건입니다.</li>
               <li>스케줄러의 배정 기록으로, 워커를 고르는 규칙이 의도대로 동작하는 것을 확인했습니다. 처음 요청 3건은 작업이 없던 워커 3개에 하나씩 나뉘어 갔고, 네 번째 요청은 다시 첫 번째 워커로 갔습니다.</li>
-              <li>마스터가 3초마다 Sui Testnet에 새 이벤트를 물어 배포 요청을 받고, 요청에 담긴 메서드, 리소스, 네임스페이스를 읽어 내는 단계까지 로그로 확인했습니다.</li>
+              <li>마스터가 3초마다 Sui Testnet에 새 이벤트를 물어 배포 요청을 받고, 요청에 담긴 method, resource, namespace를 읽어 내는 단계까지 로그로 확인했습니다.</li>
             </ul>
           </section>
 
           <section id="d-learn" aria-labelledby="d-learn-h">
             <h2 class="sechead" id="d-learn-h"><span class="sechead__no">06</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <p>이번에는 join할 때 스테이크를 확인하는 코드를 워커 쪽 K3s agent에 넣었습니다. 그런데 워커 프로그램은 워커를 가진 사람이 바꿀 수 있으므로, 참여 조건은 워커가 아니라 서버가 확인해야 한다는 것을 배웠습니다. join 토큰은 클러스터에 들어오는 열쇠 같은 비밀 값인데, 이번 구조에서는 누구나 읽을 수 있는 체인의 컨트랙트에 기록했습니다. 이런 값은 공개 체인에 그대로 기록하면 안 됩니다. 또 노드 제공자가 맡긴 SUI는 컨트랙트 안에 보관해야, 나중에 돌려주거나 벌칙으로 깎을 수 있습니다.</p>
+            <p>이번에는 join할 때 스테이크를 확인하는 코드를 워커 쪽 K3s agent에 넣었습니다. 그런데 워커 프로그램은 워커를 가진 사람이 바꿀 수 있으므로, 참여 조건은 워커가 아니라 서버가 확인해야 한다는 것을 배웠습니다. join 토큰은 클러스터에 들어오는 열쇠 같은 secret인데, 이번 구조에서는 누구나 읽을 수 있는 체인의 컨트랙트에 기록했습니다. 이런 값은 공개 체인에 그대로 기록하면 안 됩니다. 또 노드 제공자가 맡긴 SUI는 컨트랙트 안에 보관해야, 나중에 돌려주거나 slashing으로 깎을 수 있습니다.</p>
           </section>
 
           <nav class="pager" aria-label="다른 프로젝트">
