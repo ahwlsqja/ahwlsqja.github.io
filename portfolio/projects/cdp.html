@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>CDP 방문자 신원과 데이터 모델 설계와 개발 · 모진영</title>
+<title>CDP Identity Resolution: 익명 방문자를 한 사람으로 잇는 신원 모델 · 모진영</title>
 <meta name="description" content="브라우저 이벤트를 세션, 방문자, 사람 단위로 묶는 신원 모델을 설계하고, 그에 맞춰 SDK 세션과 ClickHouse 저장 구조, 신원 계산 배치를 개발한 프로젝트입니다.">
 <meta name="color-scheme" content="dark light">
 <script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
@@ -56,7 +56,7 @@
       <div class="shell">
         <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>cdp-identity</span></nav>
         <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span></div>
-        <h1 class="doc-title" id="detail-h">CDP 방문자 신원과 데이터 모델 설계와 개발</h1>
+        <h1 class="doc-title" id="detail-h">CDP Identity Resolution: 익명 방문자를 한 사람으로 잇는 신원 모델</h1>
         <p class="doc-lede">브라우저 이벤트를 세션, 방문자, 사람 단위로 묶는 신원 모델을 설계했습니다. 그 모델에 맞춰 브라우저 SDK의 세션, ClickHouse 저장 구조, 신원 계산 배치를 개발했습니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.04 – 2026.10</dd></div>
@@ -157,11 +157,11 @@
             <p>시간 순서로 보면 방문자가 세션들의 부모입니다. 저장소에 남은 기록으로 보면 세션이 root입니다. 두 관점이 모두 맞아서 하나를 고르지 않고 층을 나눴습니다. 층마다 쓸 수 있는 근거를 한 종류로 정했습니다. 세션은 저장소가 이어진다는 근거, 방문자는 기기가 비슷하다는 근거, 사람은 연락처나 주문 같은 확정된 근거입니다.</p>
 
             <h4>3. 가중치는 저장하지 않고 그때그때 계산합니다</h4>
-            <p>올라가기만 하는 가중치는 틀렸을 때 되돌릴 수 없습니다. 왜 그 값이 되었는지 근거도 남지 않습니다. 실제로 신원 규칙은 10주 동안 다섯 번 바뀌었습니다. 근거만 쌓아 두고 조회할 때 등급을 계산하면, 규칙이 바뀌어도 과거 데이터에 그대로 적용됩니다.</p>
+            <p>올라가기만 하는 가중치는 틀렸을 때 되돌릴 수 없습니다. 왜 그 값이 되었는지 근거도 남지 않습니다. 실제로 신원 규칙은 개발하는 동안 여러 번 바뀌었습니다. 근거만 쌓아 두고 조회할 때 등급을 계산하면, 규칙이 바뀌어도 과거 데이터에 그대로 적용됩니다.</p>
 
             <h4>4. cluster가 끝없이 커지지 않게 막았습니다</h4>
             <p>한 고객사의 30일 운영 데이터로 시뮬레이션해 보니, 연결을 transitive하게 끝까지 따라가면 핑거프린트 470개가 하나의 connected component로 묶였습니다. 테스트에 쓴 값과 운영용 단말이 그 component의 중심이었습니다. 초안이 걱정한 SuperNode 문제가 실제로 나타난 것입니다.</p>
-            <p>값 하나에 이어질 수 있는 핑거프린트 수에 상한을 두고, 핑거프린트로는 1-hop만 잇게 했습니다. A와 B, B와 C가 이어져도 A와 C는 잇지 않습니다. 각 핑거프린트는 중심 하나에만 붙기 때문에, 연결은 중심에서 한 겹만 뻗은 star topology가 됩니다. 이렇게 하자 가장 큰 connected component가 470개에서 7개로 줄었고, 그 대가로 원래 이어지던 연결의 2.8%를 잃었습니다.</p>
+            <p>값 하나에 이어질 수 있는 핑거프린트 수에 상한을 두고, 핑거프린트로는 1-hop만 잇게 했습니다. A와 B, B와 C가 이어져도 A와 C는 잇지 않습니다. 각 핑거프린트는 중심 하나에만 붙기 때문에, 연결은 중심에서 한 겹만 뻗은 star topology가 됩니다. 이렇게 하자 가장 큰 connected component가 470개에서 7개로 줄었습니다.</p>
 
             <h4>5. 같은 번호를 같은 사람으로 단정하지 않습니다</h4>
             <p>국내 휴대전화 번호는 1억 개가 되지 않습니다. hash로 감춰도 가능한 번호를 모두 대입하는 brute force로 되돌릴 수 있습니다. 그래서 번호마다 서버가 난수 ID를 하나씩 발급해 비교용 node로 쓰고, 분석 저장소에는 번호 대신 그 ID만 남겼습니다.</p>
@@ -318,7 +318,7 @@
               <dl class="ts__rows">
                 <div><dt>고민</dt><dd>처음에는 핑거프린트 값을 그대로 방문자 ID로 썼습니다. 핑거프린트 공급자로 가는 경로가 약 50시간 막히자, 그 기간에는 방문자를 전혀 식별하지 못했습니다. 화면마다 어떤 값을 방문자로 볼지 정하는 규칙도 달라서, 같은 기간인데도 화면마다 방문자 수가 서로 달랐습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 핑거프린트 값을 계속 방문자 ID로 쓰고, 핑거프린트를 받지 못하는 장애에 대한 대응만 보강하는 안<br>② 이벤트가 들어올 때 누구의 것인지 미리 정하고, 그 결과를 이벤트나 집계에 함께 기록하는 안<br>③ 브라우저에서 실제로 받은 값(관측한 값)은 원본에 그대로 두고, 그 이벤트를 누구의 것으로 볼지는 나중에 따로 계산하는 안</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 누구로 볼지 정하는 규칙은 바뀌지만, 관측한 값은 바뀌지 않습니다. "누구의 것"이라는 해석을 미리 기록해 두면 규칙이 바뀔 때마다 과거 기록을 다시 써야 하고, 틀렸을 때 되돌리기도 어렵습니다. ②의 대표 예인 분석 제품 PostHog는 소스 코드를 보면 사용자를 식별하는 순간 이벤트마다 person ID를 기록합니다. 그래서 잘못 합친 결과를 나중에 되돌리기 어렵습니다. 실제로 신원 규칙은 10주 동안 다섯 번 바뀌었습니다. 과거 데이터는 다시 쓰지 않고 새 규칙으로 다시 계산했습니다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 누구로 볼지 정하는 규칙은 바뀌지만, 관측한 값은 바뀌지 않습니다. "누구의 것"이라는 해석을 미리 기록해 두면 규칙이 바뀔 때마다 과거 기록을 다시 써야 하고, 틀렸을 때 되돌리기도 어렵습니다. ②의 대표 예인 분석 제품 PostHog는 소스 코드를 보면 사용자를 식별하는 순간 이벤트마다 person ID를 기록합니다. 그래서 잘못 합친 결과를 나중에 되돌리기 어렵습니다. 실제로 신원 규칙은 개발하는 동안 여러 번 바뀌었습니다. 과거 데이터는 다시 쓰지 않고 새 규칙으로 다시 계산했습니다.</dd></div>
                 <div><dt>대가</dt><dd>화면을 조회할 때마다 신원을 계산해야 해서 계산량이 늘었습니다. 큰 고객사는 조회 한 번에 읽는 데이터가 요청 하나에 허용된 한도를 넘었습니다. 그래서 신원 결과를 미리 계산해 버전별로 저장해 두는 배치를 따로 만들었습니다.</dd></div>
               </dl>
             </article>
@@ -338,7 +338,7 @@
               <dl class="ts__rows">
                 <div><dt>고민</dt><dd>공유 세션을 켜자 핑거프린트 하나에 세션이 2개 이상 붙은 비율이 약 27%에서 약 3%로 줄었습니다. 핑거프린트가 여러 세션의 부모처럼 보이던 것은 세션이 잘게 잘려서 생긴 착시였습니다. 핑거프린트가 할 일은 저장소가 지워져 끊긴 세션 사이를 잇는 것으로 좁아졌습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 핑거프린트로 이어진 연결을 끝까지 따라가, 닿는 세션을 모두 한 방문자로 묶는 안<br>② 두 핑거프린트의 similarity score를 매기고, threshold를 넘으면 묶는 안<br>③ 층마다 연결에 쓸 수 있는 근거를 한 종류로 제한하는 안</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 확률로 나온 단서끼리 이으면, threshold가 맞는지 검증할 ground truth가 없습니다. 층마다 근거를 한 종류로 두면 확률 단서만으로는 사람이 만들어지지 않습니다. 틀린 연결이 드러나면 그 층의 연결만 끊으면 됩니다. 한 고객사의 30일 데이터로 시뮬레이션해 보니, 연결을 끝까지 따라가면 핑거프린트 470개가 하나의 connected component로 묶였습니다. 1-hop까지만 잇고 각 핑거프린트를 중심 하나에만 붙이는 star topology로 제한하자, 가장 큰 connected component가 7개로 줄었습니다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 확률로 나온 단서끼리 이으면, threshold가 맞는지 검증할 ground truth가 없습니다. 층마다 근거를 한 종류로 두면 확률 단서만으로는 사람이 만들어지지 않습니다. 틀린 연결이 드러나면 그 층의 연결만 끊으면 됩니다. 한 고객사의 30일 데이터로 시뮬레이션해 보니, 연결을 끝까지 따라가면 핑거프린트 470개가 하나의 connected component로 묶였습니다. 값 하나에 이어질 수 있는 핑거프린트 수에 상한을 두고, 1-hop까지만 잇는 star topology로 제한하자, 가장 큰 connected component가 7개로 줄었습니다.</dd></div>
                 <div><dt>대가</dt><dd>같은 시뮬레이션에서 1-hop으로 제한하는 바람에 잃은 연결은 약 3%였습니다. 또 핑거프린트를 받지 못한 브라우저는 저장소가 지워지면 이전 기록과 같은 방문자로 이어지지 않습니다.</dd></div>
               </dl>
             </article>
@@ -392,8 +392,8 @@
           </section>
 
           <nav class="pager" aria-label="다른 프로젝트">
-            <a class="prev" href="green.html"><span class="k">이전 프로젝트</span><span class="t">V3 실시간 아키텍처: 상태 계산은 Flink, ClickHouse는 적재와 조회</span></a>
-            <a class="next" href="ads.html"><span class="k">다음 프로젝트</span><span class="t">광고 데이터 수집 파이프라인</span></a>
+            <a class="prev" href="sdlc.html"><span class="k">이전 프로젝트</span><span class="t">AI-native SDLC: AI 코딩 에이전트의 변경을 검증하는 개발과 배포 체계</span></a>
+            <a class="next" href="ads.html"><span class="k">다음 프로젝트</span><span class="t">Google, Meta, 네이버 광고 데이터 통합 파이프라인과 ROAS attribution</span></a>
           </nav>
         </article>
       </div>

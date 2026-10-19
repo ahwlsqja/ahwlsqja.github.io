@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>V3 실시간 아키텍처: 상태 계산은 Flink, ClickHouse는 적재와 조회 · 모진영</title>
+<title>Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환 · 모진영</title>
 <meta name="description" content="ClickHouse 안의 Refreshable MV chain이 맡던 세션 집계를, 상태 계산은 Flink가 맡고 ClickHouse는 적재와 조회만 하는 구조로 다시 설계해 운영 트래픽을 끊지 않고 cutover한 프로젝트입니다.">
 <meta name="color-scheme" content="dark light">
 <script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
@@ -37,7 +37,7 @@
       <div class="shell">
         <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>v3-architecture</span></nav>
         <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span><span class="badge badge--ok">운영 중</span></div>
-        <h1 class="doc-title" id="detail-h">V3 실시간 아키텍처: 상태 계산은 Flink, ClickHouse는 적재와 조회</h1>
+        <h1 class="doc-title" id="detail-h">Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환</h1>
         <p class="doc-lede">수파리드는 광고 클릭부터 자사몰, 매장, 외부몰 구매까지 고객 여정을 하나의 어트리뷰션으로 잇는 옴니채널 고객 인텔리전스 플랫폼입니다. 이 프로젝트는 브라우저 행동 이벤트로 방문 세션과 여정을 실시간으로 계산하는 경로를 다룹니다. late event와 재전송 이벤트를 다루는 stateful 계산을 ClickHouse에서 꺼내 Flink로 옮겼습니다. Kafka를 원본 로그로 두어, 같은 입력이면 같은 결과가 나오는 구조로 다시 설계했습니다. 운영 트래픽을 끊지 않고 새 경로로 전환했습니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.08 – 2026.10</dd></div>
@@ -503,8 +503,8 @@
           </section>
 
           <nav class="pager" aria-label="다른 프로젝트">
-            <a class="prev" href="../index.html#projects"><span class="k">첫 프로젝트</span><span class="t">포트폴리오 목록으로</span></a>
-            <a class="next" href="cdp.html"><span class="k">다음 프로젝트</span><span class="t">CDP 방문자 신원과 데이터 모델 설계와 개발</span></a>
+            <a class="prev" href="elt.html"><span class="k">이전 프로젝트</span><span class="t">Cloudflare Workers 기반 서버리스 이벤트 수집과 ELT 파이프라인</span></a>
+            <a class="next" href="clickhouse.html"><span class="k">다음 프로젝트</span><span class="t">ClickHouse 스키마 재설계와 쿼리 성능 최적화</span></a>
           </nav>
         </article>
       </div>

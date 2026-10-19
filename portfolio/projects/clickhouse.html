@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>ClickHouse 저장 구조와 조회 경로 최적화 · 모진영</title>
+<title>ClickHouse 스키마 재설계와 쿼리 성능 최적화 · 모진영</title>
 <meta name="description" content="hash 파티션 64개가 쓰기만 잘게 쪼개던 ClickHouse를, MergeTree 동작을 근거로 테이블마다 파티션과 sort key를 다시 정하고 화면별 조회 경로를 설계해 바꾼 프로젝트입니다.">
 <meta name="color-scheme" content="dark light">
 <script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
@@ -37,7 +37,7 @@
       <div class="shell">
         <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>clickhouse</span></nav>
         <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span></div>
-        <h1 class="doc-title" id="detail-h">ClickHouse 저장 구조와 조회 경로 최적화</h1>
+        <h1 class="doc-title" id="detail-h">ClickHouse 스키마 재설계와 쿼리 성능 최적화</h1>
         <p class="doc-lede">hash 파티션 64개가 조회는 빠르게 하지 못하면서 쓰기만 잘게 쪼개고 있었습니다. MergeTree 동작을 근거로 테이블마다 파티션과 sort key를 다시 정하고, 화면마다 조회 경로를 따로 설계했습니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.08 – 2026.09</dd></div>
@@ -655,8 +655,8 @@
           </section>
 
           <nav class="pager" aria-label="다른 프로젝트">
-            <a class="prev" href="qr-relay.html"><span class="k">이전 프로젝트</span><span class="t">QR Relay Module: 매장 QR과 문자 링크의 브라우저 식별과 이동</span></a>
-            <a class="next" href="elt.html"><span class="k">다음 프로젝트</span><span class="t">수집과 ELT 파이프라인 0→1</span></a>
+            <a class="prev" href="green.html"><span class="k">이전 프로젝트</span><span class="t">Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환</span></a>
+            <a class="next" href="sdlc.html"><span class="k">다음 프로젝트</span><span class="t">AI-native SDLC: AI 코딩 에이전트의 변경을 검증하는 개발과 배포 체계</span></a>
           </nav>
         </article>
       </div>
