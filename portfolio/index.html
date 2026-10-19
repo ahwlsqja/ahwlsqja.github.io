@@ -168,19 +168,19 @@
               <ul class="chips"><li class="chip">GKE</li><li class="chip">Terraform</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">External Secrets</li><li class="chip">ClickHouse Keeper</li><li class="chip">clickhouse-backup</li></ul></span>
             <span class="row__when">2026.09 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
-          <li><a class="row" href="projects/sre.html">
+          <li><a class="row" href="projects/clickhouse.html">
             <span class="row__no">02</span>
-            <span class="row__main"><span class="row__title">장애 탐지, 1차 진단, On-call 호출을 자동화한 SRE 에이전트</span>
-              <span class="row__sum">지표를 5분마다 읽어 incident를 기록하고 AI 1차 진단을 남기며, P0일 때만 담당자를 호출하는 사내 SRE 서비스</span>
-              <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Durable Object</li><li class="chip">Cloudflare Queues</li><li class="chip">Cloud Run Job</li><li class="chip">Managed Prometheus</li><li class="chip">Slack</li></ul></span>
-            <span class="row__when">2026.09 – 2026.10</span>
+            <span class="row__main"><span class="row__title">ClickHouse 스키마 재설계와 쿼리 성능 최적화</span>
+              <span class="row__sum">MergeTree 동작을 근거로 테이블마다 partition과 sort key를 다시 정하고, 화면별 조회 경로 설계</span>
+              <ul class="chips"><li class="chip">ClickHouse</li><li class="chip">ReplacingMergeTree</li><li class="chip">Projection</li><li class="chip">Refreshable MV</li><li class="chip">EXPLAIN</li><li class="chip">system.query_log</li></ul></span>
+            <span class="row__when">2026.08 – 2026.09</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
-          <li><a class="row" href="projects/deploy.html">
+          <li><a class="row" href="projects/cdp.html">
             <span class="row__no">03</span>
-            <span class="row__main"><span class="row__title">CI/CD 파이프라인 설계와 Argo CD GitOps 전환</span>
-              <span class="row__sum">한 번 빌드한 이미지를 staging에서 검증한 뒤 같은 digest 그대로 production으로 promotion하는 파이프라인을 만들고, Argo CD와 Kargo 기반 GitOps로 옮긴 배포 체계</span>
-              <ul class="chips"><li class="chip">GitHub Actions</li><li class="chip">Terraform</li><li class="chip">Infisical</li><li class="chip">GKE Autopilot</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">External Secrets Operator</li></ul></span>
-            <span class="row__when">2026.05 – 2026.10</span>
+            <span class="row__main"><span class="row__title">CDP Identity Resolution: 익명 방문자를 한 사람으로 잇는 신원 모델</span>
+              <span class="row__sum">익명 방문과 재방문, 여러 탭을 한 사람의 여정으로 잇는 방문자 신원 모델 설계와 개발</span>
+              <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Go</li><li class="chip">ClickHouse</li><li class="chip">IndexedDB</li><li class="chip">Kafka</li><li class="chip">Flink</li></ul></span>
+            <span class="row__when">2026.04 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/elt.html">
             <span class="row__no">04</span>
@@ -196,12 +196,12 @@
               <ul class="chips"><li class="chip">Go</li><li class="chip">Kafka (GCP 관리형)</li><li class="chip">Flink 2.2</li><li class="chip">ClickHouse (자체 운영)</li><li class="chip">GKE</li><li class="chip">Cloudflare Workers</li><li class="chip">Terraform</li><li class="chip">Argo CD</li></ul></span>
             <span class="row__when">2026.08 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
-          <li><a class="row" href="projects/clickhouse.html">
+          <li><a class="row" href="projects/sre.html">
             <span class="row__no">06</span>
-            <span class="row__main"><span class="row__title">ClickHouse 스키마 재설계와 쿼리 성능 최적화</span>
-              <span class="row__sum">MergeTree 동작을 근거로 테이블마다 partition과 sort key를 다시 정하고, 화면별 조회 경로 설계</span>
-              <ul class="chips"><li class="chip">ClickHouse</li><li class="chip">ReplacingMergeTree</li><li class="chip">Projection</li><li class="chip">Refreshable MV</li><li class="chip">EXPLAIN</li><li class="chip">system.query_log</li></ul></span>
-            <span class="row__when">2026.08 – 2026.09</span>
+            <span class="row__main"><span class="row__title">장애 탐지, 1차 진단, On-call 호출을 자동화한 SRE 에이전트</span>
+              <span class="row__sum">지표를 5분마다 읽어 incident를 기록하고 AI 1차 진단을 남기며, P0일 때만 담당자를 호출하는 사내 SRE 서비스</span>
+              <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Durable Object</li><li class="chip">Cloudflare Queues</li><li class="chip">Cloud Run Job</li><li class="chip">Managed Prometheus</li><li class="chip">Slack</li></ul></span>
+            <span class="row__when">2026.09 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/sdlc.html">
             <span class="row__no">07</span>
@@ -210,12 +210,12 @@
               <ul class="chips"><li class="chip">Linear</li><li class="chip">GitHub Actions</li><li class="chip">OIDC</li><li class="chip">Infisical</li><li class="chip">Atlas</li><li class="chip">Terraform</li></ul></span>
             <span class="row__when">2026.04 – 2026.09</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
-          <li><a class="row" href="projects/cdp.html">
+          <li><a class="row" href="projects/deploy.html">
             <span class="row__no">08</span>
-            <span class="row__main"><span class="row__title">CDP Identity Resolution: 익명 방문자를 한 사람으로 잇는 신원 모델</span>
-              <span class="row__sum">익명 방문과 재방문, 여러 탭을 한 사람의 여정으로 잇는 방문자 신원 모델 설계와 개발</span>
-              <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Go</li><li class="chip">ClickHouse</li><li class="chip">IndexedDB</li><li class="chip">Kafka</li><li class="chip">Flink</li></ul></span>
-            <span class="row__when">2026.04 – 2026.10</span>
+            <span class="row__main"><span class="row__title">CI/CD 파이프라인 설계와 Argo CD GitOps 전환</span>
+              <span class="row__sum">한 번 빌드한 이미지를 staging에서 검증한 뒤 같은 digest 그대로 production으로 promotion하는 파이프라인을 만들고, Argo CD와 Kargo 기반 GitOps로 옮긴 배포 체계</span>
+              <ul class="chips"><li class="chip">GitHub Actions</li><li class="chip">Terraform</li><li class="chip">Infisical</li><li class="chip">GKE Autopilot</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">External Secrets Operator</li></ul></span>
+            <span class="row__when">2026.05 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/ads.html">
             <span class="row__no">09</span>
