@@ -345,8 +345,8 @@
   {"t":"수집 Worker가 운영 queue에 발행한 배치가 성공하면, 같은 메시지를 그대로 Shadow queue에도 넣습니다. mirroring이 실패해도 운영 응답과 ACK는 바뀌지 않습니다.", "d": 4400},
   {"t":"두 queue는 같은 코드와 설정의 consumer 로직이 받아 A 테이블과 B 테이블에 각각 적재합니다. 두 테이블은 PARTITION BY 절 하나만 다릅니다."},
   {"t":"같은 시간 구간에서 같은 집계 쿼리로 결과가 같은지부터 대조하고, 그다음 INSERT 지연, part 수, 병합 횟수를 잽니다. 약 9시간 구간에서 활성 part는 A가 1,019개, B가 5개였습니다.", "d": 4600},
-  {"t":"무파티션을 채택한 뒤 운영 서비스 안에 Green을 만들어 시간 순서로 backfill하고, bridge MV로 Blue에 들어오는 행을 Green에도 복사했습니다. 빠진 키와 본문 차이는 0이었습니다.", "d": 4600},
-  {"t":"EXCHANGE TABLES 한 문장으로 Blue와 Green의 이름을 맞바꿨습니다. 같은 문장을 다시 실행하면 원래대로 돌아갑니다."}
+  {"t":"무파티션을 채택한 뒤 운영 서비스 안에 새 테이블을 만들어 시간 순서로 backfill하고, bridge MV로 기존 테이블에 들어오는 행을 새 테이블에도 복사했습니다. 빠진 키와 본문 차이는 0이었습니다.", "d": 4600},
+  {"t":"EXCHANGE TABLES 한 문장으로 기존 테이블과 새 테이블의 이름을 맞바꿨습니다. 같은 문장을 다시 실행하면 원래대로 돌아갑니다."}
 ]'>
   <figcaption><span class="n">그림 2</span>같은 입력으로 A와 B를 비교하고, 이름만 맞바꿔 교체하기</figcaption>
   <div class="dg__canvas">
@@ -442,12 +442,12 @@
       <text class="m" x="572" y="547">무파티션 채택</text>
       <g data-step="4,5">
         <rect class="box" x="112" y="590" width="220" height="60" rx="8"/>
-        <text class="t" x="126" y="616">Blue: 기존 테이블</text>
+        <text class="t" x="126" y="616">기존 테이블</text>
         <text class="s" x="126" y="636">hash 파티션 64개</text>
       </g>
       <g data-step="4,5">
         <rect class="box" x="460" y="590" width="220" height="60" rx="8"/>
-        <text class="t" x="474" y="616">Green: 새 테이블</text>
+        <text class="t" x="474" y="616">새 테이블</text>
         <text class="s" x="474" y="636">같은 열 69개, 파티션 없음</text>
       </g>
       <path id="dg-ch-ab-ex" class="flow" data-step="5" fill="none" d="M338 620H454" marker-start="url(#dg-ch-ab-ah)" marker-end="url(#dg-ch-ab-ah)"/>
@@ -525,20 +525,20 @@
             </ul>
 
             <h3>Blue/Green 무중단 전환</h3>
-            <p>실험에서 얻은 이득은 주로 파티션 제거에서 나왔으므로, 운영 전환에서도 바꾸는 것을 파티션 하나로 줄였습니다(D-03). 기존 테이블을 Blue로, <code>PARTITION BY</code> 절만 뺀 같은 열 69개짜리 새 테이블을 Green으로 두고 같은 ClickHouse 서비스 안에 나란히 세웠습니다. 서비스를 통째로 새로 띄우거나 새 schema로 옮기면, 파생 집계를 만드는 materialized view(MV) 19개와 뷰를 모두 다시 써야 합니다. 테이블 단위로 하면 schema가 같아 MV와 조회 코드는 그대로 두고 이름만 바꿔 끼우면 됩니다. 이름을 맞바꾸는 <code>EXCHANGE TABLES</code>는 같은 문장을 다시 실행하면 원래대로 돌아옵니다. 교체와 rollback이 같은 한 문장이라는 점이 이 방식을 고른 가장 큰 이유였습니다.</p>
+            <p>실험에서 얻은 이득은 주로 파티션 제거에서 나왔으므로, 운영 전환에서도 바꾸는 것을 파티션 하나로 줄였습니다(D-03). 기존 테이블은 그대로 두고, <code>PARTITION BY</code> 절만 뺀 같은 열 69개짜리 새 테이블을 같은 ClickHouse 서비스 안에 나란히 세웠습니다. 서비스를 통째로 새로 띄우거나 새 schema로 옮기면, 파생 집계를 만드는 materialized view(MV) 19개와 뷰를 모두 다시 써야 합니다. 테이블 단위로 하면 schema가 같아 MV와 조회 코드는 그대로 두고 이름만 바꿔 끼우면 됩니다. 이름을 맞바꾸는 <code>EXCHANGE TABLES</code>는 같은 문장을 다시 실행하면 원래대로 돌아옵니다. 교체와 rollback이 같은 한 문장이라는 점이 이 방식을 고른 가장 큰 이유였습니다.</p>
             <p>준비 단계에서 staging으로 두 가지를 먼저 확인했습니다. EXCHANGE 뒤에도 MV가 이름을 따라 새 테이블에서 trigger되는지, 그리고 일반 RENAME은 MV 연결을 끊는지입니다. 이 동작은 공식 문서에 나와 있지 않아서 실제 동작으로 확인했고, 결과에 따라 RENAME은 쓰지 않고 EXCHANGE만 쓰기로 했습니다.</p>
             <ol class="steps">
               <li>
                 <span class="steps__t">같은 schema로 복제</span>
-                <p>Green은 손으로 쓰지 않고, 운영 테이블 정의에서 <code>PARTITION BY</code> 절만 지워 만들었습니다. 엔진과 sort key, TTL 2년, skip index 4개, 열 69개가 Blue와 같습니다. 전환 스크립트는 첫 단계에서 두 테이블의 열 이름 순서가 같은지 확인하고, 다르면 멈추게 했습니다. dual write에 쓸 MV는 열을 이름으로 맞추지만 <code>SELECT *</code>는 위치로 맞춰서, 순서가 한 칸만 어긋나도 backfill한 행만 조용히 틀어질 수 있었기 때문입니다. backfill 쿼리에도 <code>SELECT *</code> 대신 열 목록을 적었습니다.</p>
+                <p>새 테이블은 손으로 쓰지 않고, 운영 테이블 정의에서 <code>PARTITION BY</code> 절만 지워 만들었습니다. 엔진과 sort key, TTL 2년, skip index 4개, 열 69개가 기존 테이블과 같습니다. 전환 스크립트는 첫 단계에서 두 테이블의 열 이름 순서가 같은지 확인하고, 다르면 멈추게 했습니다. dual write에 쓸 MV는 열을 이름으로 맞추지만 <code>SELECT *</code>는 위치로 맞춰서, 순서가 한 칸만 어긋나도 backfill한 행만 조용히 틀어질 수 있었기 때문입니다. backfill 쿼리에도 <code>SELECT *</code> 대신 열 목록을 적었습니다.</p>
               </li>
               <li>
                 <span class="steps__t">원본을 건드리지 않고 backfill</span>
-                <p>Blue와 MV, 수집 worker는 그대로 둔 채 Green을 채웠습니다. 순서는 실험 3단계에서 고른 대로 이벤트 시각 7일 구간 17개를 오래된 것부터 넣었고, 약 55분 걸렸습니다. 병합이 끝난 뒤 Green의 part는 9개였고, part마다 시간 범위가 이어져 있었습니다.</p>
+                <p>기존 테이블과 MV, 수집 worker는 그대로 둔 채 새 테이블을 채웠습니다. 순서는 실험 3단계에서 고른 대로 이벤트 시각 7일 구간 17개를 오래된 것부터 넣었고, 약 55분 걸렸습니다. 병합이 끝난 뒤 새 테이블의 part는 9개였고, part마다 시간 범위가 이어져 있었습니다.</p>
               </li>
               <li>
                 <span class="steps__t">논리 키로 대조</span>
-                <p>처음에는 양쪽을 같은 수신 시각 cutoff로 걸러 비교했는데 결과가 어긋났습니다. 재전송된 행이 cutoff를 넘나들면, 병합이 한쪽에서만 옛 버전을 지우기 때문입니다. 그래서 Blue를 기준으로 두고, cutoff 시점의 Blue 키 집합과 키별 최신 버전을 임시 테이블에 snapshot으로 저장했습니다. Green을 그 키로 좁힌 뒤 빠진 키 수와, 키마다 본문 61개 열로 고른 최신 행의 hash를 비교했습니다. NULL이 섞여도 hash가 NULL이 되지 않게 열을 tuple로 묶어 hash했고, replica가 2대라 <code>select_sequential_consistency=1</code>로 같은 상태를 읽게 했습니다. 빠진 키 0, 본문 차이 0이었습니다. 열 69개 전체로 비교하면 소비 시각처럼 처리할 때마다 바뀌는 열에서만 차이가 났는데, 같은 이벤트인지 판단하는 기준에서 뺀 열이라 예상한 결과였습니다.</p>
+                <p>처음에는 양쪽을 같은 수신 시각 cutoff로 걸러 비교했는데 결과가 어긋났습니다. 재전송된 행이 cutoff를 넘나들면, 병합이 한쪽에서만 옛 버전을 지우기 때문입니다. 그래서 기존 테이블을 기준으로 두고, cutoff 시점의 기존 테이블 키 집합과 키별 최신 버전을 임시 테이블에 snapshot으로 저장했습니다. 새 테이블을 그 키로 좁힌 뒤 빠진 키 수와, 키마다 본문 61개 열로 고른 최신 행의 hash를 비교했습니다. NULL이 섞여도 hash가 NULL이 되지 않게 열을 tuple로 묶어 hash했고, replica가 2대라 <code>select_sequential_consistency=1</code>로 같은 상태를 읽게 했습니다. 빠진 키 0, 본문 차이 0이었습니다. 열 69개 전체로 비교하면 소비 시각처럼 처리할 때마다 바뀌는 열에서만 차이가 났는데, 같은 이벤트인지 판단하는 기준에서 뺀 열이라 예상한 결과였습니다.</p>
               </li>
               <li>
                 <span class="steps__t">staging 리허설</span>
@@ -546,22 +546,22 @@
               </li>
               <li>
                 <span class="steps__t">dual write와 교체</span>
-                <p>운영에서는 Blue에 들어오는 행을 Green에도 복사하는 bridge MV를 붙여 ClickHouse 안에서 dual write를 시작했습니다. cutoff 이후 bridge를 붙이기 전까지 들어온 구간은 26초 만에 다시 채웠고, 이 구간도 빠진 키 0, 본문 차이 0이었습니다. 실시간으로 들어오는 행은 키 집합으로 대조했습니다. count()로 비교했을 때는 1행, 비교 구간 끝에 5초 여유를 두고 키를 비교했을 때는 4~9개 키가 달랐는데, 둘 다 병합 상태와 INSERT 도착 지연이 만든 착시였습니다. INSERT 도착이 p99 기준 약 10초까지 늦기 때문에, 구간 끝을 현재보다 60초 앞으로 두자 키가 모두 일치했습니다. 세 대조가 모두 맞은 뒤 9월 3일 <code>EXCHANGE TABLES</code> 한 문장으로 교체했습니다. 스크립트는 열 불일치, 대조 실패, 실시간 대조 불일치 중 하나라도 나오면 교체하지 않고 원본을 그대로 두게 짜 두었습니다.</p>
+                <p>운영에서는 기존 테이블에 들어오는 행을 새 테이블에도 복사하는 bridge MV를 붙여 ClickHouse 안에서 dual write를 시작했습니다. cutoff 이후 bridge를 붙이기 전까지 들어온 구간은 26초 만에 다시 채웠고, 이 구간도 빠진 키 0, 본문 차이 0이었습니다. 실시간으로 들어오는 행은 키 집합으로 대조했습니다. count()로 비교했을 때는 1행, 비교 구간 끝에 5초 여유를 두고 키를 비교했을 때는 4~9개 키가 달랐는데, 둘 다 병합 상태와 INSERT 도착 지연이 만든 착시였습니다. INSERT 도착이 p99 기준 약 10초까지 늦기 때문에, 구간 끝을 현재보다 60초 앞으로 두자 키가 모두 일치했습니다. 세 대조가 모두 맞은 뒤 9월 3일 <code>EXCHANGE TABLES</code> 한 문장으로 교체했습니다. 스크립트는 열 불일치, 대조 실패, 실시간 대조 불일치 중 하나라도 나오면 교체하지 않고 원본을 그대로 두게 짜 두었습니다.</p>
               </li>
               <li>
                 <span class="steps__t">rollback 경로</span>
-                <p>교체 뒤에는 bridge MV가 이름을 따라 방향을 바꿔, 새 원본이 된 Green에서 옛 Blue로 복사합니다. 그동안 옛 Blue가 최신 상태로 남아 있어서, rollback은 같은 EXCHANGE를 한 번 더 실행하면 끝납니다. rollback 가능 기간은 late event가 p99 기준 4.3시간, 최대 24시간 늦게 도착하는 것을 보고 72시간으로 잡았습니다. EXCHANGE는 idempotent하지 않아 다시 실행하면 원래대로 되돌아갑니다. 그래서 배포 때마다 모든 변경을 다시 적용하는 schema migration에는 넣을 수 없었고, migration 밖에서 한 번만 실행한 뒤 migration에는 교체 뒤의 테이블 정의만 반영하는 규칙을 정했습니다.</p>
+                <p>교체 뒤에는 bridge MV가 이름을 따라 방향을 바꿔, 새 원본이 된 테이블에서 옛 테이블로 복사합니다. 그동안 옛 테이블이 최신 상태로 남아 있어서, rollback은 같은 EXCHANGE를 한 번 더 실행하면 끝납니다. rollback 가능 기간은 late event가 p99 기준 4.3시간, 최대 24시간 늦게 도착하는 것을 보고 72시간으로 잡았습니다. EXCHANGE는 idempotent하지 않아 다시 실행하면 원래대로 되돌아갑니다. 그래서 배포 때마다 모든 변경을 다시 적용하는 schema migration에는 넣을 수 없었고, migration 밖에서 한 번만 실행한 뒤 migration에는 교체 뒤의 테이블 정의만 반영하는 규칙을 정했습니다.</p>
               </li>
               <li>
-                <span class="steps__t">bridge를 일찍 걷고 옛 Blue 정리</span>
-                <p>교체 직후에는 bridge 때문에 매 flush가 옛 Blue의 64개 파티션에도 기록되면서 INSERT p95가 10.4초로 오히려 나빠졌습니다. 대조가 모두 통과한 상태라 rollback할 가능성은 낮다고 보고, bridge를 계획보다 일찍 걷어냈습니다. 이때부터 rollback은 EXCHANGE를 다시 실행한 뒤, bridge를 걷은 이후 구간을 backfill하는 절차가 됩니다. 옛 Blue는 다른 이름으로 바꿔 남겨 두고 지켜봤습니다. 지우기 전 점검에서 INSERT 예외 0, p95 3.1초, 갱신 오류 0, 옛 테이블을 참조하는 의존성과 읽기 0을 확인한 뒤 9월 7일에 지웠습니다. 지운 뒤 8시간 동안은 UNDROP으로 되살릴 수 있었습니다.</p>
+                <span class="steps__t">bridge를 일찍 걷고 옛 테이블 정리</span>
+                <p>교체 직후에는 bridge 때문에 매 flush가 옛 테이블의 64개 파티션에도 기록되면서 INSERT p95가 10.4초로 오히려 나빠졌습니다. 대조가 모두 통과한 상태라 rollback할 가능성은 낮다고 보고, bridge를 계획보다 일찍 걷어냈습니다. 이때부터 rollback은 EXCHANGE를 다시 실행한 뒤, bridge를 걷은 이후 구간을 backfill하는 절차가 됩니다. 옛 테이블은 다른 이름으로 바꿔 남겨 두고 지켜봤습니다. 지우기 전 점검에서 INSERT 예외 0, p95 3.1초, 갱신 오류 0, 옛 테이블을 참조하는 의존성과 읽기 0을 확인한 뒤 9월 7일에 지웠습니다. 지운 뒤 8시간 동안은 UNDROP으로 되살릴 수 있었습니다.</p>
               </li>
             </ol>
 
             <h3>전환 뒤 결과</h3>
             <p>전환은 서비스를 멈추지 않고 끝났습니다. cutover 때 버퍼에 모여 있던 async INSERT 3건이 옛 테이블 식별자로 flush되다 실패했지만, queue가 약 61초 뒤 같은 배치를 다시 넣어 잃은 데이터는 없었습니다. 이 실패는 이후 교체 때도 나올 수 있는 예상된 알림으로 runbook에 적어 두었습니다. bridge를 걷은 뒤 13분 동안 INSERT 예외는 0이었습니다.</p>
             <p>원본 이벤트 테이블의 파티션은 64개에서 1개로, part는 454개에서 11개로 줄었습니다. 고객별 FINAL count 쿼리의 메모리는 731~826MB에서 141MB로, 24시간 FINAL count는 1,047~1,117MB에서 148MB로 줄었습니다. 트래픽이 적은 시점에 한 번 잰 요약 화면 7일 조회는 9.2초에서 2.1초가 됐습니다. 디스크 사용량은 11.46GiB와 11.29GiB로 거의 같았고, 14일 범위 조회도 기존 수준을 유지했습니다. sort key가 같아 구조로는 좋아질 수 없는 조회를 시간 순서 backfill로 지킨 결과입니다. 서버 평균 CPU와 동시 병합 수도 전날 평시보다 낮아졌습니다.</p>
-            <p>쓰기 지연은 비교 기준을 다시 잡아야 했습니다. 전환 당일 Blue는 오전 실험과 backfill로 병합이 밀려 INSERT p95가 8,302ms로 평소보다 약 2배 나빴습니다. 이 값과 견주면 전환 뒤 3,823ms는 54% 개선처럼 보입니다. 그래서 전날 같은 시각의 평시 p95인 2,676~3,473ms와도 비교했고, 쓰기 지연은 평시와 같은 수준이라고 판단했습니다. Shadow의 B처럼 0.1초대까지 내려가지 않은 것은, 운영 테이블이 MV 19개를 INSERT와 함께 동기로 처리하고 남은 지연이 주로 여기서 나왔기 때문입니다.</p>
+            <p>쓰기 지연은 비교 기준을 다시 잡아야 했습니다. 전환 당일 기존 테이블은 오전 실험과 backfill로 병합이 밀려 INSERT p95가 8,302ms로 평소보다 약 2배 나빴습니다. 이 값과 견주면 전환 뒤 3,823ms는 54% 개선처럼 보입니다. 그래서 전날 같은 시각의 평시 p95인 2,676~3,473ms와도 비교했고, 쓰기 지연은 평시와 같은 수준이라고 판단했습니다. Shadow의 B처럼 0.1초대까지 내려가지 않은 것은, 운영 테이블이 MV 19개를 INSERT와 함께 동기로 처리하고 남은 지연이 주로 여기서 나왔기 때문입니다.</p>
             <p>회귀도 하나 있었습니다. 파티션이 하나로 합쳐지면서 큰 part끼리 병합하게 되자, 5분마다 FINAL로 도는 모니터링 쿼리의 최고 메모리가 약 10% 늘어 255MB 상한에서 14번 중 4번 실패했습니다. 같은 날 상한을 512MiB로 올리고 읽기 상한 4GiB를 함께 걸었고, 이후 최고 270MiB에서 메모리 초과 없이 돌았습니다.</p>
             <p>같은 절차는 그 뒤에도 그대로 썼습니다. 9월 4~5일에는 원본 신호 테이블을 같은 방식으로 월 파티션으로 바꿨습니다. 이때는 backfill 중 INSERT p95가 15초를 넘거나 메모리가 11GiB 이상이면 backfill을 자동으로 멈추게 했고, 옛 테이블은 사흘 동안 INSERT 예외 0을 확인한 뒤 지웠습니다. 9월 7일 sort key를 (고객, 세션, 이벤트)로 바꿀 때도 같은 EXCHANGE 방식을 썼습니다. sort key와 projection의 효과도 같은 실험 틀로 쟀습니다. 운영 데이터를 읽는 분석 환경에서 바꾸기 전과 후의 테이블을 캐시를 끈 채 6회씩 번갈아 실행했고, 반환 결과의 hash가 같은 표본만 비교에 넣었습니다(D-04, D-05).</p>
           </section>
@@ -655,7 +655,7 @@
           </section>
 
           <nav class="pager" aria-label="다른 프로젝트">
-            <a class="prev" href="platform.html"><span class="k">이전 프로젝트</span><span class="t">Blue/Green 무중단 인프라 이관: Cloud Run과 관리형 ClickHouse에서 GKE로</span></a>
+            <a class="prev" href="platform.html"><span class="k">이전 프로젝트</span><span class="t">무중단 병행 인프라 이관: Cloud Run과 관리형 ClickHouse에서 GKE로</span></a>
             <a class="next" href="cdp.html"><span class="k">다음 프로젝트</span><span class="t">CDP Identity Resolution: 익명 방문자를 한 사람으로 잇는 신원 모델</span></a>
           </nav>
         </article>

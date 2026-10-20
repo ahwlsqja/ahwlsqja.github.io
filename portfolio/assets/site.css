@@ -1300,3 +1300,63 @@ pre code { font-size: inherit; color: var(--text); white-space: pre; }
 .award-shots figcaption { padding: 8px 10px; font-size: var(--fs-xs); color: var(--text-3); line-height: 1.4; border-top: 1px solid var(--line); }
 @media (max-width: 640px) { .award-shots { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { .award-shots img, .award-shots a:hover img { transition: none; transform: none; } }
+
+/* sre refresh */
+.doc-main .sre-lead { color: var(--text); font-size: var(--fs-lg); line-height: 1.6; font-weight: 500; letter-spacing: -0.01em; }
+.sre-facts { list-style: none; margin: var(--s-6) 0 var(--s-5); padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); }
+.sre-facts li { margin: 0; padding: var(--s-3) var(--s-4); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
+.sre-facts b { display: block; font-family: var(--f-mono); font-size: var(--fs-2xl); font-weight: 500; color: var(--accent-ink); line-height: 1.2; }
+.sre-facts span { display: block; margin-top: 2px; font-size: var(--fs-sm); line-height: 1.45; color: var(--text-2); }
+@media (max-width: 640px) { .sre-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.sre-example { margin: var(--s-6) 0; padding: var(--s-4) var(--s-5); border: 1px dashed var(--line-2); border-left: 2px solid var(--warn); border-radius: 0 var(--r-sm) var(--r-sm) 0; background: var(--surface); }
+.sre-example p { margin: 0 0 var(--s-2); font-size: var(--fs-md); line-height: 1.65; }
+.sre-example p:last-child { margin-bottom: 0; }
+.doc-main .sre-example b { color: var(--text); font-weight: 600; }
+.doc-main .sre-example__tag { font-family: var(--f-mono); font-size: var(--fs-2xs); letter-spacing: 0.06em; color: var(--warn); }
+
+/* sre 도식: 등급 사다리 */
+.dg svg .rung .box { stroke-width: 1.25; }
+.dg svg .rung--p0 .box { stroke: var(--bad); fill: var(--bad-soft); }
+.dg svg .rung--p1 .box { stroke: var(--warn); fill: var(--warn-soft); }
+.dg svg .rung--p2 .box { stroke: var(--ok); fill: var(--ok-soft); }
+.dg svg .rung__t { font-size: 22px; font-weight: 700; }
+.dg svg .rung .ring { fill: none; stroke: var(--accent); stroke-width: 2; opacity: 0; }
+.dg svg .rung.on .box { stroke-width: 2.25; }
+.dg svg .rung.on .t { fill: var(--text); }
+.dg.is-playing svg .rung.on .ring { opacity: 0.9; animation: sre-pulse 1.6s ease-in-out infinite; }
+@keyframes sre-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.95; } }
+@media (prefers-reduced-motion: reduce) {
+  .dg.is-playing svg .rung.on .ring { animation: none; opacity: 0.9; }
+}
+/* end sre refresh */
+
+/* green-cdp refresh */
+.gc-lead {
+  margin: var(--s-4) 0;
+  padding: var(--s-3) var(--s-4);
+  border-left: 3px solid var(--accent-line);
+  background: var(--accent-soft);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  color: var(--text);
+  font-size: var(--fs-md);
+  line-height: 1.7;
+}
+/* green-cdp refresh end */
+
+/* interviewer-readability refresh */
+.gc-sum { margin: var(--s-4) 0 var(--s-5); padding: 0; display: grid; gap: var(--s-2); }
+.gc-sum > div { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: var(--s-3); padding: var(--s-3) var(--s-4); border: 1px solid var(--line); border-left: 3px solid var(--accent-line); border-radius: var(--r-sm); background: var(--surface); }
+.gc-sum dt { margin: 0; font-weight: 600; color: var(--accent-ink); }
+.gc-sum dd { margin: 0; color: var(--text-2); line-height: 1.7; }
+@media (max-width: 640px) {
+  .gc-sum > div { grid-template-columns: 1fr; gap: 2px; }
+  .dg > figcaption::after { content: "  (좌우로 밀어서 보기)"; color: var(--text-3); font-size: var(--fs-xs); }
+  .tbl--cards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tbl--cards, .tbl--cards tbody, .tbl--cards tr, .tbl--cards th, .tbl--cards td { display: block; width: 100%; }
+  .tbl--cards tr { padding: var(--s-3) 0; border-bottom: 1px solid var(--line); }
+  .tbl--cards tbody th, .tbl--cards td { border-bottom: 0; padding: 4px var(--s-4); }
+  .tbl--cards tbody th { font-size: var(--fs-lg); }
+  .tbl--cards td[data-label]::before { content: attr(data-label); display: block; font-family: var(--f-mono); font-size: var(--fs-xs); color: var(--text-3); margin-bottom: 1px; }
+}
+.sre-flow { list-style: none; margin: 0; padding: 0; }

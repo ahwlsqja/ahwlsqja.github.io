@@ -68,7 +68,7 @@
             <p>이 기능을 판단하는 기준은 처음부터 두 가지였습니다. 식별값을 실제로 잡은 비율인 획득률과, 스캔에서 목적지 도착까지 걸린 시간인 속도입니다. 측정 전에 합격선을 먼저 정하고, Relay Worker와 브라우저 모듈, 링크 정의 API와 엣지 동기화, 스캔 집계까지 설계하고 만들어 운영에 올렸습니다.</p>
             <dl class="scope">
               <dt>맡은 일</dt><dd>속도와 획득률 합격선, Relay Worker와 브라우저 relay 모듈, 링크 정의 API와 엣지 동기화 Worker, 스캔 집계 view와 스캔 수 API를 설계하고 구현해 운영에 올렸습니다.</dd>
-              <dt>범위 밖</dt><dd>relay가 남긴 visitorId로 같은 사람인지 묶는 판정은 신원 계층이 맡습니다. 자세한 내용은 <a href="cdp.html">CDP 방문자 신원</a> 페이지에, 수집 이후의 실시간 처리는 <a href="green.html">V3 실시간 아키텍처</a> 페이지에 적었습니다.</dd>
+              <dt>범위 밖</dt><dd>relay가 남긴 visitorId로 같은 사람인지 묶는 판정은 신원 계층이 맡습니다. 자세한 내용은 <a href="cdp.html">CDP Identity Resolution</a> 페이지에, 수집 이후의 실시간 처리는 <a href="green.html">Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환</a> 페이지에 적었습니다.</dd>
             </dl>
           </section>
 

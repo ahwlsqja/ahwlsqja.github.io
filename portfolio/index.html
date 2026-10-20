@@ -61,11 +61,6 @@
   .facts .what { color: var(--text); }
   .facts .fact-note { display: block; margin-top: 2px; color: var(--text-2); font-size: var(--fs-md); }
   .facts a { color: inherit; }
-  .facts--education li { grid-template-columns: minmax(10rem, max-content) minmax(0, 1fr); }
-  @media (max-width: 560px) {
-    .facts--education li { grid-template-columns: minmax(0, 1fr); gap: var(--s-1); }
-    .facts--education .when { padding-top: 0; }
-  }
 
   .act { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); padding: var(--s-5); }
   .act + .act { margin-top: var(--s-3); }
@@ -110,9 +105,9 @@
       </h2>
 
       <div class="hero">
-        <figure class="hero__photo"><img src="assets/profile.jpg?v=20261019" alt="모진영 사진" width="184" height="184"></figure>
+        <figure class="hero__photo"><img src="assets/profile.jpg" alt="모진영 사진" width="184" height="184"></figure>
         <div>
-          <p class="profile__role">Backend <b>/</b> Data <b>/</b> Infra <b>·</b> Blockchain</p>
+          <p class="profile__role">Backend <b>/</b> Data <b>/</b> Infra <b>/</b> Blockchain</p>
           <h1 class="profile__name">모진영</h1>
           <p class="profile__lead">
             <span>저는 몰입을 즐기는 개발자입니다.</span>
@@ -161,15 +156,15 @@
       <div class="career">
         <div class="career__head">
           <span class="career__org">수파리드 주식회사</span>
-          <span class="career__role">Product Data Engineer · 초기 멤버, 백엔드·데이터·인프라</span>
+          <span class="career__role">Product Data Engineer · 초기 멤버, 백엔드, 데이터, 인프라</span>
           <span class="career__when">2026.04 – 재직 중</span>
         </div>
         <p class="career__desc">광고 클릭부터 자사몰, 매장, 외부몰 구매까지 흩어진 고객 데이터를 하나의 어트리뷰션으로 잇는 옴니채널 고객 인텔리전스 플랫폼입니다.</p>
         <ol class="rows" id="projects">
           <li><a class="row" href="projects/platform.html">
             <span class="row__no">01</span>
-            <span class="row__main"><span class="row__title">Blue/Green 무중단 인프라 이관: Cloud Run과 관리형 ClickHouse에서 GKE로</span>
-              <span class="row__sum">기존 환경을 그대로 두고 GKE에 새 환경을 나란히 세운 뒤, rollback 경로를 먼저 확인하고 트래픽과 읽기를 옮긴 이관</span>
+            <span class="row__main"><span class="row__title">무중단 병행 인프라 이관: Cloud Run과 관리형 ClickHouse에서 GKE로</span>
+              <span class="row__sum">인프라 이관. 기존 환경을 그대로 두고 GKE에 새 환경을 나란히 세운 뒤, rollback 경로를 먼저 확인하고 트래픽과 읽기를 옮김</span>
               <ul class="chips"><li class="chip">GKE</li><li class="chip">Terraform</li><li class="chip">Argo CD</li><li class="chip">Kargo</li><li class="chip">External Secrets</li><li class="chip">ClickHouse Keeper</li><li class="chip">clickhouse-backup</li></ul></span>
             <span class="row__when">2026.09 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
@@ -183,28 +178,28 @@
           <li><a class="row" href="projects/cdp.html">
             <span class="row__no">03</span>
             <span class="row__main"><span class="row__title">CDP Identity Resolution: 익명 방문자를 한 사람으로 잇는 신원 모델</span>
-              <span class="row__sum">익명 방문과 재방문, 여러 탭을 한 사람의 여정으로 잇는 방문자 신원 모델 설계와 개발</span>
+              <span class="row__sum">익명 방문과 재방문, 여러 탭을 한 사람의 여정으로 잇는 방문자 신원 모델을 설계하고, 연락처 신원 계산은 event sourcing 방식으로 Flink에서 운영</span>
               <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Go</li><li class="chip">ClickHouse</li><li class="chip">IndexedDB</li><li class="chip">Kafka</li><li class="chip">Flink</li></ul></span>
             <span class="row__when">2026.04 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
-          <li><a class="row" href="projects/green.html">
-            <span class="row__no">04</span>
-            <span class="row__main"><span class="row__title">Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환</span>
-              <span class="row__sum">Kafka를 이벤트 원본 로그로 두고, late event와 중복 이벤트를 다루는 세션 집계는 Flink가, 적재와 조회는 ClickHouse가 맡도록 다시 설계해 운영 트래픽을 끊지 않고 cutover</span>
-              <ul class="chips"><li class="chip">Go</li><li class="chip">Kafka (GCP 관리형)</li><li class="chip">Flink 2.2</li><li class="chip">ClickHouse (자체 운영)</li><li class="chip">GKE</li><li class="chip">Cloudflare Workers</li><li class="chip">Terraform</li><li class="chip">Argo CD</li></ul></span>
-            <span class="row__when">2026.08 – 2026.10</span>
-            <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/elt.html">
-            <span class="row__no">05</span>
+            <span class="row__no">04</span>
             <span class="row__main"><span class="row__title">Cloudflare Workers 기반 서버리스 이벤트 수집과 ELT 파이프라인</span>
               <span class="row__sum">브라우저 이벤트를 Cloudflare Workers와 Queues로 받아 ClickHouse raw 테이블에 적재하고, 조회용 테이블까지 나누는 수집과 ELT 경로 신규 구축</span>
               <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Cloudflare Queues</li><li class="chip">ClickHouse</li><li class="chip">PostgreSQL</li><li class="chip">R2</li></ul></span>
             <span class="row__when">2026.04 – 2026.09</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
+          <li><a class="row" href="projects/green.html">
+            <span class="row__no">05</span>
+            <span class="row__main"><span class="row__title">Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환</span>
+              <span class="row__sum">처리 계층 재설계. 세션 계산이 오류 없이 88만 개 빠진 문제를 계기로, Kafka를 원본 로그로 두는 event sourcing 구조로 계산을 ClickHouse의 SQL에서 Flink로 옮기고 운영 트래픽을 끊지 않고 cutover</span>
+              <ul class="chips"><li class="chip">Go</li><li class="chip">Kafka (GCP 관리형)</li><li class="chip">Flink 2.2</li><li class="chip">ClickHouse (자체 운영)</li><li class="chip">GKE</li><li class="chip">Cloudflare Workers</li><li class="chip">Terraform</li><li class="chip">Argo CD</li></ul></span>
+            <span class="row__when">2026.08 – 2026.10</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/sre.html">
             <span class="row__no">06</span>
-            <span class="row__main"><span class="row__title">장애 탐지, 1차 진단, On-call 호출을 자동화한 SRE 에이전트</span>
-              <span class="row__sum">지표를 5분마다 읽어 incident를 기록하고 AI 1차 진단을 남기며, P0일 때만 담당자를 호출하는 사내 SRE 서비스</span>
+            <span class="row__main"><span class="row__title">장애 탐지, 1차 진단, 심각도 판정을 자동화한 SRE 에이전트</span>
+              <span class="row__sum">지표를 5분마다 읽어 incident로 묶고 AI 1차 진단을 남기며, 심각도를 P0, P1, P2로 판정해 P0만 24시간 호출 대상으로 분류하고 기존 paging 경로로 넘기는 사내 SRE 서비스</span>
               <ul class="chips"><li class="chip">TypeScript</li><li class="chip">Cloudflare Workers</li><li class="chip">Durable Object</li><li class="chip">Cloudflare Queues</li><li class="chip">Cloud Run Job</li><li class="chip">Managed Prometheus</li><li class="chip">Slack</li></ul></span>
             <span class="row__when">2026.09 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
@@ -226,7 +221,7 @@
             <span class="row__no">09</span>
             <span class="row__main"><span class="row__title">Google, Meta, 네이버 광고 데이터 통합 파이프라인과 ROAS attribution</span>
               <span class="row__sum">Google Ads, Meta, 네이버 검색광고의 성과를 플랫폼별 adapter로 수집해 PostgreSQL ledger와 Kafka를 거쳐 ClickHouse에 적재하고, 방문 여정 속 광고 attribution으로 실제 리드와 구매 기준 ROAS를 계산하는 파이프라인</span>
-              <ul class="chips"><li class="chip">Go</li><li class="chip">Kafka</li><li class="chip">ClickHouse</li><li class="chip">PostgreSQL</li><li class="chip">GKE</li><li class="chip">GCS</li><li class="chip">Flink</li><li class="chip">Cloudflare Images·Stream</li></ul></span>
+              <ul class="chips"><li class="chip">Go</li><li class="chip">Kafka</li><li class="chip">ClickHouse</li><li class="chip">PostgreSQL</li><li class="chip">GKE</li><li class="chip">GCS</li><li class="chip">Flink</li><li class="chip">Cloudflare Images, Stream</li></ul></span>
             <span class="row__when">2026.06 – 2026.10</span>
             <span class="row__go" aria-hidden="true">→</span></a></li>
           <li><a class="row" href="projects/qr-relay.html">
@@ -473,7 +468,7 @@
       </div>
 
       <h3 class="label sublabel">교육과 학력</h3>
-      <ul class="facts facts--education">
+      <ul class="facts">
         <li><span class="when">2022.03 – 2027.02</span><span class="what">상명대학교 빅데이터융합 전공, 수학교육 부전공<span class="fact-note">전 과정 수료, 2027년 2월 졸업 예정</span></span></li>
         <li><span class="when">2023.12</span><span class="what">스파르타코딩클럽 내일배움캠프 Node.js 백엔드 과정<span class="fact-note">2024.05까지, 팀 프로젝트에서 백엔드 기능 개발</span></span></li>
       </ul>

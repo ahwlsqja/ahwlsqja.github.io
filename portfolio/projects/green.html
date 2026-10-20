@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환 · 모진영</title>
-<meta name="description" content="ClickHouse 안의 Refreshable MV chain이 맡던 세션 집계를, 상태 계산은 Flink가 맡고 ClickHouse는 적재와 조회만 하는 구조로 다시 설계해 운영 트래픽을 끊지 않고 cutover한 프로젝트입니다.">
+<meta name="description" content="세션 계산을 ClickHouse의 SQL에서 Flink로 옮기고 Kafka를 원본 로그로 두는 event sourcing 구조로 실시간 계층을 다시 설계해, 운영 트래픽을 끊지 않고 cutover한 프로젝트입니다.">
 <meta name="color-scheme" content="dark light">
 <script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,13 +35,13 @@
   <section class="sec" id="detail" aria-labelledby="detail-h">
     <div class="doc-head">
       <div class="shell">
-        <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>v3-architecture</span></nav>
+        <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>kafka-flink</span></nav>
         <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span><span class="badge badge--ok">운영 중</span></div>
         <h1 class="doc-title" id="detail-h">Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환</h1>
-        <p class="doc-lede">수파리드는 광고 클릭부터 자사몰, 매장, 외부몰 구매까지 고객 여정을 하나의 어트리뷰션으로 잇는 옴니채널 고객 인텔리전스 플랫폼입니다. 이 프로젝트는 브라우저 행동 이벤트로 방문 세션과 여정을 실시간으로 계산하는 경로를 다룹니다. late event와 재전송 이벤트를 다루는 stateful 계산을 ClickHouse에서 꺼내 Flink로 옮겼습니다. Kafka를 원본 로그로 두어, 같은 입력이면 같은 결과가 나오는 구조로 다시 설계했습니다. 운영 트래픽을 끊지 않고 새 경로로 전환했습니다.</p>
+        <p class="doc-lede">수파리드의 세션 집계에서 2026년 9월 말, 오류가 나지 않은 채 세션 약 88만 개가 빠진 것이 드러났습니다. 저는 세션 계산을 ClickHouse 안의 SQL에서 Flink로 옮기고 Kafka를 유일한 원본 로그로 두는 구조로 실시간 계층을 다시 설계했습니다. 운영 트래픽을 끊지 않고 cutover를 마쳤고, 과거분도 같은 코드로 다시 계산해 채웠으며, 지금은 이 구조로 운영하고 있습니다. 수파리드는 광고 클릭부터 자사몰, 매장, 외부몰 구매까지 고객 여정을 하나의 어트리뷰션으로 잇는 옴니채널 고객 인텔리전스 플랫폼입니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.08 – 2026.10</dd></div>
-          <div><dt>역할</dt><dd>데이터 경로 전체를 설계하고 cutover 시점을 판단했습니다. 세션 정의, partition key, dedup 위치를 정하는 일부터 수신, Flink state 처리, idempotent 적재, cutover 절차까지 맡았습니다.</dd></div>
+          <div><dt>역할</dt><dd>데이터 경로 전체를 설계하고 cutover 시점을 판단했습니다. 세션 정의, partition key, dedup 위치를 정하는 일부터 수신, Flink state 처리, idempotent 적재, 전환과 rollback 절차까지 맡았습니다.</dd></div>
           <div class="wide"><dt>상태</dt><dd>운영 중</dd></div>
           <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Go</li><li class="chip">Kafka (GCP 관리형)</li><li class="chip">Flink 2.2</li><li class="chip">ClickHouse (자체 운영)</li><li class="chip">GKE</li><li class="chip">Cloudflare Workers</li><li class="chip">Terraform</li><li class="chip">Argo CD</li></ul></dd></div>
         </dl>
@@ -52,35 +52,73 @@
       <div class="doc-body">
         <aside class="toc" aria-label="이 페이지">
           <ol>
-            <li><a href="#d-situation"><span class="n">01</span>상황과 역할</a></li>
-            <li><a href="#d-process"><span class="n">02</span>해결 과정</a></li>
-            <li><a href="#d-decision"><span class="n">03</span>설계 결정</a></li>
-            <li><a href="#d-result"><span class="n">04</span>결과</a></li>
-            <li><a href="#d-ts"><span class="n">05</span>트러블슈팅</a></li>
-            <li><a href="#d-learn"><span class="n">06</span>배운 점</a></li>
-            <li><a href="#d-links"><span class="n">07</span>관련 링크</a></li>
+            <li><a href="#d-summary"><span class="n">01</span>요약과 역할</a></li>
+            <li><a href="#d-before"><span class="n">02</span>전환 전 구조와 문제</a></li>
+            <li><a href="#d-options"><span class="n">03</span>선택지와 기준</a></li>
+            <li><a href="#d-es"><span class="n">04</span>event sourcing 원칙</a></li>
+            <li><a href="#d-cutover"><span class="n">05</span>안전한 전환</a></li>
+            <li><a href="#d-decision"><span class="n">06</span>설계 결정과 트러블슈팅</a></li>
+            <li><a href="#d-now"><span class="n">07</span>지금의 운영 상태</a></li>
+            <li><a href="#d-learn"><span class="n">08</span>배운 점</a></li>
+            <li><a href="#d-links"><span class="n">09</span>관련 링크</a></li>
           </ol>
         </aside>
 
         <article class="doc-main">
-          <section id="d-situation" aria-labelledby="d-situation-h">
-            <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황과 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <p>2026년 9월 말, 봇을 제외한 방문 세션 중 집계가 끝난 비율이 사흘 사이 약 60%에서 30%로 떨어졌습니다. 원본 이벤트는 남아 있었고, 세션 집계만 빠졌습니다.</p>
-            <p>세션 집계는 ClickHouse 안에서 Materialized View(MV)와 Refreshable MV 여러 개를 줄줄이 이어 붙인 MV chain이 맡고 있었습니다. SQL은 약 2만 줄이었고, queue, rate limit, 처리 기록, checkpoint까지 모두 SQL로 구현한 사실상의 stream processor였습니다. 그중 한 MV가 queue에서 처리할 세션을 일부만 고른 채 offset을 넘겼습니다. 고르지 못한 세션은 처리되지 않고 지나갔습니다.</p>
-            <p>부하 기록을 보면 CPU의 절반 이상을 적재 쪽이 썼습니다. 몇 행짜리 INSERT 하나가 MV 십여 개로 퍼져, 입력보다 수백 배 많은 part merge가 일어났습니다. 메모리 한도 초과 오류도 대부분 Refreshable MV에서 났습니다. 반면 대시보드 조회는 CPU의 1%도 쓰지 않았습니다.</p>
-            <p>관리형 ClickHouse를 해지하고 자체 운영 클러스터로 옮기는 일정도 정해져 있었습니다. 새 클러스터로는 이 MV chain을 옮기지 않기로 했습니다. 그래서 세션 집계를 맡을 곳이 따로 필요했습니다.</p>
-            <p>설계 제약은 그보다 앞서 바꾼 세션 정의에서 왔습니다. 30분 inactivity timeout으로 세션을 끊던 방식을 탭 수명 기준으로 바꿨습니다. 이어서 같은 브라우저의 탭들이 함께 쓰는 장기 세션을 두고, 유입은 세션과 따로 기록하게 했습니다. 세션이 며칠씩 열려 있게 되자, 세션은 언젠가 닫히는 window가 아니라 결과를 계속 고쳐 내는 key가 됐습니다. 게다가 SDK는 최대 7일까지 이벤트를 다시 보냅니다.</p>
-            <p>그래서 과제는 세 가지였습니다.</p>
-            <ul>
-              <li>이벤트가 늦게 오거나 같은 이벤트가 다시 와도, 세션 집계 결과에는 한 번만 반영되어야 했습니다.</li>
-              <li>장애가 나면 원본 이벤트부터 다시 읽어 결과를 다시 계산할 수 있어야 했습니다.</li>
-              <li>관리형 ClickHouse 해지 일정 안에, 운영 트래픽을 끊지 않고 새 경로로 옮겨야 했습니다.</li>
-            </ul>
-            <dl class="scope">
-              <dt>맡은 일</dt><dd>세션 정의, partition key, dedup 위치를 정하고, Go receiver, Flink 세션 집계 job, Go sinker, cutover 절차를 설계하고 구현했습니다. cutover 시점 판단도 맡았습니다.</dd>
-              <dt>범위 밖</dt><dd>방문자 신원 계산은 별도 배치로 설계했습니다. 자세한 내용은 CDP 방문자 신원 페이지에 적었습니다.</dd>
-            </dl>
 
+          <!-- 01 -->
+          <section id="d-summary" aria-labelledby="d-summary-h">
+            <h2 class="sechead" id="d-summary-h"><span class="sechead__no">01</span><span class="sechead__title">요약과 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p class="gc-lead">세션 계산을 ClickHouse의 SQL에서 Flink로 옮기고, Kafka를 유일한 원본 로그로 두는 구조로 실시간 계층을 다시 설계했습니다. 이 구조에서는 모든 상태를 원본 이벤트를 다시 읽어 만들 수 있어서, 늦게 온 이벤트와 다시 온 이벤트, 과거 데이터 재처리를 같은 방식으로 다룹니다.</p>
+            <dl class="gc-sum" aria-label="세 줄 요약">
+              <div><dt>문제</dt><dd>세션 약 88만 개가 오류 없이 집계에서 빠졌습니다. 세션 계산이 ClickHouse의 insert trigger 방식 MV에 묶여 있어서, 늦게 온 이벤트가 들어와도 이미 낸 결과를 고칠 수 없었고 처음부터 다시 계산할 수도 없었습니다.</dd></div>
+              <div><dt>결정</dt><dd>기준은 속도가 아니라 의미론이었습니다. 7일 늦게 온 이벤트를 반영할 때도, 이미 낸 결과를 고칠 때도, 처음부터 다시 계산할 때도 같은 결과가 나오도록 Flink와 Kafka 원본 로그를 골랐습니다. 이어지는 02부터 04에서 이유를 설명합니다.</dd></div>
+              <div><dt>결과</dt><dd>운영 중에 cutover를 마쳤습니다. 운영 환경에서 24시간 대조한 결과 한쪽에만 있는 이벤트는 약 0.06%였고 partition 12개의 offset이 모두 일치했습니다. 약 6,800만 행의 과거분도 같은 코드로 재생해 채웠습니다. 안전하게 옮긴 방법은 05에 있습니다.</dd></div>
+            </dl>
+            <dl class="scope">
+              <dt>맡은 일</dt><dd>세션 정의, partition key, dedup 위치를 정했습니다. Go receiver, Flink 세션 집계 job, Go sinker와 전환 절차를 설계하고 구현했고, 각 단계로 넘어가는 시점도 직접 판단했습니다.</dd>
+              <dt>범위 밖</dt><dd>방문자를 한 사람으로 잇는 신원 모델은 <a href="cdp.html">CDP Identity Resolution</a> 페이지에 적었습니다. 이 계층의 Flink는 연락처 쪽 신원 계산만 함께 맡습니다.</dd>
+            </dl>
+          </section>
+
+          <!-- 02 -->
+          <section id="d-before" aria-labelledby="d-before-h">
+            <h2 class="sechead" id="d-before-h"><span class="sechead__no">02</span><span class="sechead__title">전환 전 구조와 문제</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>전환 전에는 ClickHouse 한 곳이 저장, 세션 계산, queue 관리, 조회를 모두 맡고 있었습니다. 수집 Worker가 받은 이벤트는 queue와 consumer를 거쳐 관리형 ClickHouse에 들어갔습니다. 세션 계산은 Materialized View(MV)와 Refreshable MV를 줄줄이 이어 붙인 chain이 했습니다. SQL은 약 2만 줄이었고, queue, rate limit, 처리 기록, checkpoint까지 SQL로 구현한 사실상의 stream processor였습니다.</p>
+            <p>한 곳이 너무 많은 일을 맡은 이 구조에서 실제로 무엇이 깨졌는지 먼저 보겠습니다. 구조 전체를 전과 후로 비교한 그림은 03의 끝에 두었습니다.</p>
+
+
+<h3>문제는 네 가지로 드러났습니다</h3>
+            <p><strong>1. 세션이 조용히 빠졌습니다.</strong> 2026년 9월 말, 봇을 제외한 방문 세션 중 집계가 끝난 비율이 30% 수준까지 떨어졌고, 누적으로 약 88만 개 세션이 집계에서 빠졌습니다. 원본 이벤트는 남아 있었고 집계만 빠졌습니다. 원인은 처리 대기 목록의 고르는 방식에 있었습니다. 대기 목록 창은 최대 1만 건인데, 그중 도착이 가장 새로운 800건만 후보로 고르고 읽은 위치를 창 끝까지 넘겼습니다. 고르지 못한 오래된 건은 한 번도 처리되지 않았고, 건너뛴 세션은 아무 기록 없이 8일 뒤 사라졌습니다. 누락이 오류로 드러나지 않는다는 점이 가장 나빴습니다.</p>
+            <p><strong>2. 결과를 되돌릴 수 없었습니다.</strong> ClickHouse의 MV는 테이블의 현재 상태를 보고 계산하지 않고, INSERT가 일어날 때 새로 들어온 행만 보고 계산하는 insert trigger입니다. 이미 더해진 숫자는 나중에 중복 행이 병합돼도 돌아가지 않습니다. SDK는 최대 7일까지 이벤트를 다시 보내는데, 기존 경로의 dedup은 30분 안쪽만 막아서 그보다 늦은 재전송이 집계를 부풀린 적이 있었습니다.</p>
+            <p><strong>3. 다시 계산할 수 없었습니다.</strong> queue는 한 번 읽으면 사라지고 보관 기간도 14일이었습니다. 관리형 ClickHouse를 해지하면 그 안의 원본도 함께 사라지는 상황이었습니다. 부하 면에서도, 몇 행짜리 INSERT 하나가 MV 십여 개로 퍼져, 적재가 대시보드 조회보다 훨씬 많은 자원을 썼습니다.</p>
+            <p><strong>4. 세션 정의가 바뀌어 window 모델이 맞지 않았습니다.</strong> 30분 inactivity timeout으로 세션을 끊던 방식을 탭 수명 기준으로 바꾸고, 같은 브라우저의 탭들이 함께 쓰는 장기 세션과 세션과 따로 기록하는 유입을 도입했습니다. 세션이 며칠씩 열려 있게 되자, 세션은 언젠가 닫히는 window가 아니라 결과를 계속 고쳐 내는 key가 됐습니다.</p>
+            <p>그래서 과제는 세 가지였습니다. 이벤트가 늦게 오거나 다시 와도 결과에는 한 번만 반영되어야 했습니다. 장애가 나면 원본부터 다시 읽어 같은 결과를 다시 만들 수 있어야 했습니다. 그리고 관리형 ClickHouse를 해지하기 전에 운영 트래픽을 끊지 않고 옮겨야 했습니다.</p>
+          </section>
+
+          <!-- 03 -->
+          <section id="d-options" aria-labelledby="d-options-h">
+            <h2 class="sechead" id="d-options-h"><span class="sechead__no">03</span><span class="sechead__title">선택지와 기준</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p class="gc-lead">Flink를 고른 기준은 속도가 아니라 의미론이었습니다. 이벤트가 들어와 세션 집계에 반영되기까지의 목표는 약 15분이었고, 이 정도는 Flink 없이도 낼 수 있었습니다. 필요한 것은 7일 늦게 온 이벤트를 반영할 때도, 이미 낸 결과를 고칠 때도, 처음부터 다시 처리할 때도 모두 같은 결과를 내는 성질이었습니다.</p>
+            <p>이 기준으로 아래 선택지를 비교했습니다. 비용은 결정을 좌우할 만큼 크지 않았고, 실제로 갈린 것은 운영해야 할 구성 요소와 직접 만들어야 할 기능이었습니다.</p>
+            <div class="table-wrap">
+              <table class="tbl tbl--cards">
+                <caption>표 2. 선택지와 trade-off</caption>
+                <thead><tr><th scope="col">선택지</th><th scope="col">얻는 것</th><th scope="col">포기하는 것</th><th scope="col">결과</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">Refreshable MV의 queue를 보강해 누락만 막기</th><td data-label="얻는 것">변경이 가장 작습니다.</td><td data-label="포기하는 것">저장소가 상태 계산을 계속 떠안고, 새 클러스터로 SQL 2만 줄을 그대로 옮겨야 합니다. insert trigger 구조라 재전송, late event, backfill과 맞지 않습니다.</td><td data-label="결과">채택하지 않았습니다. 세션이 며칠씩 열려 있는 새 세션 정의에서는 누락을 막아도 늦은 이벤트를 고칠 수 없어서, 문제의 원인이 그대로 남습니다.</td></tr>
+                  <tr><th scope="row">Go consumer가 세션을 직접 계산</th><td data-label="얻는 것">운영 비용이 훨씬 쌉니다.</td><td data-label="포기하는 것">keyed state, 시간이 지나면 동작하는 timer, 장애 복구용 checkpoint를 직접 다시 만들어야 합니다. 기존 MV chain이 바로 그렇게 2만 줄이 됐습니다.</td><td data-label="결과">채택하지 않았습니다.</td></tr>
+                  <tr><th scope="row">배치 처리부터 먼저 만들기</th><td data-label="얻는 것">구조가 단순합니다.</td><td data-label="포기하는 것">귀속 결과가 바뀔 때 그 변경이 바로 전파되어야 하는데 배치 주기만큼 늦어집니다.</td><td data-label="결과">채택하지 않았습니다.</td></tr>
+                  <tr><th scope="row">ClickHouse 엔진 교체</th><td data-label="얻는 것">익숙한 운영 방식을 유지합니다.</td><td data-label="포기하는 것">문제의 원인을 건드리지 못합니다. 문제는 엔진이 아니라 원본 보관, 해석, 계산, 조회가 chain 하나에 섞인 구조였습니다.</td><td data-label="결과">채택하지 않았습니다.</td></tr>
+                  <tr><th scope="row">Apache Fluss를 Flink의 상태 저장소로 사용</th><td data-label="얻는 것">state를 외부에서 관리할 수 있습니다.</td><td data-label="포기하는 것">막 1.0이 나온 시점이었고, ZooKeeper가 필수이며 지원하는 인증 방식이 한정적이고 Go 클라이언트가 없었습니다. 운영에 쓰기에는 이르다고 판단했습니다.</td><td data-label="결과">보류했습니다.</td></tr>
+                  <tr class="is-pick"><th scope="row">Kafka 원본 로그 + Flink 상태 계산 + ClickHouse는 적재와 조회만</th><td data-label="얻는 것">모든 상태를 로그에서 다시 만들 수 있고, 같은 입력이면 같은 결과가 나옵니다.</td><td data-label="포기하는 것">Kafka, Flink, sinker만큼 운영 구성 요소가 늘고, 작은 규모의 시스템에 JVM 기반 도구가 더해집니다. 범위를 넓힌 채 일정을 지켜야 해서 마지막 몇 주가 빠듯했습니다.</td><td data-label="결과">채택했습니다.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <h3>수신 경로도 한 번 고쳤습니다</h3>
+            <p>처음 수신 설계는 Cloudflare queue에 이벤트를 넣고 GKE 쪽 bridge가 당겨 오는 방식이었습니다. 이 queue를 거치지 않고 수집 Worker가 Go receiver를 통해 Kafka에 직접 쓰고, Kafka 자체를 buffer로 쓰도록 바꿨고 bridge는 없앴습니다. 구성 요소가 하나 줄고, 성공 응답의 의미도 "Kafka가 기록을 확인했다"는 하나로 단순해집니다.</p>
+            <h3>선택한 구조, 전환 전과 후</h3>
+            <p>고른 선택지를 기존 구조와 나란히 놓으면 다음과 같습니다. 그림 1은 같은 이벤트가 두 구조에서 어떻게 달라지는지, 표 1은 책임이 어디로 옮겨 갔는지 보여 줍니다.</p>
 <figure class="dg" id="dg-green-a" style="--dg-min: 560px" data-step-ms="3600"
   data-idle="왼쪽이 기존 경로, 오른쪽이 새 경로입니다. 같은 높이에 같은 일을 놓았습니다."
   data-steps='[
@@ -91,9 +129,9 @@
   {"t":"기존 경로는 다시 들어온 행이 원본 테이블의 병합 때 접히기를 기다렸습니다. 새 경로는 Go sinker가 넣을 offset 구간을 ledger에 먼저 적어, 같은 구간을 한 번만 넣습니다.", "d": 4400},
   {"t":"새 경로의 ClickHouse는 적재와 조회만 합니다. MV와 Refreshable MV는 하나도 두지 않았습니다.", "d": 4000}
 ]'>
-  <figcaption><span class="n">그림 1</span>누가 무엇을 맡는가: 기존 경로와 새 경로</figcaption>
+  <figcaption><span class="n">그림 1</span>전환 전과 후, 누가 무엇을 맡는가</figcaption>
   <div class="dg__canvas">
-    <svg viewBox="0 0 728 684" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 728 684" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="전환 전과 후의 구조 비교. 왼쪽 기존 경로는 관리형 ClickHouse가 계산과 queue 관리를 모두 맡고, 오른쪽 새 경로는 Kafka 원본 로그, Flink, sinker, ClickHouse로 책임이 나뉩니다.">
       <defs>
         <marker id="dg-green-a-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
         <!-- 칩이 옮겨 가는 경로 (그리지 않음) -->
@@ -134,7 +172,7 @@
       <g data-step="1,2,6"><rect class="box" x="40" y="260" width="296" height="384" rx="10"/><text class="t" x="54" y="286">관리형 ClickHouse</text><text class="s" x="54" y="306">저장, 계산, queue 관리, 조회를 한곳에서</text></g>
       <g data-step="2,4">
         <rect class="box" x="56" y="322" width="264" height="114" rx="8"/>
-        <text class="t" x="70" y="348">MV → Refreshable MV chain</text>
+        <text class="t" x="70" y="348">MV와 Refreshable MV chain</text>
         <text class="s" x="70" y="368">SQL 약 2만 줄로 세션 계산</text>
         <rect class="chip-r" x="70" y="380" width="114" height="18" rx="9"/><text class="chip-t" x="127" y="393" text-anchor="middle">queue</text>
         <rect class="chip-r" x="192" y="380" width="114" height="18" rx="9"/><text class="chip-t" x="249" y="393" text-anchor="middle">offset</text>
@@ -152,7 +190,7 @@
       <g data-step="4">
         <rect class="box" x="392" y="322" width="296" height="114" rx="8"/>
         <text class="t" x="406" y="348">Flink</text>
-        <text class="s" x="406" y="368">세션·여정 state, 7일 dedup</text>
+        <text class="s" x="406" y="368">세션과 여정 state, 7일 dedup</text>
         <rect class="chip-r" x="406" y="380" width="114" height="18" rx="9"/><text class="chip-t" x="463" y="393" text-anchor="middle">queue</text>
         <rect class="chip-r" x="528" y="380" width="114" height="18" rx="9"/><text class="chip-t" x="585" y="393" text-anchor="middle">offset</text>
         <rect class="chip-r" x="406" y="404" width="114" height="18" rx="9"/><text class="chip-t" x="463" y="417" text-anchor="middle">처리 기록</text>
@@ -193,23 +231,31 @@
                 <thead><tr><th scope="col">책임</th><th scope="col">기존 경로</th><th scope="col">새 경로</th></tr></thead>
                 <tbody>
                   <tr><th scope="row">원본 보관과 재처리</th><td>14일 동안 보관하지만 한 번 읽으면 사라지는 queue와, ClickHouse 안의 원본 테이블에 기댔습니다.</td><td>Kafka 원본 로그에 30일 동안 보관하고, 필요하면 처음부터 다시 읽습니다.</td></tr>
-                  <tr><th scope="row">dedup</th><td>queue consumer가 최근 30분 동안 본 이벤트 ID를 기억해 거르고, 저장소가 병합할 때 한 번 더 접고, 조회할 때 FINAL 옵션으로 병합된 최신본만 골라 읽었습니다.</td><td>Flink가 받은 이벤트 ID를 세션 state 안에 7일 동안 기억해 거르고, dedup token으로 같은 묶음이 두 번 들어가지 않게 합니다. 원본 테이블에는 중복을 그대로 둡니다.</td></tr>
+                  <tr><th scope="row">dedup</th><td>queue consumer가 최근 30분 동안 본 이벤트 ID를 거르고, 저장소가 병합할 때 한 번 더 접고, 조회할 때 FINAL 옵션으로 최신본만 읽었습니다.</td><td>Flink가 받은 이벤트 ID를 세션 state 안에 7일 동안 기억해 거르고, dedup token으로 같은 묶음이 두 번 들어가지 않게 합니다. 원본 테이블에는 중복을 그대로 둡니다.</td></tr>
                   <tr><th scope="row">세션 state와 late event 정정</th><td>ClickHouse 안의 Refreshable MV가 계산했습니다.</td><td>Flink가 세션마다 state를 들고, late event가 오면 버전을 올린 결과를 다시 냅니다.</td></tr>
-                  <tr><th scope="row">idempotent 적재</th><td>같은 데이터 묶음이 다시 들어오면 무시하는 ClickHouse의 block dedup 기능에 기댔습니다.</td><td>넣을 구간을 sink ledger에 먼저 적고, Kafka offset 구간으로 만든 token을 붙여 넣습니다. ClickHouse replica 두 대가 모두 받아야 성공으로 봅니다.</td></tr>
-                  <tr><th scope="row">방문자 신원과 채널 분류</th><td>MV와 조회용 view 곳곳에 섞여 있었습니다.</td><td>채널 분류는 조회 시점에 계산하는 view에 두고, 방문자 신원은 별도 배치가 계산합니다.</td></tr>
+                  <tr><th scope="row">idempotent 적재</th><td>같은 데이터 묶음이 다시 들어오면 무시하는 ClickHouse의 block dedup 기능에 기댔습니다.</td><td>넣을 구간을 sink ledger에 먼저 적고, Kafka offset 구간으로 만든 token을 붙여 넣습니다. replica 두 대가 모두 받아야 성공으로 봅니다.</td></tr>
+                  <tr><th scope="row">채널 분류와 신원</th><td>MV와 조회용 view 곳곳에 섞여 있었습니다.</td><td>채널 분류는 조회 시점에 계산하는 view에 둡니다. 방문자 신원(익명 방문을 한 사람의 브라우저로 잇는 일)은 별도 배치가, 연락처 신원(문의나 주문처럼 확정된 값으로 사람을 잇는 일)은 Flink의 별도 job이 계산합니다.</td></tr>
                   <tr class="is-pick"><th scope="row">저장소가 하는 일</th><td>저장, 세션 계산, queue와 checkpoint 관리, 조회</td><td>저장과 조회</td></tr>
                 </tbody>
               </table>
             </div>
-          </section>
 
-          <section id="d-process" aria-labelledby="d-process-h">
-            <h2 class="sechead" id="d-process-h"><span class="sechead__no">02</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+                      </section>
+
+          <!-- 04 -->
+          <section id="d-es" aria-labelledby="d-es-h">
+            <h2 class="sechead" id="d-es-h"><span class="sechead__no">04</span><span class="sechead__title">event sourcing 원칙</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p class="gc-lead">원본 이벤트만 사실로 두고, 나머지 상태는 모두 원본을 다시 읽어 계산합니다. 원본은 Kafka에 30일 동안, ClickHouse의 원본 테이블에 그보다 오래 남습니다. 세션 결과, 중복 판정, 세션 시작 같은 값은 여기서 파생된 값일 뿐이라 잃어도 다시 만들 수 있습니다. 30일 안은 Kafka를 다시 읽고, 30일 밖은 원본 테이블을 같은 코드로 BATCH 재생합니다.</p>
+            <ul>
+              <li>원본 로그는 Kafka입니다. 원본 topic은 partition 12개, replication factor 3, 보존 30일로 두었고, key는 고객사와 세션의 조합입니다. 같은 세션의 이벤트는 늘 같은 partition에 순서대로 쌓입니다.</li>
+              <li>상태는 재생으로 계산합니다. Flink의 keyed state는 로그에서 파생된 값입니다. 장애가 나면 마지막 checkpoint에서 복원해 로그를 이어 읽고, 버전을 올리거나 되돌릴 때는 savepoint를 씁니다.</li>
+              <li>결과의 버전은 입력만으로 결정됩니다. 재처리 회차, 반영한 이벤트 수, 상태를 차례로 비교하고, 결과를 낸 횟수나 현재 시각은 쓰지 않습니다. 그래서 같은 입력을 다시 돌리면 같은 버전이 나옵니다.</li>
+            </ul>
 
 <figure class="dg" id="dg-green-b" style="--dg-min: 560px" data-step-ms="3600"
-  data-idle="이벤트 한 건이 대시보드까지 가는 길입니다. 수신에서 원본 테이블까지 약 33초, 세션 집계 테이블까지 약 65초 걸렸습니다. 스테이징에서 테스트 이벤트로 한 번 잰 값입니다."
+  data-idle="이벤트 한 건이 대시보드까지 가는 길입니다. 화살표를 따라 수신, 원본 로그, Flink 계산, 적재, 조회 순서로 보세요."
   data-steps='[
-  {"t":"브라우저 SDK가 여러 탭이 함께 쓰는 세션 S에 이벤트를 붙이고 이벤트 ID를 매깁니다. 이벤트 하나는 (고객사, 세션, 이벤트 ID) 조합으로 구별합니다."},
+  {"t":"브라우저 SDK가 여러 탭이 함께 쓰는 세션 S에 이벤트를 붙이고 이벤트 ID를 매깁니다. 이벤트 하나는 고객사, 세션, 이벤트 ID의 조합으로 구별합니다."},
   {"t":"receiver는 Kafka가 기록을 확인한 뒤에만 200을 돌려줍니다. 브라우저는 이 응답을 받은 뒤에야 따로 남겨 둔 세션 시작 이벤트 사본을 지웁니다.", "d": 4000},
   {"t":"receiver는 (고객사, 세션)을 key로 Kafka에 씁니다. 같은 세션은 12개 partition 중 늘 같은 partition에 순서대로 쌓이고, 30일 동안 남습니다.", "d": 4000},
   {"t":"Kafka의 이벤트는 두 consumer가 따로 읽습니다. 원본 sinker는 Flink를 거치지 않고 원본 테이블에 넣으므로, Flink가 멈춰도 원본 이벤트는 저장됩니다.", "d": 4200},
@@ -217,9 +263,9 @@
   {"t":"집계 sinker는 Flink 결과 topic을 읽어 ledger 기록, INSERT, 두 replica 확인, offset 확정 순서로 버전이 붙은 행을 넣습니다. 대시보드는 세션마다 가장 큰 버전만 읽습니다.", "d": 4600},
   {"t":"같은 이벤트가 다시 오면 Kafka와 원본 테이블에는 한 번 더 쌓입니다. Flink는 이미 받은 ID로 보고 버리므로, 대시보드 결과에는 한 번만 들어갑니다.", "d": 4600}
 ]'>
-  <figcaption><span class="n">그림 2</span>이벤트 한 건의 여정</figcaption>
+  <figcaption><span class="n">그림 2</span>이벤트 한 건이 Kafka, Flink, ClickHouse를 지나는 길</figcaption>
   <div class="dg__canvas">
-    <svg viewBox="0 0 728 628" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 728 628" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="이벤트가 브라우저 SDK에서 Worker, receiver, Kafka 원본 topic, Flink keyed state, 집계 sinker를 거쳐 ClickHouse와 대시보드까지 흐르는 경로">
       <defs>
         <marker id="dg-green-b-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
         <!-- 움직이는 점의 경로 (그리지 않음) -->
@@ -234,19 +280,19 @@
       </defs>
 
       <!-- 1행: 받기 -->
-      <g data-step="1,2,7"><rect class="box" x="24" y="60" width="160" height="60" rx="8"/><text class="t" x="38" y="86">브라우저 SDK</text><text class="s" x="38" y="106">세션 S · 이벤트 ID</text></g>
+      <g data-step="1,2,7"><rect class="box" x="24" y="60" width="160" height="60" rx="8"/><text class="t" x="38" y="86">브라우저 SDK</text><text class="s" x="38" y="106">세션 S, 이벤트 ID</text></g>
       <g data-step="1,2"><path class="edge" fill="none" d="M64 120V132"/><rect class="chip-r" x="40" y="132" width="104" height="20" rx="10"/><text class="chip-t" x="50" y="146">세션 시작 사본</text></g>
-      <g data-step="2,7"><rect class="box" x="220" y="60" width="144" height="60" rx="8"/><text class="t" x="234" y="86">Worker</text><text class="s" x="234" y="106">mirror / 주 경로</text></g>
+      <g data-step="2,7"><rect class="box" x="220" y="60" width="144" height="60" rx="8"/><text class="t" x="234" y="86">Worker</text><text class="s" x="234" y="106">mirror 또는 primary</text></g>
       <g data-step="2,3,7"><rect class="box" x="408" y="60" width="136" height="60" rx="8"/><text class="t" x="422" y="86">receiver</text><text class="s" x="422" y="106">acks=all 뒤 200</text></g>
 
       <path class="flow" data-step="2,7" fill="none" d="M184 91H214" marker-end="url(#dg-green-b-ah)"/>
       <path class="flow" data-step="2,7" fill="none" d="M364 91H402" marker-end="url(#dg-green-b-ah)"/>
       <path class="flow edge--dash" data-step="2" fill="none" d="M476 60V36H104V54" marker-end="url(#dg-green-b-ah)"/>
-      <text class="m" data-step="2" x="290" y="52" text-anchor="middle">200 → 사본 지움</text>
+      <text class="m" data-step="2" x="290" y="52" text-anchor="middle">200을 받으면 사본 지움</text>
 
       <!-- 2행: Kafka 원본 topic -->
-      <text class="m" data-step="3" x="540" y="160">같은 세션 → 같은 partition</text>
-      <g data-step="3,4,7"><rect class="box" x="24" y="184" width="680" height="60" rx="8"/><text class="t" x="38" y="210">Kafka 원본 topic</text><text class="s" x="38" y="230">key (고객사, 세션) · 30일</text></g>
+      <text class="m" data-step="3" x="540" y="160">같은 세션은 같은 partition</text>
+      <g data-step="3,4,7"><rect class="box" x="24" y="184" width="680" height="60" rx="8"/><text class="t" x="38" y="210">Kafka 원본 topic</text><text class="s" x="38" y="230">key는 고객사와 세션, 보관 30일</text></g>
       <g data-step="3,4,7">
         <rect x="278" y="200" width="28" height="28" rx="4" style="fill: var(--surface-2); stroke: var(--line-2)"/>
         <rect x="312" y="200" width="28" height="28" rx="4" style="fill: var(--surface-2); stroke: var(--line-2)"/>
@@ -273,7 +319,7 @@
       <path class="flow" data-step="4,7" fill="none" d="M122 360V518" marker-end="url(#dg-green-b-ah)"/>
       <text class="m" data-step="4" x="132" y="484">Flink를 거치지 않음</text>
 
-      <g data-step="4,5,7"><rect class="box" x="184" y="300" width="220" height="160" rx="8"/><text class="t" x="198" y="326">Flink</text><text class="s" x="198" y="346">세션·여정 state</text><path class="edge" fill="none" d="M204 368V412"/></g>
+      <g data-step="4,5,7"><rect class="box" x="184" y="300" width="220" height="160" rx="8"/><text class="t" x="198" y="326">Flink</text><text class="s" x="198" y="346">세션과 여정 state</text><path class="edge" fill="none" d="M204 368V412"/></g>
       <g data-step="5,7"><circle class="box" cx="204" cy="368" r="4"/><text class="s" x="216" y="372">받은 ID 7일 기억</text></g>
       <g data-step="5"><circle class="box" cx="204" cy="394" r="4"/><text class="s" x="216" y="398">반영한 이벤트 수 +1</text></g>
       <g data-step="5,6"><rect class="box" x="196" y="412" width="196" height="24" rx="6"/><text class="s" x="208" y="428">버전 (회차, 반영 수, 상태)</text></g>
@@ -325,174 +371,306 @@
   </div>
 </figure>
 
-            <h3>1. Kafka와 Flink를 고른 기준</h3>
-            <p>브라우저가 이벤트를 다시 보내는 것, queue가 메시지를 다시 전달하는 것, Kafka에서 같은 구간을 다시 읽는 것은 모두 at-least-once 방식, 곧 적어도 한 번은 전달하는 방식입니다. 그래서 같은 이벤트가 두 번 이상 오는 일은 반드시 생깁니다. 이 전제에서 기준을 둘로 정했습니다. 첫째, 세션 집계에 들어갈 dedup은 Flink의 세션 state 한 곳에서만 합니다. 둘째, 같은 입력을 다시 돌리면 같은 결과가 나와야 합니다.</p>
-            <ul>
-              <li>Kafka는 순간 부하를 받아 내는 buffer이면서, 재계산할 때 다시 읽는 원본 로그입니다. 원본 topic은 retention 30일, replication factor 3으로 두었습니다. queue만 쓰는 안은 메시지를 한 번 읽으면 사라져 다시 계산할 수 없어서 쓰지 않았습니다.</li>
-              <li>Go consumer가 세션을 직접 계산하는 안도 비교했습니다. 비용은 쌌지만 keyed state와 timer, checkpoint를 직접 다시 만들어야 했습니다. 기존 MV chain이 바로 그렇게 2만 줄이 됐습니다.</li>
-              <li>이벤트가 들어와 세션 집계에 반영되기까지의 목표는 약 15분이었습니다. 이 정도 속도는 Flink가 아니어도 낼 수 있었습니다. Flink를 고른 이유는 속도가 아니라, 늦게 오거나 다시 오는 데이터를 다루는 기능이었습니다.</li>
-            </ul>
-
-            <h3>2. 트래픽 수용 설계</h3>
-            <p>평균 트래픽은 크지 않습니다. 그래서 처리량보다, 트래픽이 순간적으로 몰릴 때 버티는 방식과 partition 수처럼 나중에 바꾸기 어려운 값을 먼저 정했습니다.</p>
-            <ul>
-              <li>브라우저 이벤트를 처음 받는 곳은 Cloudflare Workers에서 도는 수집 Worker입니다. Kafka는 사설망 안에 있고 클라우드 IAM 인증을 거쳐야 해서 Worker가 직접 붙을 수 없습니다. 그래서 둘 사이에 Go receiver를 두었습니다.</li>
-              <li>receiver는 요청에 담긴 모든 레코드를 Kafka replica 모두가 기록했다고 확인한 뒤에만(acks=all) 성공 응답인 HTTP 200을 돌려줍니다. 레코드가 하나라도 기록에 실패하면 요청 전체를 실패로 돌려보냅니다.</li>
-              <li>receiver에는 자체 버퍼를 두지 않았습니다. 버퍼가 receiver와 Kafka 클라이언트 두 곳에 있으면, 성공이라고 답한 이벤트가 어디까지 실제로 기록됐는지 흐려지기 때문입니다.</li>
-              <li>Kafka 클라이언트의 버퍼가 차면 기다리지 않고 바로 실패를 돌려주는 non-blocking produce를 썼습니다. 버퍼가 가득 찼거나 약 1.2초 안에 기록을 끝내지 못하면, receiver는 "지금은 처리할 수 없다"는 HTTP 503을 돌려줍니다. Worker는 503을 받으면 그 요청을 fallback queue로 보냅니다.</li>
-              <li>fallback queue에는 평소에도 전체 트래픽의 1%를 흘려 보냅니다. 장애 때만 쓰는 경로는 정작 필요할 때 고장 나 있기 쉽기 때문입니다.</li>
-              <li>receiver는 Kubernetes HPA로 CPU 사용률 60%를 기준 삼아 2대에서 8대까지 scale out합니다.</li>
-              <li>Kafka는 topic을 여러 partition으로 나눠 저장하고, 레코드에 붙은 key로 어느 partition에 넣을지 정합니다. 이 partition key는 고객사와 세션의 조합으로 정했고, partition 수는 12개로 고정했습니다. 이렇게 정한 이유는 아래 설계 결정 D-05에 적었습니다.</li>
-            </ul>
-
-            <h3>3. Flink 세션 집계와 idempotent 적재</h3>
-            <ul>
-              <li>Flink job은 기능별로 나누지 않고 하나로 두었습니다. 고객사와 세션의 조합을 key로 삼아, 세션마다 keyed state를 따로 듭니다. 이 state 안에 이미 받은 이벤트 ID를 7일 동안 보관합니다. SDK가 이벤트를 다시 보낼 수 있는 기간과 같습니다.</li>
-              <li>같은 이벤트가 다시 오면 버립니다. ID는 같은데 내용이 다르면 한쪽을 고르지 않고 따로 빼서 알림을 보냅니다.</li>
-              <li>Flink가 내는 세션 결과마다 버전을 붙입니다. 재처리 회차, 반영한 이벤트 수, 결과 상태를 이 순서로 비교해 큰 쪽을 최신으로 봅니다. 결과 상태는 진행 중, 마감, 삭제 순으로 큽니다. 결과를 낸 횟수나 현재 시각은 버전에 쓰지 않습니다. 그래야 같은 입력을 다시 돌렸을 때 같은 버전이 나옵니다.</li>
-              <li>Flink가 장애 뒤 이어서 시작할 수 있도록, RocksDB state backend에서 바뀐 부분만 담은 incremental checkpoint를 60초마다 GCS에 남깁니다.</li>
-              <li>원본 이벤트는 Flink를 거치지 않습니다. 원본 sinker가 Kafka에서 바로 읽어 원본 테이블에 넣습니다. 그래서 Flink가 멈춰도 원본 저장은 멈추지 않습니다.</li>
-              <li>Go sinker는 Kafka에서 읽은 레코드를 구간 단위로 묶어, 구간마다 다음 순서로 ClickHouse에 넣습니다.
-                <ol>
-                  <li>이번에 넣을 offset 구간을 sink ledger에 적습니다. sink ledger는 어느 구간을 넣기 시작했는지 따로 남겨 두는 기록입니다.</li>
-                  <li>데이터를 넣습니다.</li>
-                  <li>두 replica가 모두 받았는지 확인합니다.</li>
-                  <li>Kafka에 offset을 확정합니다.</li>
-                </ol>
-              </li>
-              <li>sinker가 중간에 죽으면 같은 구간을 같은 dedup token(<code>insert_deduplication_token</code>)을 붙여 다시 넣습니다. ClickHouse는 같은 token으로 들어온 데이터를 한 번만 받습니다. token은 topic, partition, offset 구간, 대상 테이블을 묶어 계산하므로 같은 구간이면 늘 같은 값이 나옵니다. 그래서 같은 구간을 두 번 넣어도 중복이 생기지 않습니다. 몇 번을 넣어도 한 번 넣은 것과 결과가 같은 이 성질을 idempotent하다고 합니다.</li>
-              <li>두 replica가 모두 받아야 쓰기가 성공하도록 설정(<code>insert_quorum=2</code>)해서, replica 하나가 내려가면 쓰기가 멈춥니다. 그동안 밀린 데이터는 Kafka에 남아 있습니다. 쓰기가 멈추는 쪽이 두 replica 내용이 서로 갈라지는 쪽보다 복구가 쉽다고 판단했습니다.</li>
-              <li>새 클러스터에는 MV와 Refreshable MV를 하나도 두지 않았습니다. schema lint에서 MV를 만드는 구문이 있으면 실패하게 해서, 다시 생기지 않게 막았습니다.</li>
-            </ul>
-
-            <h3>4. 단계적 cutover</h3>
-            <p>cutover는 수집 Worker의 설정값 하나로 단계를 나눠 진행했습니다. 설정값은 꺼짐, mirror, 주 경로 세 가지입니다. 꺼짐은 새 경로로 아무것도 보내지 않습니다. mirror는 기존 경로로 서비스를 계속하면서 같은 이벤트의 복사본을 새 경로에도 보내, 두 경로를 나란히 돌리는 traffic mirroring 단계입니다. 주 경로는 새 경로가 실제 서비스를 맡는 단계입니다. 스테이징에서 먼저 mirroring을 돌리고, 운영에서 mirroring을 거친 뒤 주 경로로 바꿨습니다. 운영 mirroring을 시작하기 전에는 스테이징에서 replica를 일부러 멈추고 sinker를 강제로 종료해 보았고, runbook에 따라 대응하는 훈련도 했습니다.</p>
-            <p>mirroring 기간에는 건수가 아니라, 두 경로에 들어온 이벤트 키 집합과 partition별 offset을 대조했습니다. 건수는 일부가 빠지고 다른 일부가 더 들어가도 우연히 맞을 수 있기 때문입니다. 이 대조로 mirroring 첫날 새 경로로 가는 복사본 중 약 0.2%가 빠진 것을 찾았습니다. 자세한 내용은 트러블슈팅 T-01에 적었습니다.</p>
+            <h3>Flink로 옮긴 상태 계산</h3>
+            <p>세션 계산은 기능별로 나누지 않고 Flink job 하나에 두었습니다. 고객사와 세션의 조합을 key로 삼아 세션마다 keyed state를 따로 들고, 아래 일을 모두 이 state 위에서 합니다. key가 다른 연락처 신원 계산만 별도 job으로 분리했습니다.</p>
+            <div class="table-wrap">
+              <table class="tbl">
+                <caption>표 3. 상태 계산은 Flink, 적재와 조회는 ClickHouse</caption>
+                <thead><tr><th scope="col">계산</th><th scope="col">어디서 하는가</th><th scope="col">내용</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">중복 제거</th><td>Flink</td><td>받은 이벤트 ID를 7일 동안 기억합니다. SDK가 이벤트를 다시 보낼 수 있는 기간과 같습니다. ID는 같은데 내용이 다르면 한쪽을 고르지 않고 따로 빼서 알립니다.</td></tr>
+                  <tr><th scope="row">세션 조각과 마감</th><td>Flink</td><td>세션을 하루 단위 조각으로 나눠 계산하고, 날짜가 끝나고 7일이 지나면 마감합니다. late event가 오면 조각의 버전을 올려 다시 냅니다.</td></tr>
+                  <tr><th scope="row">세션 시작 확정</th><td>Flink</td><td>시작 표식이 있는 이벤트를 우선하고, 없으면 가장 이른 시각의 이벤트를 시작으로 삼습니다. 이 state는 60일 동안 보존합니다.</td></tr>
+                  <tr><th scope="row">클라이언트 시각 보정</th><td>Flink</td><td>브라우저가 보낸 시각이 과거 7일보다 오래됐거나 미래 24시간보다 멀면 서버에서 범위 안으로 자릅니다.</td></tr>
+                  <tr><th scope="row">구매 관측, 결제 시도 후보, 방문 키</th><td>Flink</td><td>세션 계산과 같은 입력에서 곁가지 출력으로 따로 내보냅니다.</td></tr>
+                  <tr><th scope="row">연락처 신원 계산</th><td>Flink의 별도 job</td><td>같은 Kafka 로그를 읽어 연락처 단위 신원과 귀속을 계산합니다. 자세한 내용은 <a href="cdp.html#d-process">CDP 페이지</a>에 적었습니다.</td></tr>
+                  <tr><th scope="row">원본 이벤트 저장</th><td>ClickHouse</td><td>Flink를 거치지 않고 sinker가 Kafka에서 바로 읽어 넣습니다. Flink가 멈춰도 원본 저장은 멈추지 않습니다.</td></tr>
+                  <tr><th scope="row">채널 분류와 어트리뷰션</th><td>ClickHouse의 view</td><td>자주 바뀌는 해석 규칙은 조회 시점에 계산합니다. 거의 바뀌지 않는 "무엇이 세션이고 late event를 어떻게 고치는가"만 Flink에 둡니다.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Flink가 하지 않는 일도 정해 두었습니다. fingerprint 조회처럼 외부 서비스를 부르는 일은 Flink 밖에 둡니다. Flink는 Kafka에 있는 입력만 replay해도 같은 결과를 내야 하기 때문입니다. ClickHouse에는 MV와 Refreshable MV를 하나도 두지 않았고, schema lint가 MV를 만드는 구문을 막습니다. 법적 의무로 삭제해야 하는 개인정보만 DELETE 예외를 한 가지 두었고, 재생과 복구 때도 삭제 목록으로 걸러냅니다.</p>
+            <p>이 원칙은 세션 계산 경로에는 끝까지 적용했습니다. 연락처 신원은 계산을 Flink가 하지만 결과의 기준 저장소는 PostgreSQL입니다. 그래서 세션 계산은 결과까지 로그에서 다시 만들 수 있고, 연락처 신원은 계산 상태만 로그에서 다시 만들 수 있습니다.</p>
           </section>
 
+          <!-- 05 -->
+          <section id="d-cutover" aria-labelledby="d-cutover-h">
+            <h2 class="sechead" id="d-cutover-h"><span class="sechead__no">05</span><span class="sechead__title">안전한 전환</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p class="gc-lead">수집 Worker의 설정값 하나로 단계를 나눠, 기존 경로를 끄기 전까지는 매 단계마다 되돌리는 방법이 있는 상태에서 옮겼습니다. 설정값은 꺼짐, mirror, primary 세 가지입니다.</p>
+
+<figure class="dg" id="dg-green-c" style="--dg-min: 600px" data-step-ms="3600"
+  data-idle="전환은 다섯 단계입니다. 단계마다 무엇을 하고 무엇을 확인하는지, 문제가 생기면 어떻게 되돌리는지를 한 줄에 놓았습니다."
+  data-steps='[
+  {"t":"새 경로를 켜기 전에 staging에서 replica를 멈추고 sinker를 강제로 종료하는 훈련을 먼저 했습니다. 이 단계에서는 새 경로로 아무것도 보내지 않습니다."},
+  {"t":"mirror 단계입니다. 기존 경로가 서비스를 하고, 같은 이벤트의 복사본이 새 경로로 갑니다. 건수가 아니라 이벤트 키 집합과 partition별 offset으로 대조합니다. 문제가 있으면 설정값을 꺼서 멈춥니다.", "d": 5000},
+  {"t":"primary 단계입니다. 새 경로가 서비스를 맡습니다. Kafka 기록에 실패하면 예비 queue로 보내고, 평소에도 트래픽의 1%를 예비 queue로 흘려 검증합니다. 문제가 있으면 기존 경로에 먼저 쓰는 방식으로 돌아갑니다.", "d": 5200},
+  {"t":"화면이 읽는 곳을 새 계층으로 바꿉니다. 해지 전까지는 읽는 곳만 기존 쪽으로 되돌릴 수 있습니다.", "d": 4000},
+  {"t":"기존 경로의 적재를 끄고 관리형 클러스터를 해지합니다. 이제 되돌릴 기존 경로가 없어서, 예비 queue 14일과 SDK의 재전송이 마지막 안전망입니다.", "d": 4600}
+]'>
+  <figcaption><span class="n">그림 3</span>mirroring에서 cutover까지, 단계마다 되돌리는 방법</figcaption>
+  <div class="dg__canvas">
+    <svg viewBox="0 0 728 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="전환 다섯 단계. 리허설, mirror, primary, 읽기 전환, 기존 적재 끔 순서로 각 단계의 하는 일과 되돌리는 방법을 보여 줍니다.">
+      <defs>
+        <marker id="dg-green-c-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
+      </defs>
+      <text class="m" x="24" y="26">단계</text>
+      <text class="m" x="214" y="26">하는 일과 확인</text>
+      <text class="m" x="510" y="26">되돌리는 법</text>
+
+      <!-- 1 -->
+      <g data-step="1"><rect class="box" x="24" y="44" width="156" height="64" rx="8"/><text class="t" x="38" y="70">1. 리허설</text><text class="s" x="38" y="90">새 경로는 꺼둠</text></g>
+      <g data-step="1"><rect class="box" x="214" y="44" width="262" height="64" rx="8"/><text class="t" x="228" y="68">staging 훈련</text><text class="s" x="228" y="86">replica 정지 리허설과</text><text class="s" x="228" y="101">sinker 강제 종료 훈련</text></g>
+      <g data-step="1"><rect class="box" x="510" y="44" width="194" height="64" rx="8"/><text class="t" x="524" y="68">되돌리기</text><text class="s" x="524" y="86">보낼 것이 없어</text><text class="s" x="524" y="101">되돌릴 일이 없음</text></g>
+      <path id="dg-green-c-a1" class="flow" data-step="1" d="M180 76H208" marker-end="url(#dg-green-c-ah)"/>
+      <path class="edge edge--dash" data-step="1" d="M476 76H504" marker-end="url(#dg-green-c-ah)"/>
+
+      <!-- 2 -->
+      <path id="dg-green-c-v2" class="flow" data-step="2" d="M102 112V130" marker-end="url(#dg-green-c-ah)"/>
+      <text class="m" data-step="2" x="114" y="126">go/no-go</text>
+      <g data-step="2"><rect class="box" x="24" y="136" width="156" height="64" rx="8"/><text class="t" x="38" y="162">2. mirror</text><text class="s" x="38" y="182">기존이 서비스</text></g>
+      <g data-step="2"><rect class="box" x="214" y="136" width="262" height="64" rx="8"/><text class="t" x="228" y="160">대조</text><text class="s" x="228" y="178">이벤트 키 집합과</text><text class="s" x="228" y="193">partition별 offset 대조</text></g>
+      <g data-step="2"><rect class="box" x="510" y="136" width="194" height="64" rx="8"/><text class="t" x="524" y="160">되돌리기</text><text class="s" x="524" y="178">설정값을 끄면</text><text class="s" x="524" y="193">전송이 멈춤</text></g>
+      <path id="dg-green-c-a2" class="flow" data-step="2" d="M180 168H208" marker-end="url(#dg-green-c-ah)"/>
+      <path class="edge edge--dash" data-step="2" d="M476 168H504" marker-end="url(#dg-green-c-ah)"/>
+
+      <!-- 3 -->
+      <path id="dg-green-c-v3" class="flow" data-step="3" d="M102 204V222" marker-end="url(#dg-green-c-ah)"/>
+      <text class="m" data-step="3" x="114" y="218">go/no-go</text>
+      <g data-step="3"><rect class="box" x="24" y="228" width="156" height="64" rx="8"/><text class="t" x="38" y="254">3. primary</text><text class="s" x="38" y="274">새 경로가 서비스</text></g>
+      <g data-step="3"><rect class="box" x="214" y="228" width="262" height="64" rx="8"/><text class="t" x="228" y="252">안전망</text><text class="s" x="228" y="270">실패하면 예비 queue로,</text><text class="s" x="228" y="285">예비 queue는 평소 1% 사용</text></g>
+      <g data-step="3"><rect class="box" x="510" y="228" width="194" height="64" rx="8"/><text class="t" x="524" y="252">되돌리기</text><text class="s" x="524" y="270">기존 경로에 먼저</text><text class="s" x="524" y="285">쓰는 방식으로 복귀</text></g>
+      <path id="dg-green-c-a3" class="flow" data-step="3" d="M180 260H208" marker-end="url(#dg-green-c-ah)"/>
+      <path class="edge edge--dash" data-step="3" d="M476 260H504" marker-end="url(#dg-green-c-ah)"/>
+
+      <!-- 4 -->
+      <path id="dg-green-c-v4" class="flow" data-step="4" d="M102 296V314" marker-end="url(#dg-green-c-ah)"/>
+      <text class="m" data-step="4" x="114" y="310">go/no-go</text>
+      <g data-step="4"><rect class="box" x="24" y="320" width="156" height="64" rx="8"/><text class="t" x="38" y="346">4. 읽기 전환</text><text class="s" x="38" y="366">화면 조회를 이동</text></g>
+      <g data-step="4"><rect class="box" x="214" y="320" width="262" height="64" rx="8"/><text class="t" x="228" y="344">하는 일</text><text class="s" x="228" y="362">화면이 읽는 곳을</text><text class="s" x="228" y="377">새 계층으로 바꿈</text></g>
+      <g data-step="4"><rect class="box" x="510" y="320" width="194" height="64" rx="8"/><text class="t" x="524" y="344">되돌리기</text><text class="s" x="524" y="362">읽는 곳만 기존</text><text class="s" x="524" y="377">쪽으로 되돌림</text></g>
+      <path id="dg-green-c-a4" class="flow" data-step="4" d="M180 352H208" marker-end="url(#dg-green-c-ah)"/>
+      <path class="edge edge--dash" data-step="4" d="M476 352H504" marker-end="url(#dg-green-c-ah)"/>
+
+      <!-- 5 -->
+      <path id="dg-green-c-v5" class="flow" data-step="5" d="M102 388V406" marker-end="url(#dg-green-c-ah)"/>
+      <text class="m" data-step="5" x="114" y="402">go/no-go</text>
+      <g data-step="5"><rect class="box" x="24" y="412" width="156" height="64" rx="8"/><text class="t" x="38" y="438">5. 기존 적재 끔</text><text class="s" x="38" y="458">관리형 해지</text></g>
+      <g data-step="5"><rect class="box" x="214" y="412" width="262" height="64" rx="8"/><text class="t" x="228" y="436">하는 일</text><text class="s" x="228" y="454">기존 경로 적재를 끄고</text><text class="s" x="228" y="469">관리형 클러스터 해지</text></g>
+      <g data-step="5"><rect class="box" x="510" y="412" width="194" height="64" rx="8"/><text class="t" x="524" y="436">되돌리기</text><text class="s" x="524" y="454">되돌릴 경로 없음</text><text class="s" x="524" y="469">예비 queue 14일 보관</text></g>
+      <path id="dg-green-c-a5" class="flow" data-step="5" d="M180 444H208" marker-end="url(#dg-green-c-ah)"/>
+      <path class="edge edge--dash" data-step="5" d="M476 444H504" marker-end="url(#dg-green-c-ah)"/>
+
+      <!-- 움직이는 점 -->
+      <circle class="pkt" data-step="1" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-c-a1"/></animateMotion></circle>
+      <circle class="pkt" data-step="2" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-c-a2"/></animateMotion></circle>
+      <circle class="pkt" data-step="2" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-c-v2"/></animateMotion></circle>
+      <circle class="pkt" data-step="3" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-c-a3"/></animateMotion></circle>
+      <circle class="pkt" data-step="3" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-c-v3"/></animateMotion></circle>
+      <circle class="pkt" data-step="4" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-c-a4"/></animateMotion></circle>
+      <circle class="pkt" data-step="4" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-c-v4"/></animateMotion></circle>
+      <circle class="pkt" data-step="5" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-c-a5"/></animateMotion></circle>
+      <circle class="pkt" data-step="5" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-c-v5"/></animateMotion></circle>
+    </svg>
+  </div>
+</figure>
+
+
+            <h3>1. mirroring으로 나란히 비교하기</h3>
+            <p>mirror 단계는 기존 경로로 서비스를 계속하면서 같은 이벤트의 복사본을 새 경로에도 보내 두 경로를 나란히 돌립니다. 비교는 건수가 아니라 이벤트 키 집합과 partition별 offset으로 했습니다. 건수는 일부가 빠지고 다른 일부가 더 들어가도 우연히 맞을 수 있기 때문입니다. 이렇게 비교해서 mirror 첫날 복사본이 약 0.2% 빠진 것을 찾았고, 원인은 트러블슈팅 T-01에 적었습니다. 고친 뒤 운영 환경에서 24시간 동안 대조한 결과, 한쪽에만 있는 이벤트는 약 0.06%였고 12개 partition의 offset은 모두 맞았습니다.</p>
+
+            <h3>2. idempotent 적재</h3>
+            <p>Go sinker는 Kafka에서 읽은 레코드를 구간 단위로 묶어 다음 순서로 ClickHouse에 넣습니다.</p>
+            <ol>
+              <li>이번에 넣을 offset 구간을 sink ledger에 먼저 적습니다. sink ledger는 어느 구간을 넣기 시작했는지 따로 남겨 두는 기록입니다.</li>
+              <li>데이터를 넣습니다.</li>
+              <li>replica 두 대가 모두 받았는지 확인합니다.</li>
+              <li>Kafka에 offset을 확정합니다.</li>
+            </ol>
+            <p>sinker가 중간에 죽으면 같은 구간을 같은 dedup token으로 다시 넣습니다. token은 topic, partition, offset 구간, 대상 테이블을 묶어 계산하므로 같은 구간이면 늘 같은 값이 나오고, ClickHouse는 같은 token으로 들어온 데이터를 한 번만 받습니다. replica 두 대가 모두 받아야 쓰기가 성공하도록 설정해서, replica 하나가 내려가면 쓰기가 멈춥니다. 그동안 밀린 데이터는 Kafka에 남아 있습니다. 두 replica 내용이 서로 갈라지는 쪽보다 쓰기가 멈추는 쪽이 복구하기 쉽다고 판단했습니다.</p>
+
+            <h3>3. checkpoint와 savepoint</h3>
+            <p>Flink는 RocksDB state backend의 incremental checkpoint를 60초마다 남깁니다. checkpoint 모드는 at-least-once입니다. checkpoint 이후 구간을 다시 처리하면 같은 버전의 행이 한 번 더 들어가지만, 결과가 입력만으로 정해지고 읽는 쪽이 세션마다 가장 큰 버전 하나만 고르므로 화면 결과는 같습니다. 장애에서는 checkpoint로 자동 복구하고, 새 버전을 올리거나 되돌릴 때는 savepoint를 씁니다. 새 버전을 올리기 전에는 savepoint를 먼저 만들고, operator ID를 고정해 두어 state가 복원되지 않는 사고를 사전에 점검 도구로 막습니다. 병렬도를 나중에 올릴 수 있도록 key group 상한도 미리 넉넉하게 잡았습니다.</p>
+
+            <h3>4. backfill과 replay</h3>
+            <p>Kafka 보존은 30일이므로, 전환 이전의 과거분은 로그만으로 다시 만들 수 없습니다. 그래서 세 갈래로 나눠 채웠습니다.</p>
+            <ul>
+              <li>mirror를 켠 뒤 빠진 이벤트는 원래 수신 시각 그대로 보충용 topic에 다시 넣어 같은 경로로 흘렸습니다.</li>
+              <li>mirror 이전의 과거 원본은 기존 클러스터에서 새 클러스터로 복사했습니다.</li>
+              <li>과거분의 세션 결과는 복사한 원본을 Flink BATCH 모드로 처음부터 다시 읽어 만들었습니다. 스트리밍과 같은 계산 코드를 쓰므로, 과거분을 위한 코드를 따로 만들지 않았습니다.</li>
+            </ul>
+
+<figure class="dg" id="dg-green-d" style="--dg-min: 600px" data-step-ms="3600"
+  data-idle="원본 로그를 다시 읽어 상태를 만드는 세 가지 경우입니다. 평소의 스트리밍, 보관 기간 안의 장애 복구, 보관 기간 밖 과거분의 재생을 한 그림에 놓았습니다."
+  data-steps='[
+  {"t":"평소에는 Kafka 원본 로그를 Flink 스트리밍 job이 읽어 keyed state를 갱신하고, 결과를 ClickHouse의 세션 조각 표에 냅니다. 결과의 재처리 회차는 0입니다."},
+  {"t":"보관 기간 안에서 장애가 나면 마지막 checkpoint를 복원하고, 그 시점 뒤의 이벤트를 Kafka에서 다시 읽습니다. 같은 입력이므로 같은 결과가 나옵니다.", "d": 4600},
+  {"t":"Kafka 보관 기간 밖의 과거분은 ClickHouse에 복사해 둔 원본을 Flink BATCH job이 처음부터 읽습니다. 스트리밍과 같은 계산 코드를 쓰고, 결과는 재처리 회차 1로 따로 쌓습니다.", "d": 4800},
+  {"t":"마감된 버전끼리만 회차 0과 회차 1을 비교하고, 최신 날은 제외합니다. 차이의 사유를 설명할 수 있으면 읽기 상한을 0에서 1로 바꿔 화면이 재생 결과를 읽게 합니다. 상한은 언제든 0으로 되돌립니다.", "d": 5200}
+]'>
+  <figcaption><span class="n">그림 4</span>원본 로그를 다시 읽어 상태를 만드는 세 가지 경우</figcaption>
+  <div class="dg__canvas">
+    <svg viewBox="0 0 728 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kafka 원본 로그를 Flink 스트리밍 job이 읽는 평소 경로, checkpoint 복원 뒤 다시 읽는 장애 복구 경로, 보관 기간 밖 원본을 BATCH job이 재생해 회차 1 결과를 만들고 비교한 뒤 읽기 상한을 바꾸는 경로를 보여 줍니다.">
+      <defs>
+        <marker id="dg-green-d-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
+      </defs>
+
+      <!-- 평소 -->
+      <text class="m" data-step="1" x="24" y="28">평소 처리</text>
+      <g data-step="1,2"><rect class="box" x="24" y="40" width="180" height="64" rx="8"/><text class="t" x="38" y="66">Kafka 원본 로그</text><text class="s" x="38" y="86">순서대로 쌓임, 30일</text></g>
+      <g data-step="1,2"><rect class="box" x="274" y="40" width="180" height="64" rx="8"/><text class="t" x="288" y="66">Flink 스트리밍 job</text><text class="s" x="288" y="86">keyed state로 계산</text></g>
+      <g data-step="1,4"><rect class="box" x="524" y="40" width="180" height="64" rx="8"/><text class="t" x="538" y="66">세션 조각 표</text><text class="s" x="538" y="86">재처리 회차 0</text></g>
+      <path id="dg-green-d-e1" class="flow" data-step="1,2" d="M204 72H268" marker-end="url(#dg-green-d-ah)"/>
+      <path id="dg-green-d-e2" class="flow" data-step="1" d="M454 72H518" marker-end="url(#dg-green-d-ah)"/>
+
+      <!-- 장애 복구 -->
+      <text class="m" data-step="2" x="24" y="160">보관 기간 안의 장애: checkpoint 복원 뒤 다시 읽음</text>
+      <g data-step="2"><rect class="box" x="274" y="174" width="180" height="56" rx="8"/><text class="t" x="288" y="198">checkpoint</text><text class="s" x="288" y="217">60초마다 남기는 스냅샷</text></g>
+      <path id="dg-green-d-e3" class="flow" data-step="2" d="M364 174V114" marker-end="url(#dg-green-d-ah)"/>
+
+      <!-- 과거분 재생 -->
+      <text class="m" data-step="3" x="24" y="290">보관 기간 밖의 과거분: 복사해 둔 원본을 BATCH로 재생</text>
+      <g data-step="3"><rect class="box" x="24" y="300" width="180" height="64" rx="8"/><text class="t" x="38" y="326">ClickHouse 원본</text><text class="s" x="38" y="346">Kafka 이전의 과거분</text></g>
+      <g data-step="3,4"><rect class="box" x="274" y="300" width="180" height="64" rx="8"/><text class="t" x="288" y="326">Flink BATCH job</text><text class="s" x="288" y="346">같은 계산 코드</text></g>
+      <g data-step="3,4"><rect class="box" x="524" y="300" width="180" height="64" rx="8"/><text class="t" x="538" y="326">세션 조각 표</text><text class="s" x="538" y="346">재처리 회차 1</text></g>
+      <path id="dg-green-d-e4" class="flow" data-step="3" d="M204 332H268" marker-end="url(#dg-green-d-ah)"/>
+      <path id="dg-green-d-e5" class="flow" data-step="3" d="M454 332H518" marker-end="url(#dg-green-d-ah)"/>
+
+      <!-- 비교와 전환 -->
+      <text class="m" data-step="4" x="24" y="420">비교한 뒤 읽기를 전환</text>
+      <g data-step="4"><rect class="box" x="214" y="430" width="240" height="64" rx="8"/><text class="t" x="228" y="456">마감된 버전끼리 비교</text><text class="s" x="228" y="476">회차 0과 1, 최신 날은 제외</text></g>
+      <g data-step="4"><rect class="box" x="524" y="430" width="180" height="64" rx="8"/><text class="t" x="538" y="456">읽기 상한</text><text class="s" x="538" y="476">0에서 1로 바꿔 전환</text></g>
+      <path id="dg-green-d-e6" class="flow" data-step="4" d="M364 368V424" marker-end="url(#dg-green-d-ah)"/>
+      <path id="dg-green-d-e7" class="flow" data-step="4" d="M454 462H518" marker-end="url(#dg-green-d-ah)"/>
+
+      <circle class="pkt" data-step="1" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-d-e1"/></animateMotion></circle>
+      <circle class="pkt" data-step="1" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-d-e2"/></animateMotion></circle>
+      <circle class="pkt" data-step="2" r="4"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#dg-green-d-e3"/></animateMotion></circle>
+      <circle class="pkt" data-step="2" r="4"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#dg-green-d-e1"/></animateMotion></circle>
+      <circle class="pkt" data-step="3" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-d-e4"/></animateMotion></circle>
+      <circle class="pkt" data-step="3" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-d-e5"/></animateMotion></circle>
+      <circle class="pkt" data-step="4" r="4"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#dg-green-d-e6"/></animateMotion></circle>
+      <circle class="pkt" data-step="4" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-d-e7"/></animateMotion></circle>
+    </svg>
+  </div>
+</figure>
+
+
+            <p>스트리밍 결과와 재생 결과는 마감된 버전끼리만 비교하고, 아직 늦은 이벤트가 올 수 있는 최신 날은 제외했습니다. 경계가 되는 하루를 비교하니 스트리밍 쪽이 18,212건, 재생 쪽이 18,215건이었습니다. 차이 3건은 스트리밍이 내보내지 못했던 것이었습니다. 합격선을 숫자로 정해 두지 않고, 차이가 나면 그 사유를 설명할 수 있는지로 판단했습니다. 판단이 끝난 뒤 읽기 상한 값을 0에서 1로 바꿔 화면이 재생 결과를 읽게 했습니다. 이 값은 언제든 0으로 되돌릴 수 있습니다.</p>
+
+            <h3>5. cutover와 rollback</h3>
+            <p>primary 단계에서는 receiver가 Kafka에 쓰고 성공을 확인한 뒤에만 200을 돌려줍니다. 실패하면 예비 queue에 넣고, 예비 queue에도 못 넣으면 503을 돌려줍니다. 장애 때만 쓰는 경로는 정작 필요할 때 고장 나 있기 쉬워서, 평소에도 트래픽의 1%를 예비 queue로 흘려 검증합니다.</p>
+            <p>rollback은 단계마다 방법이 다릅니다. mirror 단계에서 문제가 있으면 설정값을 끄면 끝입니다. primary 단계에서는 기존 경로에 먼저 동기로 쓰는 방식으로 돌아가고, 이때 유실은 없습니다. 기존 경로의 적재를 끈 뒤에는 되돌릴 기존 경로가 없어서, 예비 queue 14일과 SDK의 재전송이 마지막 안전망입니다. 이 단계는 각 화살표마다 go/no-go를 직접 판단했습니다. 넘어가는 조건은 다음과 같았습니다.</p>
+            <ul>
+              <li>리허설에서 mirror로: staging에서 replica 정지와 sinker 강제 종료 훈련을 runbook대로 마쳤을 때.</li>
+              <li>mirror에서 primary로: 두 경로의 이벤트 키 집합 차이를 원인까지 설명할 수 있고, 12개 partition의 offset이 모두 맞을 때.</li>
+              <li>기존 경로를 끄고 해지로: 새 경로에 없고 다시 계산할 수도 없는 원천 데이터를 snapshot으로 보관하고 원본과 대조해 확인했을 때.</li>
+            </ul>
+            <p>다만 7일 관찰 단계와 트래픽 비율을 조금씩 올리는 canary 단계는 생략했습니다. 관리형 클러스터 비용을 먼저 끊으려는 선택이었고, 위험의 크기를 따져 본 결과이기도 합니다. 계산 결과는 원본만 있으면 재생으로 고칠 수 있으니 관찰 기간을 줄여도 되돌릴 수 있는 위험이었습니다. 되돌릴 수 없는 위험은 원본이 새 경로에 도달하지 못하는 누락뿐이어서, 그것만 키 대조와 원천 snapshot 대조로 엄격하게 막았습니다(D-06). 그 대신 운영 mirroring을 시작하기 전에 staging에서 replica를 일부러 멈추고 sinker를 강제로 종료하는 훈련을 runbook대로 해 보았습니다. 해지 직전에는 새 경로에 없고 다시 계산할 수도 없는 원천 데이터만 골라 snapshot으로 보관하고 원본과 대조했습니다.</p>
+          </section>
+
+          <!-- 06 -->
           <section id="d-decision" aria-labelledby="d-decision-h">
-            <h2 class="sechead" id="d-decision-h"><span class="sechead__no">03</span><span class="sechead__title">설계 결정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <p>해결 과정의 방향을 정한 판단 여덟 가지입니다. 고민, 선택지, 결정과 이유, 대가 순서로 적었습니다.</p>
+            <h2 class="sechead" id="d-decision-h"><span class="sechead__no">06</span><span class="sechead__title">설계 결정과 트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>앞 절의 흐름 속에서 방향을 갈랐던 판단 여섯 가지와, 전환 중 찾은 문제 하나입니다. 고민, 선택지, 결정과 이유, 대가 순서로 적었습니다.</p>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-01</span><h3>원본의 중복 제거를 포기하고, 결과에 한 번만 반영하기</h3></header>
+              <header class="ts__head"><span class="ts__id">D-01</span><h3>중복 제거는 저장 전이 아니라 되돌릴 수 없는 계산 바로 앞에서 하기</h3></header>
               <dl class="ts__rows">
-                <div><dt>고민</dt><dd>브라우저 재전송, queue 재전달, Kafka에서 다시 읽기는 모두 at-least-once 전달입니다. 기존 경로는 dedup을 네 겹으로 두었습니다. 그래도 30분보다 늦게 다시 보낸 이벤트는 이 단계를 모두 빠져나가 집계 숫자를 부풀린 적이 있었습니다. 저장소가 나중에 병합하며 중복 행을 접어도, 이미 MV에 더해진 숫자는 되돌아가지 않습니다.</dd></div>
+                <div><dt>고민</dt><dd>브라우저 재전송, queue 재전달, Kafka에서 다시 읽기는 모두 적어도 한 번은 전달하는 at-least-once 방식입니다. 그래서 같은 이벤트가 두 번 이상 오는 일은 반드시 생깁니다. 기존 경로는 dedup을 네 겹으로 두었는데도 30분보다 늦게 다시 온 이벤트는 모두 빠져나갔습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 중복을 거르는 층을 더 촘촘하게 만드는 안<br>② Kafka의 exactly-once 기능이나 저장소의 병합에 dedup을 맡기는 안<br>③ 원본은 중복이 섞인 채 도착한 그대로 기록하고, 결과를 되돌릴 수 없게 되는 첫 계산 바로 앞에서 한 번만 반영하는 안</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 원본 테이블가 병합하며 중복을 지우는 것은 꼭 지켜야 할 조건에서 뺐습니다. 대신 세션 집계와 적재는 같은 데이터가 여러 번 들어와도 한 번 넣은 것과 결과가 같아야 한다는 조건, 곧 idempotent만 반드시 지키게 했습니다. 두 이벤트가 같은지 가리는 키는 고객사, 세션, 이벤트 ID의 조합으로 정했습니다. 중복이 정상인 시스템에서는 중복을 없앨 곳보다, 되돌릴 수 없는 연산 앞에서 한 번만 반영할 곳을 정해야 한다고 봤습니다. 저장 전에 거르다 잘못 판정하면 정상 이벤트를 버립니다. 그 판단은 되돌릴 수 없습니다.</dd></div>
-                <div><dt>대가</dt><dd>원본 테이블의 행 수가 서로 다른 이벤트의 수보다 많습니다. 원본 테이블를 직접 읽는 화면은 중복된 행 가운데 최신본 하나만 골라 읽어야 집계와 같은 수가 나옵니다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 저장소가 병합하며 중복을 지우는 일은 꼭 지켜야 할 조건에서 뺐습니다. 대신 세션 집계와 적재는 같은 데이터가 여러 번 들어와도 한 번 넣은 것과 결과가 같아야 한다는 idempotent 조건만 반드시 지키게 했습니다. 두 이벤트가 같은지 가리는 키는 고객사, 세션, 이벤트 ID의 조합입니다. 중복이 정상인 시스템에서는 중복을 없앨 곳보다 되돌릴 수 없는 연산 앞에서 한 번만 반영할 곳을 정해야 한다고 봤습니다. 저장 전에 거르다 잘못 판정하면 정상 이벤트를 버리게 되고, 그 판단은 되돌릴 수 없습니다.</dd></div>
+                <div><dt>대가</dt><dd>원본 테이블의 행 수가 서로 다른 이벤트의 수보다 많습니다. 원본 테이블을 직접 읽는 화면은 중복된 행 가운데 최신본 하나만 골라 읽어야 집계와 같은 수가 나옵니다.</dd></div>
               </dl>
             </article>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-02</span><h3>상태 계산은 Flink, ClickHouse는 적재와 조회만</h3></header>
+              <header class="ts__head"><span class="ts__id">D-02</span><h3>세션은 닫히는 window가 아니라 버전을 올려 고쳐 쓰는 key로 다루기</h3></header>
               <dl class="ts__rows">
-                <div><dt>고민</dt><dd>Refreshable MV를 고치면 누락은 막을 수 있었습니다. 하지만 저장소가 상태 계산과 queue, checkpoint 관리를 계속 떠안고, 새 클러스터로 MV chain도 그대로 옮겨야 했습니다.</dd></div>
-                <div><dt>선택지</dt><dd>① Refreshable MV의 queue를 보강해 누락만 막는 안<br>② Go consumer가 바뀐 세션만 골라 직접 계산하는 안<br>③ 배치 처리부터 먼저 만드는 안<br>④ 저장소 엔진을 바꾸는 안<br>⑤ 상태 계산을 Flink로 옮기고, 저장소에는 적재와 조회만 맡기는 안</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>⑤를 골랐습니다. ClickHouse MV는 테이블의 현재 상태를 보고 계산하지 않고, INSERT가 일어날 때마다 새로 들어온 행만 보고 계산하는 insert trigger입니다. 그래서 같은 행이 다시 들어오는 재전송, 지난 결과를 고쳐야 하는 late event, 빠진 기간을 나중에 채우는 backfill과 맞지 않습니다. ②는 월 비용이 훨씬 쌌지만, keyed state, 시간이 지나면 동작하는 timer, 장애 복구용 checkpoint를 직접 다시 만들어야 했습니다. ④는 쓰지 않았습니다. 문제는 엔진이 아니라, 원본 보관, 해석 규칙, 세션 계산, 조회가 MV chain 하나에 섞인 구조에 있었습니다. 몇 분 안에 결과를 보여 주는 것은 Flink 없이도 할 수 있었습니다. 필요한 것은 7일 늦게 온 이벤트를 반영할 때도, 이미 낸 결과를 고칠 때도, 처음부터 다시 처리할 때도 모두 같은 결과를 내는 기능이었습니다. 자주 바뀌는 해석 규칙은 조회 시점에 계산하게 두었습니다. conversion을 어느 유입의 몫으로 볼지 정하는 attribution, 유입을 어느 채널로 묶을지, 방문자가 누구인지가 여기에 해당합니다. 거의 바뀌지 않는 "무엇이 세션이고, late event를 어떻게 고치는가"만 Flink에 두었습니다.</dd></div>
-                <div><dt>대가</dt><dd>Kafka, Flink, sinker만큼 운영할 구성 요소가 늘었고, 작은 규모로 운영하는 시스템에 JVM 기반 도구가 더해졌습니다. 범위를 넓힌 채 일정을 지켜야 해서 마지막 몇 주가 빠듯했습니다.</dd></div>
+                <div><dt>고민</dt><dd>같은 브라우저의 탭들이 함께 쓰는 장기 세션에는 "세션이 끝났다"는 신호가 없습니다. 그래서 한 세션의 결과를 여러 번 고쳐 내야 하고, 그 결과를 여러 번 넣어도 한 번 넣은 것과 같아야 했습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 일정 시간 이벤트가 없으면 세션을 닫는 session window를 쓰는 안<br>② 세션 계산 기능마다 Flink job을 따로 나누는 안<br>③ 결과의 버전을 결과를 낸 횟수, Kafka offset, 현재 시각으로 정하는 안<br>④ 고객사와 세션을 key로 하는 job 하나에 세션 계산을 모으고, 버전은 입력만으로 정해지는 규칙으로 매기는 안</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>④를 골랐습니다. ①처럼 세션을 닫으면 late event가 올 때마다 다시 열어야 합니다. 버전은 재처리 회차, 반영한 이벤트 수, 상태 순위를 앞에서부터 차례로 비교합니다. 반영한 이벤트 수는 줄어들지 않으므로, 새 이벤트를 반영한 결과가 옛 버전에 가려 조용히 사라지지 않습니다. 같은 입력이면 같은 버전이 나옵니다. 그래서 한 번만 반영되는 효과를 Flink의 exactly-once checkpoint에 기대지 않고, 결과가 입력만으로 정해지는 deterministic 처리로 얻었습니다. state TTL도 둘로 나눴습니다. 받은 이벤트 ID는 SDK가 다시 보낼 수 있는 7일 동안 기억하고, 집계 state는 결과가 확정될 때까지 둡니다.</dd></div>
+                <div><dt>대가</dt><dd>한 세션에 버전이 다른 행이 여러 개 쌓이므로 읽는 쪽이 세션마다 가장 큰 버전 하나만 골라야 합니다. 트래픽이 끊긴 환경에서는 다음 이벤트가 올 때까지 Flink가 결과를 내보내지 않습니다.</dd></div>
               </dl>
             </article>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-03</span><h3>Kafka를 원본 로그로 두고, 두 경로는 수집 Worker에서 나누기</h3></header>
+              <header class="ts__head"><span class="ts__id">D-03</span><h3>수신 응답, partition key, 적재 방식을 하나의 규칙으로 맞추기</h3></header>
               <dl class="ts__rows">
-                <div><dt>고민</dt><dd>재처리하려면 원본이 저장소와 떨어진 곳에 남아 있어야 했습니다. 기존 queue는 한 번 읽으면 사라지고 보관 기간도 14일이라 다시 읽을 수 없었습니다. 관리형 ClickHouse를 해지하면 그 안의 기존 원본도 되살릴 수 없었습니다.</dd></div>
-                <div><dt>선택지</dt><dd>① 기존 경로에서 적재에 성공한 이벤트를 새 경로로 복사하는 안<br>② 새 경로 전용 queue를 따로 두고 bridge로 이어 붙이는 안<br>③ 수집 Worker에서 이벤트를 두 경로로 나누고, 새 경로는 Kafka로 바로 보내는 안</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 원본 로그가 source of truth이고, 저장소의 모든 테이블은 로그를 다시 읽어 만들 수 있어야 합니다. 기존 경로의 성공분을 복사하면 새 경로가 기존 경로에 기대게 됩니다. 복사에서 빠진 것은 영구 누락이 됩니다. 같은 수집 지점에서 나눠야 두 경로를 서로 독립적으로 비교할 수 있습니다. 같은 이유로 fingerprint 조회처럼 외부 서비스를 부르는 일은 Flink 밖에 두었습니다. Flink는 Kafka에 있는 입력만 replay해도 같은 결과를 내야 하기 때문입니다.</dd></div>
-                <div><dt>대가</dt><dd>두 경로를 함께 돌린 기간에는 비용도 두 경로 몫을 함께 냈습니다. Kafka에는 SDK가 다시 보낸 이벤트가 중복된 채 그대로 쌓입니다.</dd></div>
+                <div><dt>고민</dt><dd>receiver가 성공(200)이라고 답한 이벤트를 잃어버리는 일이 없어야 했습니다. 한 세션 안의 이벤트 순서를 지키면서도 한 고객사에 트래픽이 몰릴 때 한 partition에만 쏠리지 않아야 했습니다. Flink가 결과를 냈다고 해서 저장소에 한 번만 들어간다는 보장이 생기지는 않아서, 이것도 따로 풀어야 했습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① receiver에 자체 버퍼를 두고, 고객사만 키로 쓰고, partition은 적게 시작해 나중에 늘리는 안<br>② Flink가 공식 connector로 ClickHouse에 직접 넣는 안<br>③ receiver에는 버퍼를 두지 않고, 고객사와 세션의 조합을 키로 쓰고, partition을 처음부터 12개로 고정하는 안. 적재는 Go sinker 하나가 sink ledger, dedup token, 두 replica 쓰기로 한 번만 넣습니다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. SDK는 200을 받으면 그 이벤트를 다시 보내지 않으므로, 200은 "더 보내지 않아도 된다"는 약속입니다. 그래서 Kafka replica 모두가 기록을 확인했을 때만 200을 주게 했습니다. partition key를 Flink가 쓰는 key와 같게 두어 한 세션의 이벤트는 늘 같은 partition에 순서대로 들어갑니다. partition 수를 나중에 바꾸면 같은 세션이 다른 partition으로 가게 되므로, 평소 트래픽보다 훨씬 큰 부하도 감당하도록 계산한 12개로 처음부터 고정했습니다. Go 코드와 Java 코드가 같은 키를 같은 partition으로 보내는지는, 고정된 입력을 양쪽에 똑같이 넣어 결과를 비교하는 교차 테스트로 확인합니다. 공식 connector는 at-least-once만 보장하고, retry를 다 하고도 실패하면 레코드를 버리기 때문에 쓰지 않았습니다.</dd></div>
+                <div><dt>대가</dt><dd>12개는 load test로 확인한 값이 아니라 계산으로 정한 값입니다. replica 한 대가 빠지면 쓰기가 멈추는데, 의도한 동작이고 밀린 데이터는 Kafka가 30일 동안 들고 있습니다. Go와 Java 두 언어가 같은 규칙을 지켜야 해서 교차 테스트를 계속 유지합니다.</dd></div>
               </dl>
             </article>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-04</span><h3>세션은 닫히는 window가 아니라 버전을 올려 고쳐 쓰는 key로</h3></header>
+              <header class="ts__head"><span class="ts__id">D-04</span><h3>늦게 와서 바뀌는 세션 시작도 Flink가 확정하기</h3></header>
               <dl class="ts__rows">
-                <div><dt>고민</dt><dd>같은 브라우저의 탭들이 함께 쓰는 장기 세션에는 "세션이 끝났다"는 신호가 없습니다. 그래서 한 세션의 결과를 여러 번 고쳐 내야 합니다. 그 결과를 여러 번 넣어도 한 번 넣은 것과 같으려면, 다시 처리해도 같은 결과가 나와야 했습니다.</dd></div>
-                <div><dt>선택지</dt><dd>① 일정 시간 이벤트가 없으면 세션을 닫는 session window를 쓰는 안<br>② 기능마다 Flink job을 따로 나누는 안<br>③ 결과의 버전을 결과를 낸 횟수, Kafka offset, 현재 시각으로 정하는 안<br>④ 고객사와 세션을 key로 하는 job 하나에 모으고, 버전은 입력만으로 정해지는 규칙으로 매기는 안</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>④를 골랐습니다. ①처럼 세션을 닫으면 late event가 올 때마다 다시 열어야 합니다. 버전은 재처리 회차, 반영한 이벤트 수, 상태 순위를 앞에서부터 차례로 비교합니다. 반영한 이벤트 수는 줄어들지 않으므로, 새 이벤트를 반영한 결과가 옛 버전에 가려 조용히 사라지지 않습니다. 같은 입력이면 같은 버전이 나옵니다. 그래서 한 번만 반영되는 효과를 Flink의 exactly-once checkpoint에 기대지 않고, 결과가 입력만으로 정해지는 deterministic 처리로 얻었습니다. 같은 이벤트가 두 번 처리되어도 같은 버전이 나오므로, checkpoint는 at-least-once 모드로 충분합니다. state TTL도 둘로 나눴습니다. 받은 이벤트 ID는 SDK가 다시 보낼 수 있는 7일 동안 기억하고, 집계 state는 결과가 확정될 때까지 둡니다.</dd></div>
-                <div><dt>대가</dt><dd>한 세션에 버전이 다른 행이 여러 개 쌓이므로, 읽는 쪽이 세션마다 가장 큰 버전 하나만 골라야 합니다. 트래픽이 끊긴 환경에서는 다음 이벤트가 올 때까지 Flink가 결과를 내보내지 않습니다.</dd></div>
+                <div><dt>고민</dt><dd>처음에는 Flink가 세션 시작 이벤트를 후보로만 쌓아 두고, 화면에서 조회할 때마다 그 고객의 과거 후보 전체에서 시작을 다시 골랐습니다. 세션이 며칠씩 이어지다 보니 7일치만 조회해도 이력 전체를 정렬해야 했고, 더 긴 기간을 조회하면 메모리 한도를 넘었습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① 마감된 날의 세션 시작은 더 바뀌지 않는다고 규칙을 정하고 조회 기간을 나눠 처리하는 안<br>② 조회 기간 앞뒤에 여유를 두고 그 범위만 잘라 읽는 안<br>③ Flink가 후보를 state로 들고 있다가 시작을 확정하고, 저장소에는 세션마다 현재 값 한 줄만 두는 안</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>처음에는 ①을 검토했지만, 조회할 때 시작을 고르는 구조를 그대로 둔 채 규칙을 덧대는 우회책이었습니다. late event로 과거 결과가 바뀌는 일은 state가 다룰 문제이고, state는 이미 Flink로 옮겼습니다. 그래서 ③으로 바꿨습니다. 세션 ID는 앞부분에 만든 시각이 들어가는 UUIDv7인데 ClickHouse는 UUID를 비교할 때 뒤쪽 비트를 먼저 보기 때문에 시간순으로 놓이지 않습니다. 그래서 sort key 맨 앞에 세션 ID에서 꺼낸 날짜를 두어, 세션 ID 하나로 세션을 구별하면서 시간 순서로도 정렬하게 했습니다. 이후로는 조회할 때 이력 전체에서 현재 값을 고르는 설계를 보면, 읽기 최적화보다 먼저 Flink state로 옮길 수 있는지부터 따집니다.</dd></div>
+                <div><dt>대가</dt><dd>Flink state가 더 오래 남습니다. 세션 시작을 정하는 state는 60일 동안 보존합니다. 대신 화면 조회는 조회 기간 안에 있는 세션만큼만 읽게 됐습니다.</dd></div>
               </dl>
             </article>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-05</span><h3>수신 응답, partition key, 적재 방식을 하나의 규칙으로 맞추기</h3></header>
+              <header class="ts__head"><span class="ts__id">D-05</span><h3>재전송 폭주는 서버에서 거르지 않고 원인인 SDK에서 막기</h3></header>
               <dl class="ts__rows">
-                <div><dt>고민</dt><dd>receiver가 성공(200)이라고 답한 이벤트를 잃어버리는 일이 없어야 했습니다. 한 세션 안의 이벤트 순서를 지키면서도, 트래픽이 한 고객사에 몰릴 때 한 partition에만 쏠리지 않아야 했습니다. Flink가 결과를 냈다고 해서 저장소에 한 번만 들어간다는 보장이 생기지는 않아서, 이것도 따로 풀어야 했습니다.</dd></div>
-                <div><dt>선택지</dt><dd>① receiver에 자체 버퍼를 두고, 고객사만 키로 쓰고, partition은 적게 시작해 나중에 늘리는 안<br>② Flink가 공식 connector로 ClickHouse에 직접 넣는 안<br>③ receiver에는 버퍼를 두지 않고, 고객사와 세션의 조합을 키로 쓰고, partition을 처음부터 12개로 고정하는 안. 적재는 Go sinker 하나가 맡아 sink ledger, dedup token, 두 replica 쓰기로 한 번만 넣습니다.</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. SDK는 200을 받으면 그 이벤트를 다시 보내지 않습니다. 그래서 200 응답은 곧 "더 보내지 않아도 된다"는 약속이고, 이 응답은 Kafka replica 모두가 기록을 확인했을 때(acks=all)만 주게 했습니다. partition key를 Flink가 쓰는 key와 같게 두어, 한 세션의 이벤트는 늘 같은 partition에 들어가 순서가 지켜집니다. partition 수를 나중에 바꾸면 같은 세션이 다른 partition으로 가게 됩니다. 그래서 지금 트래픽의 100배가 들어와도 partition마다 감당할 수 있다고 계산한 12개로 처음부터 고정했습니다. Go 코드와 Java 코드가 같은 키를 같은 partition으로 보내는지는, 고정된 입력을 양쪽에 똑같이 넣어 결과를 비교하는 교차 테스트로 확인합니다. 공식 connector는 at-least-once만 보장하고, retry를 다 하고도 실패하면 레코드를 버리기 때문에 쓰지 않았습니다. sink ledger와 Kafka offset을 서로 다른 시스템에 기록해 두면, 둘을 맞춰 보는 것만으로 "건수는 맞는데 일부가 빠진" 누락도 잡을 수 있습니다.</dd></div>
-                <div><dt>대가</dt><dd>12개는 load test로 확인한 값이 아니라 계산으로 정한 값입니다. replica 한 대가 빠지면 쓰기가 멈춥니다. 의도한 동작이고, 그동안 밀린 데이터는 Kafka가 30일 동안 들고 있습니다. Go와 Java 두 언어의 코드가 같은 규칙을 지켜야 해서, 양쪽 결과를 비교하는 교차 테스트를 계속 유지합니다.</dd></div>
+                <div><dt>고민</dt><dd>운영 mirroring 중 Kafka에 쌓인 레코드 수가 서로 다른 이벤트 수의 약 4.5배였습니다. 평소에는 1.2배에서 1.3배 수준입니다. 배포된 SDK가 탭끼리 함께 쓰는 공유 세션을 항상 켜면서 모든 이벤트를 버퍼에 넣었다가 나중에 보내게 바뀌었는데, 일부 이벤트의 업로더는 "받아들여졌다"는 확인을 받을 때까지 60초마다 다시 보내도록 만들어져 있었습니다. 버퍼의 "나중에 보낸다"와 업로더의 "받아들여질 때까지 다시 보낸다"가 맞물려 같은 이벤트를 끝없이 다시 내보냈습니다.</dd></div>
+                <div><dt>선택지</dt><dd>① receiver에 TTL이 짧은 cache를 두어 같은 이벤트가 들어오는 횟수에 상한을 거는 안<br>② 브라우저와 가까운 edge에서 고객사별, 세션별로 rate limit을 거는 안<br>③ 원본 이벤트도 Flink를 거쳐 중복을 거른 뒤 저장하는 안<br>④ 원본은 수집 단계에서 막지 않고 모두 저장하되, 중복 배수를 측정해 경보를 걸고, 원인인 SDK의 재전송 규칙을 고치는 안</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>④를 골랐습니다. 기존 경로에서 저장 전에 중복을 거른 것은 결과를 정확하게 하려는 장치가 아니라, INSERT 하나가 MV 여러 개로 번지며 불어나는 부하와 유료 API 비용을 막는 장치였습니다. 새 구조에는 그런 비용이 생기지 않으므로 그 장치를 다시 들일 이유가 없었습니다. ③은 Flink가 멈출 때 원본 저장까지 함께 멈추게 되어 쓰지 않았습니다. 대신 SDK 안에 이벤트가 실제로 전송 단계에 넘어갔다는 신호를 따로 두고, 그 신호를 받은 뒤에만 이벤트를 지우게 했습니다. 또 만든 지 7일이 지난 이벤트는 더 보내지 않게 했습니다. 서버가 받은 이벤트를 기억하는 기간이 7일이라, 그보다 늦게 다시 보낸 이벤트는 처음 보는 이벤트로 들어오기 때문입니다.</dd></div>
+                <div><dt>대가</dt><dd>이미 떠 있는 브라우저 탭은 고친 SDK를 받기 전까지 계속 다시 보냅니다.</dd></div>
               </dl>
             </article>
 
             <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-06</span><h3>늦게 와서 바뀌는 세션 시작도 Flink가 확정하기</h3></header>
+              <header class="ts__head"><span class="ts__id">D-06</span><h3>cutover 판정에서 기존 경로를 정답으로 쓰지 않기</h3></header>
               <dl class="ts__rows">
-                <div><dt>고민</dt><dd>처음에는 Flink가 세션과 유입의 시작 이벤트를 후보로만 쌓아 두었습니다. 그리고 화면에서 조회할 때마다 그 고객의 과거 후보 전체에서 시작을 다시 골랐습니다. 세션이 며칠씩 이어지다 보니 7일치만 조회해도 이력 전체를 정렬해야 했고, 90일치를 조회하면 메모리 한도를 넘었습니다. 세션 ID로 정렬해도 시간 순서가 되지 않았습니다. 세션 ID는 앞부분에 만든 시각이 들어가는 UUIDv7인데, ClickHouse는 UUID를 비교할 때 뒤쪽 64비트를 먼저 보기 때문에 시간순으로 놓이지 않습니다.</dd></div>
-                <div><dt>선택지</dt><dd>① 마감된 날의 세션 시작은 더 바뀌지 않는다고 규칙을 정하고, 조회 기간을 나눠 처리하는 안<br>② 조회 기간 앞뒤에 여유를 두고 그 범위만 잘라 읽는 안<br>③ Flink가 후보를 state로 들고 있다가 시작을 확정하고, 저장소에는 세션마다 현재 값 한 줄만 두는 안</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>처음에는 ①을 검토했습니다. 하지만 ①은 조회할 때 시작을 고르는 구조를 그대로 둔 채 규칙을 덧대는 우회책이었습니다. late event로 과거 결과가 바뀌는 일은 state가 다룰 문제이고, state는 이미 Flink로 옮겼습니다. 그래서 ③으로 바꿨습니다. ClickHouse sort key 맨 앞에는 세션 ID(UUIDv7)에서 꺼낸 날짜를 두었습니다. 그래서 세션 ID 하나로 세션을 구별하면서 시간 순서로도 정렬할 수 있게 됐습니다. 이후로는 조회할 때 이력 전체에서 현재 값을 고르는 설계를 보면, 읽기 최적화보다 먼저 Flink state로 옮길 수 있는지부터 따져 봅니다.</dd></div>
-                <div><dt>대가</dt><dd>Flink state가 더 오래 남습니다. 세션 시작을 정하는 state는 60일 동안 보존합니다. 세션 ID로 바로 찾는 조회는 따로 빠르게 만들어야 합니다. 대신 화면 조회는 조회 기간 안에 있는 세션만큼만 읽게 됐습니다.</dd></div>
-              </dl>
-            </article>
-
-            <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-07</span><h3>재전송 폭주는 서버에서 거르지 않고 원인인 SDK에서 막기</h3></header>
-              <dl class="ts__rows">
-                <div><dt>고민</dt><dd>운영 mirroring 중 Kafka에 쌓인 레코드 수가 서로 다른 이벤트 수의 약 4.5배였습니다. 업로드 완료를 알리는 이벤트 한 종류는 약 28배였습니다. 배포된 SDK에서 탭끼리 함께 쓰는 공유 세션을 항상 켜면서, 모든 이벤트가 바로 보내지 않고 버퍼에 넣었다가 나중에 보내는 방식으로 바뀌었습니다. 그런데 이 이벤트를 보내는 업로더는 "받아들여졌다"는 확인을 받을 때까지 60초마다 다시 보내도록 만들어져 있었습니다. 버퍼의 "나중에 보낸다"와 업로더의 "받아들여질 때까지 다시 보낸다"는 뜻이 달랐고, 두 동작이 맞물려 같은 이벤트를 끝없이 다시 내보냈습니다.</dd></div>
-                <div><dt>선택지</dt><dd>① receiver에 TTL이 짧은 cache를 두어 같은 이벤트가 들어오는 횟수에 상한을 거는 안<br>② 브라우저와 가까운 edge에서 고객사별, 세션별로 rate limit을 거는 안<br>③ 원본 이벤트도 Flink를 거쳐 중복을 거른 뒤 저장하는 안<br>④ 원본은 수집 단계에서 막지 않고 모두 저장하되, 중복 배수를 측정해 경보를 걸어 두고, 원인인 SDK의 재전송 규칙을 고치는 안</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>④를 골랐습니다. 기존 경로에서 저장 전에 중복을 거른 것은 결과를 정확하게 하려는 장치가 아니었습니다. INSERT 하나가 MV 여러 개로 번지며 불어나는 부하와 유료 API 비용을 막는 장치였습니다. 새 구조에서는 그런 비용이 생기지 않으므로, 그 장치를 다시 들일 이유가 없었습니다. 실제로 새 저장소의 부하도 CPU 평균 약 3%로 작았습니다. 원본까지 Flink를 거치게 하면 Flink가 멈출 때 원본 저장도 함께 멈춥니다. 대신 SDK 안에 이벤트가 실제로 전송 단계에 넘어갔다는 신호를 따로 두고, 그 신호를 받은 뒤에만 이벤트를 지우게 했습니다. 또 만든 지 7일이 지난 이벤트는 더 보내지 않게 했습니다. 서버가 받은 이벤트를 기억하는 기간이 모두 7일이라, 그보다 늦게 다시 보낸 이벤트는 처음 보는 이벤트로 들어오기 때문입니다.</dd></div>
-                <div><dt>대가</dt><dd>옛 SDK가 이미 떠 있는 브라우저 탭은 고친 SDK를 받기 전까지 계속 다시 보냅니다. 이런 옛 탭에서 온 몫을 빼고 보면, 레코드 수는 서로 다른 이벤트 수의 약 1.2배로 내려갔습니다.</dd></div>
-              </dl>
-            </article>
-
-            <article class="ts">
-              <header class="ts__head"><span class="ts__id">D-08</span><h3>cutover 판정에서 기존 경로를 정답으로 쓰지 않기</h3></header>
-              <dl class="ts__rows">
-                <div><dt>고민</dt><dd>기존 경로는 세션 집계가 끝난 비율 자체가 30%까지 떨어져 있었습니다. 기존 경로를 정답으로 놓고 대조하면, 기존 경로에서 빠진 것을 새 경로의 오류로 세게 됩니다.</dd></div>
+                <div><dt>고민</dt><dd>기존 경로는 세션 집계가 끝난 비율 자체가 30% 수준까지 떨어져 있었습니다. 기존 경로를 정답으로 놓고 대조하면, 기존 경로에서 빠진 것을 새 경로의 오류로 세게 됩니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 기존 경로의 결과를 정답으로 놓고 대조하는 안<br>② 건수만 비교해 보고 전환하는 안<br>③ 원본이 빠짐없이 들어왔는지, 대표 사례가 맞게 계산되는지, 늘 성립해야 하는 invariant가 지켜지는지로 판정하고, 원본이 새 경로에 도달하지 못한 누락만 엄격하게 보는 안</dd></div>
-                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 비교 기준이 틀리면 대조가 오히려 판단을 흐립니다. 집계는 원본만 있으면 다시 계산할 수 있습니다. 반면 새 경로에 도달하지 못한 원본은 해지 뒤 되살릴 수 없어서, 그것만 엄격하게 봤습니다. 운영 mirroring을 시작하려면 replica 장애 테스트, sinker 강제 종료 테스트, runbook 훈련을 먼저 통과하도록 정했습니다. 7일 관찰 단계와 트래픽 비율을 조금씩 올리는 canary 단계는, 관리형 클러스터 비용을 먼저 끊으려고 생략했습니다. 대신 해지 직전에 새 경로에는 없고 다시 계산할 수도 없는 원천 데이터만 골라 snapshot으로 보관하고, 원본과 대조했습니다.</dd></div>
-                <div><dt>대가</dt><dd>해지 시점의 판단은 매일 도는 대조, 경보 채널, 운영 Flink 복구 리허설 같은 별도 안정성 검증 장치 대신, 운영 중 바로 확인할 수 있는 지표로 내렸습니다. sink ledger와 Kafka offset 사이에 차이가 없었고, 재시작이 없었고, 빠진 이벤트 키도 없었습니다.</dd></div>
+                <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. 비교 기준이 틀리면 대조가 오히려 판단을 흐립니다. 집계는 원본만 있으면 다시 계산할 수 있습니다. 반면 새 경로에 도달하지 못한 원본은 해지 뒤 되살릴 수 없어서, 그것만 엄격하게 봤습니다.</dd></div>
+                <div><dt>대가</dt><dd>해지 시점의 판단은 매일 도는 대조나 경보 채널 같은 별도 안정성 장치 대신, 운영 중 바로 확인할 수 있는 지표로 내렸습니다.</dd></div>
               </dl>
             </article>
-          </section>
 
-          <section id="d-result" aria-labelledby="d-result-h">
-            <h2 class="sechead" id="d-result-h"><span class="sechead__no">04</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
-            <ul>
-              <li>운영 환경에서 24시간 동안 두 경로를 나란히 돌리며, 양쪽에 들어온 이벤트 키를 하나하나 맞춰 봤습니다. 한쪽에만 있는 이벤트는 약 0.06%였고, 고객사별로 나눠 봐도 ±0.2% 안이었습니다. Kafka 12개 partition의 offset을 대조해도 모두 맞았습니다.</li>
-              <li>mirroring 첫날에는 새 경로로 보내는 복사본이 약 0.2% 빠졌습니다. 수집 Worker가 복사본 전송을 거는 순서를 고친 뒤 다시 대조했을 때는 빠진 이벤트가 없었습니다. 이미 빠진 이벤트도 기존 경로의 원본에서 되살려 새 원본 테이블에 다시 넣었고, 대조해 보니 남은 누락은 없었습니다.</li>
-              <li>replica 한 대를 일부러 멈춘 테스트에서는, 멈춘 동안 쓰기가 바로 거부됐고 잃어버린 데이터는 없었습니다. replica가 돌아오고 약 2분 뒤 그동안 밀린 데이터를 모두 넣었습니다.</li>
-              <li>적재 도중 sinker를 강제로 종료하거나 동시에 다시 띄운 테스트에서도, 두 번 들어간 데이터는 없었고 두 replica의 내용은 같았습니다.</li>
-              <li>운영 환경에서 sink ledger에 적힌 구간과 Kafka에 확정된 offset을 대조했더니 12개 partition 모두 일치했습니다. 약 1주 뒤 다시 대조했을 때도 차이가 없었습니다.</li>
-              <li>Flink 세션 집계 job은 10월 중순까지 약 8일 동안 한 번도 재시작하지 않고 돌고 있습니다.</li>
-              <li>새 클러스터에는 MV와 Refreshable MV가 하나도 없습니다. 2026년 10월 16일 새 경로를 주 경로로 전환하고 관리형 ClickHouse를 해지했습니다.</li>
-            </ul>
-            <p>이벤트 한 건이 receiver에 들어와 원본 테이블에 저장되기까지 약 33초, 세션 집계 테이블에 반영되기까지 약 65초 걸렸습니다. 스테이징 환경에서 테스트 이벤트로, 쉬고 있던 구성 요소가 다시 켜진 상태에서 한 번 잰 값입니다.</p>
-          </section>
-
-          <section id="d-ts" aria-labelledby="d-ts-h">
-            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">05</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <article class="ts">
               <header class="ts__head"><span class="ts__id">T-01</span><h3>실패 기록이 없는데 복사본 약 0.2%가 빠진 문제</h3></header>
               <dl class="ts__rows">
-                <div><dt>문제</dt><dd>운영 mirroring을 켠 첫날, 두 경로의 이벤트 키를 맞춰 보니 기존 경로에는 있고 새 경로에는 없는 이벤트가 약 0.2% 나왔습니다. 실패 로그, fallback queue, DLQ에는 아무것도 없었습니다.</dd></div>
-                <div><dt>원인</dt><dd>payload 크기 초과와 형식 오류를 먼저 의심했지만 둘 다 아니었습니다. 빠진 이벤트는 모두 페이지를 떠날 때 나가는 이벤트였습니다. 같은 시간대 Worker 호출의 약 4%는 클라이언트가 먼저 연결을 끊은 호출이었습니다. <code>waitUntil</code>은 응답을 마친 뒤에도 끝까지 처리할 일을 Cloudflare에 맡기는 함수입니다. 그런데 Worker 코드는 기존 경로 전송을 <code>await</code>로 기다린 뒤에야 복사본 전송을 <code>waitUntil</code>에 걸었습니다. Cloudflare는 클라이언트가 먼저 연결을 끊으면, 그때까지 <code>waitUntil</code>에 걸려 있던 일만 이어서 처리합니다. 그래서 기존 경로를 기다리는 사이 연결이 끊기면 복사본 전송은 아예 시작되지 않았습니다.</dd></div>
-                <div><dt>해결</dt><dd>기존 경로를 기다리기 전에 복사본 전송을 <code>waitUntil</code>에 거는 순서로 바꿨습니다. 끊김을 흉내 낸 unit test로, 고치기 전에는 복사본 전송이 아예 걸리지 않는 것을 먼저 확인했습니다. 끊긴 뒤 실제로 전송되는지는 배포 뒤 키 대조로 확인했습니다.</dd></div>
-                <div class="is-key"><dt>결과</dt><dd>배포 뒤 키 대조에서 누락은 없었습니다. 이미 빠진 이벤트는 기존 경로 원본에서 되살려 원본 테이블에 다시 넣었고, 다시 대조해 남은 누락이 없음을 확인했습니다. 건수만 비교했다면 찾지 못했을 누락입니다.</dd></div>
+                <div><dt>문제</dt><dd>운영 mirroring을 켠 첫날, 두 경로의 이벤트 키를 맞춰 보니 기존 경로에는 있고 새 경로에는 없는 이벤트가 약 0.2% 나왔습니다. 실패 로그, 예비 queue, dead letter queue에는 아무것도 없었습니다.</dd></div>
+                <div><dt>원인</dt><dd>payload 크기 초과와 형식 오류를 먼저 의심했지만 둘 다 아니었습니다. 빠진 이벤트는 모두 페이지를 떠날 때 나가는 이벤트였습니다. 같은 시간대 Worker 호출 가운데 상당수는 클라이언트가 먼저 연결을 끊은 호출이었습니다. <code>waitUntil</code>은 응답을 마친 뒤에도 끝까지 처리할 일을 Cloudflare에 맡기는 함수입니다. 그런데 Worker 코드는 기존 경로 전송을 <code>await</code>로 기다린 뒤에야 복사본 전송을 <code>waitUntil</code>에 걸었습니다. Cloudflare는 클라이언트가 먼저 연결을 끊으면 그때까지 <code>waitUntil</code>에 걸려 있던 일만 이어서 처리합니다. 그래서 기존 경로를 기다리는 사이 연결이 끊기면 복사본 전송은 시작되지 않았습니다.</dd></div>
+                <div><dt>해결</dt><dd>기존 경로를 기다리기 전에 복사본 전송을 <code>waitUntil</code>에 거는 순서로 바꿨습니다. 끊김을 흉내 낸 unit test로, 고치기 전에는 복사본 전송이 걸리지 않는 것을 먼저 확인했습니다. 끊긴 뒤 실제로 전송되는지는 배포 뒤 키 대조로 확인했습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>배포 뒤 키 대조에서 누락은 없었습니다. 이미 빠진 이벤트는 기존 경로 원본에서 되살려 새 원본 테이블에 다시 넣었고, 다시 대조해 남은 누락이 없음을 확인했습니다. 건수만 비교했다면 찾지 못했을 누락입니다.</dd></div>
               </dl>
             </article>
           </section>
 
+          <!-- 07 -->
+          <section id="d-now" aria-labelledby="d-now-h">
+            <h2 class="sechead" id="d-now-h"><span class="sechead__no">07</span><span class="sechead__title">지금의 운영 상태</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p class="gc-lead">지금은 새 실시간 계층이 운영 트래픽을 처리하고 있고, 관리형 ClickHouse는 해지했습니다. 세션 집계 job과 연락처 신원 job이 모두 운영 환경에서 실행 중이며, 새 클러스터에는 MV와 Refreshable MV가 하나도 없습니다.</p>
+            <ol class="steps">
+              <li><span class="steps__t">10월 7일, 모든 고객 트래픽에 mirror 가동</span><p>기존 경로로 서비스를 하면서 같은 이벤트를 새 경로에도 보내 비교를 시작했습니다. 다음 날 복사본 누락의 원인을 찾아 고쳤습니다.</p></li>
+              <li><span class="steps__t">10월 16일, 읽기 전환과 관리형 ClickHouse 해지</span><p>화면이 새 계층을 읽도록 바꾸고, 기존 경로의 적재를 끄고, 관리형 ClickHouse를 해지했습니다. 당초에는 해지를 더 늦추는 일정이었는데, 비용 때문에 먼저 끄고 천천히 옮기는 쪽으로 바꿨습니다.</p></li>
+              <li><span class="steps__t">10월 18일, 연락처 신원 계산을 Flink로 이관</span><p>Go로 돌던 연락처 신원 계산과 복구를 Flink의 별도 job으로 옮겼고, 지금 운영 환경에서 실행 중입니다.</p></li>
+              <li><span class="steps__t">10월 19일, 대시보드 화면 전환과 과거분 재생</span><p>대시보드 화면을 새 호스팅으로 옮기고 예전 화면 앱을 제거했습니다. 같은 날 운영 환경에서 과거분 재생을 한 번 실행했습니다. 약 6,800만 행의 과거 원본을 읽어 하루 단위 세션 조각 약 248만 개를 만들었고, 작업은 약 157분 걸렸습니다.</p></li>
+            </ol>
+            <p>운영 환경에서는 세션 집계 job이 병렬도 2로 실행 중이고, checkpoint는 60초마다 남습니다. 평소 트래픽은 하루 40만에서 60만 건 수준이라 처리량보다 정확성과 복구 가능성에 설계 비용을 썼습니다.</p>
+          </section>
+
+          <!-- 08 -->
           <section id="d-learn" aria-labelledby="d-learn-h">
-            <h2 class="sechead" id="d-learn-h"><span class="sechead__no">06</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-learn-h"><span class="sechead__no">08</span><span class="sechead__title">배운 점</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
-              <li>sort key, partition, dedup은 따로 고르는 설정이 아니었습니다. 세션을 무엇으로 볼지가 바뀌자 셋이 함께 바뀌었습니다. 결국 state를 어디에 둘지까지 세션 정의가 정했습니다.</li>
-              <li>경로를 바꿀 때는 이벤트 종류마다 언제 보내고 언제 다시 보내는지부터 표로 맞춰 봐야 합니다. 저장 전에 중복을 거르는 단계를 없애면서, 그 단계가 의도치 않게 해 주던 일, 곧 재전송이 불어나도 일정 수준에서 끊어 주던 역할을 놓쳤고, 이것이 D-07의 재전송 폭주로 드러났습니다.</li>
-              <li>경로를 바꿀 때 건수만 비교하면 일부가 빠져도 알아채지 못합니다. 이벤트 키 집합과 offset처럼 서로 다른 기록이 맞는지를 전환 조건으로 걸어야 합니다.</li>
+              <li>sort key, partition, dedup은 따로 고르는 설정이 아니었습니다. 세션을 무엇으로 볼지가 바뀌자 셋이 함께 바뀌었고, state를 어디에 둘지까지 세션 정의가 정했습니다.</li>
+              <li>경로를 바꿀 때는 이벤트 종류마다 언제 보내고 언제 다시 보내는지부터 표로 맞춰 봐야 합니다. 저장 전에 중복을 거르는 단계를 없애면서, 그 단계가 의도치 않게 해 주던 일, 곧 재전송이 불어나도 일정 수준에서 끊어 주던 역할을 놓쳤고, 이것이 D-05의 재전송 폭주로 드러났습니다.</li>
+              <li>건수만 비교하면 일부가 빠져도 알아채지 못합니다. 이벤트 키 집합과 offset처럼 서로 다른 기록이 맞는지를 전환 조건으로 걸어야 합니다. 비교 기준 자체가 이미 틀어져 있다면 기준부터 바꿔야 합니다.</li>
+              <li>스트리밍과 BATCH가 같은 계산 코드를 쓰면, 과거 데이터를 채우는 일이 별도 이전 작업이 아니라 같은 로직의 재실행이 됩니다. 계산을 재생 가능하게 만든 값을 가장 크게 느낀 부분입니다.</li>
             </ul>
           </section>
 
+          <!-- 09 -->
           <section id="d-links" aria-labelledby="d-links-h">
-            <h2 class="sechead" id="d-links-h"><span class="sechead__no">07</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <h2 class="sechead" id="d-links-h"><span class="sechead__no">09</span><span class="sechead__title">관련 링크</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p>사내 작업이라 공개 코드는 없습니다.</p>
             <ul>
               <li><a href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a></li>
@@ -503,8 +681,8 @@
           </section>
 
           <nav class="pager" aria-label="다른 프로젝트">
-            <a class="prev" href="cdp.html"><span class="k">이전 프로젝트</span><span class="t">CDP Identity Resolution: 익명 방문자를 한 사람으로 잇는 신원 모델</span></a>
-            <a class="next" href="elt.html"><span class="k">다음 프로젝트</span><span class="t">Cloudflare Workers 기반 서버리스 이벤트 수집과 ELT 파이프라인</span></a>
+            <a class="prev" href="elt.html"><span class="k">이전 프로젝트</span><span class="t">Cloudflare Workers 기반 서버리스 이벤트 수집과 ELT 파이프라인</span></a>
+            <a class="next" href="sre.html"><span class="k">다음 프로젝트</span><span class="t">장애 탐지, 1차 진단, 심각도 판정을 자동화한 SRE 에이전트</span></a>
           </nav>
         </article>
       </div>

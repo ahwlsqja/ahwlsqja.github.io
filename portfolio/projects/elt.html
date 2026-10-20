@@ -228,7 +228,7 @@
                 <div><dt>고민</dt><dd>게이트웨이의 KV는 30분 안에 본 ID만 기억합니다. 그래서 30분 넘게 늦게 다시 온 이벤트는 게이트웨이와 적재 consumer의 dedup을 모두 통과했고, 집계 숫자를 부풀렸습니다. 데이터를 감시하는 지표도 FINAL로 중복을 합친 뒤의 값을 세고 있어서, 원본에 쌓인 이 중복을 보지 못했습니다.</dd></div>
                 <div><dt>선택지</dt><dd>① 적재 consumer의 dedup을 없애고 ClickHouse 병합에만 맡긴다. ② 넣기 전에 ClickHouse를 조회해 이미 있으면 버린다. ③ 입구인 게이트웨이, 적재 consumer, 저장소인 ClickHouse의 세 층으로 나누고, 층마다 어느 범위의 중복을 맡는지 적어 둔다.</dd></div>
                 <div class="is-key"><dt>결정과 이유</dt><dd>③을 골랐습니다. ①을 고르면 서로 다른 batch로 나뉘어 들어간 중복이 병합되기 전에 INSERT 시점 집계에 그대로 더해집니다. ②는 쓸 때마다 넓은 범위를 먼저 읽는 read-before-write라 ClickHouse에 맞지 않고, 같은 이벤트 두 건이 동시에 도착하면 둘 다 "아직 없음"을 보게 되어 막지도 못합니다. 적재 consumer는 자기 처리 범위 안에서 생긴 중복만 맡게 했습니다. 각 층을 계속 둘지는 실제 숫자를 보고 정했습니다. 요청마다 요청 ID를, queue에 넣는 시도마다 시도 ID를, queue 메시지마다 메시지 ID를 붙여서 중복이 어느 단계에서 생기는지 측정했습니다. 중복 감시는 화면에 보여 주는 FINAL 값만 보지 않고, FINAL 없이 센 행 수와 FINAL로 센 행 수의 차이를 따로 셉니다. 이 차이가 아직 합쳐지지 않은 중복의 양입니다.</dd></div>
-                <div><dt>대가</dt><dd>30분을 넘겨 다시 온 이벤트는 이 구조에서도 여전히 통과합니다. 이 문제는 다음 구조인 <a href="green.html">V3 실시간 아키텍처</a>에서, 되돌릴 수 없는 집계 바로 앞에서 같은 이벤트를 한 번만 반영하는 방식으로 풀었습니다.</dd></div>
+                <div><dt>대가</dt><dd>30분을 넘겨 다시 온 이벤트는 이 구조에서도 여전히 통과합니다. 이 문제는 다음 구조인 <a href="green.html">Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환</a>에서, 되돌릴 수 없는 집계 바로 앞에서 같은 이벤트를 한 번만 반영하는 방식으로 풀었습니다.</dd></div>
               </dl>
             </article>
 
@@ -260,7 +260,7 @@
               <li>2026년 6월 적재가 멈췄던 구간을 복구한 뒤, R2 원본 기록과 ClickHouse에 있는 이벤트 ID 3,900여 개를 양쪽에서 서로 맞춰 봤습니다. 원본 기록에 있는데 ClickHouse에서 빠진 ID는 하나도 없었고, 다시 넣으면서 두 번 들어간 ID도 없었습니다. 이 결과는 그 장애 구간에 한정한 것입니다.</li>
               <li>ClickHouse에 쓸 때 하루 150건 안팎으로 나던 HTTP 520 오류가, 고친 뒤 40시간 가까이 지켜보는 동안 한 건도 나지 않았습니다. keep-alive 시간 조정과 retry 같은 여러 변경을 함께 적용한 뒤의 결과라, 어느 한 변경만의 효과는 아닙니다.</li>
               <li>2026년 7월에는 queue에 쌓인 메시지 수인 queue depth 경보가 한 번 튄 값만으로 울리지 않게 바꿨습니다. 90초 안에 두 번 연속으로 threshold를 넘을 때만 울립니다. 바꾸기 전에 이 조건을 과거 경보 8건에 적용해 보니, 실제 장애였던 6건은 모두 잡았고 지표가 1분 동안 잠깐 튀었던 2건은 걸렀습니다. 대신 on-call 호출은 최대 1분쯤 늦어집니다.</li>
-              <li>9월 말에는 사람이 방문한 세션 가운데 집계에 잡힌 세션의 비율이 사흘 만에 약 60%에서 30%로 떨어졌습니다. 이 일을 계기로 10월에 세션 처리를 Kafka와 Flink 경로로 옮겼고, 자세한 내용은 <a href="green.html">V3 실시간 아키텍처</a>에 있습니다.</li>
+              <li>9월 말에는 사람이 방문한 세션 가운데 집계에 잡힌 세션의 비율이 30% 수준까지 떨어졌습니다. 이 일을 계기로 10월에 세션 처리를 Kafka와 Flink 경로로 옮겼고, 자세한 내용은 <a href="green.html">Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환</a>에 있습니다.</li>
             </ul>
             <p>다시 읽을 수 있는 원본이 있어야 중복도 정리하고 복구도 확인할 수 있었습니다. 복구는 queue 상태만 보고 끝내면 안 되고, 원본 기록과 ClickHouse의 ID를 맞춰 본 뒤에 끝내야 합니다.</p>
           </section>
@@ -289,8 +289,8 @@
           </section>
 
           <nav class="pager" aria-label="다른 프로젝트">
-            <a class="prev" href="green.html"><span class="k">이전 프로젝트</span><span class="t">Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환</span></a>
-            <a class="next" href="sre.html"><span class="k">다음 프로젝트</span><span class="t">장애 탐지, 1차 진단, On-call 호출을 자동화한 SRE 에이전트</span></a>
+            <a class="prev" href="cdp.html"><span class="k">이전 프로젝트</span><span class="t">CDP Identity Resolution: 익명 방문자를 한 사람으로 잇는 신원 모델</span></a>
+            <a class="next" href="green.html"><span class="k">다음 프로젝트</span><span class="t">Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환</span></a>
           </nav>
         </article>
       </div>

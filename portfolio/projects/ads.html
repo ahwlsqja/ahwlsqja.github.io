@@ -77,7 +77,7 @@
             <p>기존 구조에서는 이 문제들이 실제 증상으로 나타났습니다. 광고 수집은 사이트 이벤트를 받는 Cloudflare Worker 안의 모듈이었고, 공통 interface 없이 플랫폼 이름으로 곳곳에서 분기했습니다. 다시 읽는 구간이 사실상 2일이라 Meta가 28일까지 고치는 값 중 26일치를 놓치고 있었습니다. Google Ads API 버전이 종료되면서 성과 수집이 멈췄지만 경보가 없어 몇 주 동안 묻혔습니다. 광고비와 유입을 화면 표시용 채널 이름으로 JOIN하는 구조라, Meta 광고 유입이 전 기간 0으로 보였습니다. 채널 성과 화면은 요청마다 전체 이력을 다시 읽다가 ClickHouse 읽기 행 한도에 걸려 호출의 53.8%가 실패했습니다. 유료 유입의 42.5%를 차지하는 네이버 검색광고는 연동이 없어 광고비가 0으로 붙었습니다.</p>
             <dl class="scope">
               <dt>맡은 일</dt><dd>수집 스케줄과 quota 예산, adapter interface, PostgreSQL ledger와 Kafka 경로, GCS 원문 보관과 ClickHouse 적재 규칙, 조회용 snapshot, 여정 속 광고 attribution과 ROAS 계산 규칙을 설계하고, Go 서비스로 구현해 GKE에서 운영했습니다. Meta를 먼저 새 경로로 옮기고, Google Ads와 네이버 검색광고를 같은 구조에 붙였습니다.</dd>
-              <dt>범위 밖</dt><dd>브라우저 이벤트로 방문 세션과 진입 기록을 만드는 실시간 처리는 <a href="green.html">V3 실시간 아키텍처</a> 페이지에 적었습니다.</dd>
+              <dt>범위 밖</dt><dd>브라우저 이벤트로 방문 세션과 진입 기록을 만드는 실시간 처리는 <a href="green.html">Kafka + Flink 스트림 처리 아키텍처 재설계와 무중단 전환</a> 페이지에 적었습니다.</dd>
             </dl>
           </section>
 
