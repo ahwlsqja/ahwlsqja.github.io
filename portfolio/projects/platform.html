@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>무중단 병행 인프라 이관: Cloud Run과 관리형 ClickHouse에서 GKE로 · 모진영</title>
+<title>Blue/Green 무중단 인프라 이관: Cloud Run과 관리형 ClickHouse에서 GKE로 · 모진영</title>
 <meta name="description" content="기존 환경을 남겨 둔 채 GKE에 새 환경을 세우고, rollback 경로를 먼저 확인하며 Cloud Run과 관리형 ClickHouse를 옮긴 이관입니다. 되돌릴 수 없는 관리형 서비스 해지는 맨 마지막에 했습니다.">
 <meta name="color-scheme" content="dark light">
 <script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
@@ -37,7 +37,7 @@
       <div class="shell">
         <nav class="trail" aria-label="위치"><a href="../index.html#projects">← 포트폴리오</a><span aria-hidden="true">/</span><span>platform</span></nav>
         <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--plain">수파리드</span><span class="badge badge--ok">운영 중</span></div>
-        <h1 class="doc-title" id="detail-h">무중단 병행 인프라 이관: Cloud Run과 관리형 ClickHouse에서 GKE로</h1>
+        <h1 class="doc-title" id="detail-h">Blue/Green 무중단 인프라 이관: Cloud Run과 관리형 ClickHouse에서 GKE로</h1>
         <p class="doc-lede">기존 환경을 그대로 두고 GKE에 새 환경을 나란히 세웠습니다. rollback 경로가 실제로 작동하는지 먼저 확인한 뒤에 API 트래픽과 ClickHouse 읽기를 새 환경으로 옮겼습니다. 되돌릴 수 없는 관리형 ClickHouse 해지는 맨 마지막에 했습니다.</p>
         <dl class="spec">
           <div><dt>기간</dt><dd class="num">2026.09 – 2026.10</dd></div>
