@@ -197,7 +197,7 @@
           <section id="d-result" aria-labelledby="d-result-h">
             <h2 class="sechead" id="d-result-h"><span class="sechead__no">04</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <ul>
-              <li>이 파이프라인은 2026년 10월 16일 Kafka 경로로 cutover하기 전까지 실제 이벤트를 받는 주 수집 경로로 운영했습니다.</li>
+              <li>이 파이프라인은 Kafka 경로로 cutover하기 전까지 실제 이벤트를 받는 주 수집 경로로 운영했습니다.</li>
               <li>2026년 6월 적재가 멈췄던 구간을 복구한 뒤, R2 원본 기록과 ClickHouse에 있는 이벤트 ID 3,900여 개를 양쪽에서 서로 맞춰 봤습니다. 원본 기록에 있는데 ClickHouse에서 빠진 ID는 하나도 없었고, 다시 넣으면서 두 번 들어간 ID도 없었습니다. 이 결과는 그 장애 구간에 한정한 것입니다.</li>
               <li>ClickHouse에 쓸 때 하루 150건 안팎으로 나던 HTTP 520 오류가, 고친 뒤 40시간 가까이 지켜보는 동안 한 건도 나지 않았습니다. keep-alive 시간 조정과 retry 같은 여러 변경을 함께 적용한 뒤의 결과라, 어느 한 변경만의 효과는 아닙니다.</li>
               <li>2026년 7월에는 queue에 쌓인 메시지 수인 queue depth 경보가 한 번 튄 값만으로 울리지 않게 바꿨습니다. 90초 안에 두 번 연속으로 threshold를 넘을 때만 울립니다. 바꾸기 전에 이 조건을 과거 경보 8건에 적용해 보니, 실제 장애였던 6건은 모두 잡았고 지표가 1분 동안 잠깐 튀었던 2건은 걸렀습니다. 대신 on-call 호출은 최대 1분쯤 늦어집니다.</li>

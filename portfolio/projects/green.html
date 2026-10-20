@@ -674,10 +674,10 @@
             <h2 class="sechead" id="d-now-h"><span class="sechead__no">07</span><span class="sechead__title">지금의 운영 상태</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p class="gc-lead">지금은 새 실시간 계층이 운영 트래픽을 처리하고 있고, 관리형 ClickHouse는 해지했습니다. 세션 집계 job과 연락처 신원 job이 모두 운영 환경에서 실행 중이며, 새 클러스터에는 MV와 Refreshable MV가 하나도 없습니다.</p>
             <ol class="steps">
-              <li><span class="steps__t">10월 7일, 모든 고객 트래픽에 mirror 가동</span><p>기존 경로로 서비스를 하면서 같은 이벤트를 새 경로에도 보내 비교를 시작했습니다. 다음 날 복사본 누락의 원인을 찾아 고쳤습니다.</p></li>
-              <li><span class="steps__t">10월 16일, 읽기 전환과 관리형 ClickHouse 해지</span><p>화면이 새 계층을 읽도록 바꾸고, 기존 경로의 적재를 끄고, 관리형 ClickHouse를 해지했습니다. 당초에는 해지를 더 늦추는 일정이었는데, 비용 때문에 먼저 끄고 천천히 옮기는 쪽으로 바꿨습니다.</p></li>
-              <li><span class="steps__t">10월 18일, 연락처 신원 계산을 Flink로 이관</span><p>Go로 돌던 연락처 신원 계산과 복구를 Flink의 별도 job으로 옮겼고, 지금 운영 환경에서 실행 중입니다.</p></li>
-              <li><span class="steps__t">10월 19일, 대시보드 화면 전환과 과거분 재생</span><p>대시보드 화면을 새 호스팅으로 옮기고 예전 화면 앱을 제거했습니다. 같은 날 운영 환경에서 과거분 재생을 한 번 실행했습니다. 약 6,800만 행의 과거 원본을 읽어 하루 단위 세션 조각 약 248만 개를 만들었고, 작업은 약 157분 걸렸습니다.</p></li>
+              <li><span class="steps__t">모든 고객 트래픽에 mirror 가동</span><p>기존 경로로 서비스를 하면서 같은 이벤트를 새 경로에도 보내 비교를 시작했습니다. 다음 날 복사본 누락의 원인을 찾아 고쳤습니다.</p></li>
+              <li><span class="steps__t">읽기 전환과 관리형 ClickHouse 해지</span><p>화면이 새 계층을 읽도록 바꾸고, 기존 경로의 적재를 끄고, 관리형 ClickHouse를 해지했습니다. 당초에는 해지를 더 늦추는 일정이었는데, 비용 때문에 먼저 끄고 천천히 옮기는 쪽으로 바꿨습니다.</p></li>
+              <li><span class="steps__t">연락처 신원 계산을 Flink로 이관</span><p>Go로 돌던 연락처 신원 계산과 복구를 Flink의 별도 job으로 옮겼고, 지금 운영 환경에서 실행 중입니다.</p></li>
+              <li><span class="steps__t">대시보드 화면 전환과 과거분 재생</span><p>대시보드 화면을 새 호스팅으로 옮기고 예전 화면 앱을 제거했습니다. 이어서 운영 환경에서 과거분 재생을 한 번 실행했습니다. 약 6,800만 행의 과거 원본을 읽어 하루 단위 세션 조각 약 248만 개를 만들었고, 작업은 약 157분 걸렸습니다.</p></li>
             </ol>
             <p>운영 환경에서는 세션 집계 job이 병렬도 2로 실행 중이고, checkpoint는 60초마다 남습니다. 평소 트래픽은 하루 40만에서 60만 건 수준이라 처리량보다 정확성과 복구 가능성에 설계 비용을 썼습니다.</p>
           </section>
