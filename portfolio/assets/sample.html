@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>디자인 견본 | 모진영 포트폴리오</title>
+<meta name="description" content="포트폴리오 공통 디자인 시스템 견본 페이지입니다.">
+<meta name="color-scheme" content="dark light">
+<script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+
+<header class="topbar">
+  <div class="shell topbar__row">
+    <a class="brand" href="#about">mojinyeong<b>/</b>portfolio</a>
+    <nav class="topnav" aria-label="섹션" data-spy>
+      <a href="#about"><span class="n">§01</span><span class="t">소개</span></a>
+      <a href="#work"><span class="n">§02</span><span class="t">경력</span></a>
+      <a href="#side"><span class="n">§03</span><span class="t">사이드</span></a>
+      <a href="#detail"><span class="n">§04</span><span class="t">상세 견본</span></a>
+      <a class="ext" href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <button class="icon-btn theme-btn" type="button" aria-label="테마 바꾸기">
+      <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="shell">
+
+    <!-- §01 소개 -->
+    <section class="sec profile" id="about" aria-labelledby="about-h">
+      <h2 class="sechead" id="about-h">
+        <span class="sechead__no">§01</span><span class="sechead__title">소개</span>
+        <span class="sechead__rule" aria-hidden="true"></span><span class="sechead__pos">01 / 04</span>
+      </h2>
+
+      <p class="profile__role">Backend <b>/</b> Data pipeline <b>/</b> Infra</p>
+      <h1 class="profile__name">모진영</h1>
+      <p class="profile__lead">웹 행동 데이터를 받아 저장하고 조회하는 경로를 설계하고 운영합니다. 그 아래의 <strong>Kubernetes 인프라</strong>도 직접 다룹니다.</p>
+      <div class="profile__links">
+        <a class="btn btn--primary" href="https://github.com/ahwlsqja" target="_blank" rel="noopener">GitHub <span class="ext" aria-hidden="true">↗</span></a>
+        <button class="btn" type="button" data-copy="hello@example.com">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg>
+          <span class="copy-label">이메일 복사</span>
+        </button>
+      </div>
+      <p class="profile__contact"><span>hello@example.com</span><span>Seoul, KR</span></p>
+
+      <div class="twocol" style="margin-top: var(--s-12)">
+        <div>
+          <h3 class="label">핵심 역량</h3>
+          <ol class="caps">
+            <li>Kafka와 Flink 기반 실시간 수집 경로 설계와 구현</li>
+            <li>ClickHouse 저장 구조와 조회 경로 설계</li>
+            <li>GKE와 Argo CD로 상태 저장 서비스 배포와 운영</li>
+            <li>방문자 신원과 이벤트 데이터 모델 설계</li>
+            <li>Go 노드 데몬으로 GPU 머신의 Kubernetes 워커 편입</li>
+          </ol>
+        </div>
+        <div>
+          <h3 class="label">기술</h3>
+          <dl class="stack">
+            <div><dt>Language</dt><dd><ul class="chips"><li class="chip">Go</li><li class="chip">TypeScript</li><li class="chip">Java</li><li class="chip">Solidity</li></ul></dd></div>
+            <div><dt>Data</dt><dd><ul class="chips"><li class="chip">Kafka</li><li class="chip">Flink</li><li class="chip">ClickHouse</li><li class="chip">PostgreSQL</li></ul></dd></div>
+            <div><dt>Infra</dt><dd><ul class="chips"><li class="chip">GKE</li><li class="chip">Argo CD</li><li class="chip">Terraform</li><li class="chip">Cloudflare Workers</li></ul></dd></div>
+            <div><dt>Observability</dt><dd><ul class="chips"><li class="chip">Prometheus</li><li class="chip">system tables</li></ul></dd></div>
+            <div><dt>Chain</dt><dd><ul class="chips"><li class="chip">Besu</li><li class="chip">go-ethereum</li><li class="chip">Sui Move</li></ul></dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- §02 경력 -->
+    <section class="sec" id="work" aria-labelledby="work-h">
+      <h2 class="sechead" id="work-h">
+        <span class="sechead__no">§02</span><span class="sechead__title">경력</span>
+        <span class="sechead__rule" aria-hidden="true"></span><span class="sechead__pos">02 / 04</span>
+      </h2>
+
+      <div class="career">
+        <div class="career__head">
+          <span class="career__org">수파리드 주식회사</span>
+          <span class="career__role">초기 멤버, 제품 백엔드와 데이터, 인프라 담당</span>
+          <span class="career__when">2026.04 – 현재</span>
+        </div>
+        <p class="career__desc">웹사이트 방문 행동과 광고 데이터를 연결해 방문 여정과 채널 성과를 보여 주는 B2B 분석 제품입니다.</p>
+        <ol class="rows">
+          <li><a class="row" href="#detail">
+            <span class="row__no">01</span>
+            <span class="row__main"><span class="row__title">Kafka와 Flink 기반 실시간 수집 파이프라인 설계와 구현</span>
+              <ul class="chips"><li class="chip">Kafka</li><li class="chip">Flink</li><li class="chip">Go</li><li class="chip">ClickHouse</li></ul></span>
+            <span class="row__when">2026.09 – 2026.10</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
+          <li><a class="row" href="#detail">
+            <span class="row__no">02</span>
+            <span class="row__main"><span class="row__title">ClickHouse 저장 구조와 조회 경로 재설계</span>
+              <ul class="chips"><li class="chip">MergeTree</li><li class="chip">projection</li><li class="chip">EXPLAIN</li></ul></span>
+            <span class="row__when">2026.08 – 2026.09</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
+          <li><a class="row" href="#detail">
+            <span class="row__no">03</span>
+            <span class="row__main"><span class="row__title">수집과 ELT 파이프라인 0→1 구축</span>
+              <ul class="chips"><li class="chip">Cloudflare Workers</li><li class="chip">ClickHouse</li><li class="chip">TypeScript</li></ul></span>
+            <span class="row__when">2026.04 – 2026.10</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
+        </ol>
+      </div>
+
+      <div class="career">
+        <div class="career__head">
+          <span class="career__org">리버벤스 (월드랜드)</span>
+          <span class="career__role">계약직 인턴, 블록체인 백엔드 개발</span>
+          <span class="career__when">2026.01 – 2026.04</span>
+        </div>
+        <ol class="rows">
+          <li><a class="row" href="#detail">
+            <span class="row__no">04</span>
+            <span class="row__main"><span class="row__title">월드랜드 GPU 노드 플랫폼</span>
+              <ul class="chips"><li class="chip">Go</li><li class="chip">client-go</li><li class="chip">kubeadm</li><li class="chip">mTLS</li><li class="chip chip--more">+2</li></ul></span>
+            <span class="row__when">2026.01 – 2026.02</span>
+            <span class="row__go" aria-hidden="true">→</span></a></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- §03 사이드 -->
+    <section class="sec" id="side" aria-labelledby="side-h">
+      <h2 class="sechead" id="side-h">
+        <span class="sechead__no">§03</span><span class="sechead__title">사이드 프로젝트</span>
+        <span class="sechead__rule" aria-hidden="true"></span><span class="sechead__pos">03 / 04</span>
+      </h2>
+      <div class="grid-auto">
+        <a class="card" href="#detail">
+          <span class="badge badge--accent card__kind">Hackathon</span>
+          <div class="card__visual"><span class="mono">K3s + Sui</span></div>
+          <div class="card__body">
+            <h3>DAAS-Vader</h3>
+            <p class="card__sum">K3s를 포크해 Sui 스테이킹으로 워커 노드를 편입하는 구조를 제안하고, 핵심 경로를 직접 설계하고 개발했습니다.</p>
+            <ul class="chips"><li class="chip">Go</li><li class="chip">K3s</li><li class="chip">Sui Move</li><li class="chip">Docker</li></ul>
+          </div>
+          <div class="card__foot"><span class="card__when">2025.09</span><span class="badge badge--warn">데모</span></div>
+        </a>
+        <a class="card" href="#detail">
+          <span class="badge badge--plain card__kind">Team</span>
+          <div class="card__visual"><span class="mono">Besu / QBFT</span></div>
+          <div class="card__body">
+            <h3>Besu 프라이빗 네트워크 on Kubernetes</h3>
+            <p class="card__sum">Besu 노드 3개를 StatefulSet으로 띄웠습니다. 동기화 실패 원인 4개를 로그로 하나씩 좁혀 고쳤습니다.</p>
+            <ul class="chips"><li class="chip">Besu</li><li class="chip">Kubernetes</li><li class="chip">Go</li></ul>
+          </div>
+          <div class="card__foot"><span class="card__when">2025.09 – 2025.12</span><span class="badge badge--plain">학부</span></div>
+        </a>
+      </div>
+
+      <h3 class="label" style="margin-top: var(--s-10)">오픈소스</h3>
+      <ol class="rows">
+        <li><a class="row" href="https://github.com/ignite/cli/pull/4838" target="_blank" rel="noopener">
+          <span class="row__no">OS</span>
+          <span class="row__main"><span class="row__title">ignite CLI의 Go 1.24 빌드 실패를 고쳤고 반영됐습니다</span></span>
+          <span class="row__when">2025.11</span>
+          <span class="row__go" aria-hidden="true">↗</span></a></li>
+        <li><a class="row" href="https://github.com/InjectiveLabs/injective-ts/pull/617" target="_blank" rel="noopener">
+          <span class="row__no">OS</span>
+          <span class="row__main"><span class="row__title">injective-ts 예외 처리의 TypeError를 고쳤고 반영됐습니다</span></span>
+          <span class="row__when">2026.03</span>
+          <span class="row__go" aria-hidden="true">↗</span></a></li>
+      </ol>
+    </section>
+  </div>
+
+  <!-- §04 상세 페이지 견본 -->
+  <section class="sec" id="detail" aria-labelledby="detail-h">
+    <div class="shell">
+      <h2 class="sechead" id="detail-h" style="margin-bottom:0">
+        <span class="sechead__no">§04</span><span class="sechead__title">상세 페이지 견본</span>
+        <span class="sechead__rule" aria-hidden="true"></span><span class="sechead__pos">04 / 04</span>
+      </h2>
+    </div>
+
+    <div class="doc-head">
+      <div class="shell">
+        <nav class="trail" aria-label="위치"><a href="#work">~/work</a><span aria-hidden="true">/</span><span>stream-pipeline</span></nav>
+        <div class="doc-head__badges"><span class="badge badge--plain">Professional</span><span class="badge badge--ok">운영 중</span></div>
+        <h1 class="doc-title">Kafka와 Flink 기반 실시간 수집 파이프라인</h1>
+        <p class="doc-lede">브라우저 행동 이벤트를 받는 수집 경로를 Kafka와 Flink로 새로 설계하고 구현했습니다. 운영 트래픽을 미러링으로 대조한 뒤 새 경로로 전환했습니다.</p>
+        <dl class="spec">
+          <div><dt>기간</dt><dd class="num">2026.09 – 2026.10</dd></div>
+          <div><dt>역할</dt><dd>설계와 구현, 전환 판단</dd></div>
+          <div><dt>상태</dt><dd>운영 중 (10월 전환)</dd></div>
+          <div class="wide"><dt>기술</dt><dd><ul class="chips"><li class="chip">Go</li><li class="chip">Kafka</li><li class="chip">Flink</li><li class="chip">ClickHouse</li><li class="chip">GKE</li><li class="chip">Terraform</li><li class="chip">Argo CD</li></ul></dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="shell">
+      <div class="doc-body">
+        <aside class="toc" aria-label="이 페이지">
+          <ol>
+            <li><a href="#d-situation"><span class="n">01</span>상황과 역할</a></li>
+            <li><a href="#d-process"><span class="n">02</span>해결 과정</a></li>
+            <li><a href="#d-result"><span class="n">03</span>결과</a></li>
+            <li><a href="#d-ts"><span class="n">04</span>트러블슈팅</a></li>
+            <li><a href="#d-kw"><span class="n">05</span>핵심 역량</a></li>
+          </ol>
+        </aside>
+
+        <article class="doc-main">
+          <section id="d-situation" aria-labelledby="d-situation-h">
+            <h2 class="sechead" id="d-situation-h"><span class="sechead__no">01</span><span class="sechead__title">상황과 역할</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <p>기존 경로는 세션 집계를 ClickHouse 안의 갱신 뷰와 Materialized View로 만들었습니다. 9월 말 사람 세션 커버리지가 사흘 사이 약 60%에서 30%로 떨어졌습니다.</p>
+            <p>관리형 ClickHouse 해지도 10월 말로 정해져 있었습니다. 새 클러스터에는 기존 뷰 체인을 옮기지 않기로 해서, 세션 집계를 맡을 곳이 따로 필요했습니다.</p>
+            <dl class="scope">
+              <dt>맡은 일</dt><dd>아키텍처 설계와 기술 선택, Flink 잡과 Go 수신 서버, Go 적재기 구현, 전환 판단</dd>
+              <dt>범위 밖</dt><dd>방문자 신원 계산은 별도 배치가 맡습니다.</dd>
+            </dl>
+          </section>
+
+          <section id="d-process" aria-labelledby="d-process-h">
+            <h2 class="sechead" id="d-process-h"><span class="sechead__no">02</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+
+            <figure class="dg" id="dg1" data-step-ms="2800" data-steps='[
+              {"t":"브라우저 SDK가 이벤트를 묶어 보내면 수집 Worker가 Go 수신 서버로 넘깁니다."},
+              {"t":"수신 서버가 (고객사, 세션)을 키로 Kafka에 씁니다. 같은 세션은 같은 파티션에 들어갑니다."},
+              {"t":"Flink가 세션 상태에서 중복을 지우고 집계 결과를 결과 토픽에 씁니다."},
+              {"t":"Go 적재기가 원본과 집계 결과를 ClickHouse 두 레플리카에 씁니다."},
+              {"t":"두 레플리카가 확인한 뒤에만 Kafka 오프셋을 확정합니다. 중간에 죽으면 확정 지점부터 다시 읽습니다."}
+            ]'>
+              <figcaption><span class="n">그림 1</span>이벤트 1건이 저장까지 가는 경로</figcaption>
+              <div class="dg__canvas">
+                <svg viewBox="0 0 728 316" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <marker id="dg1-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
+                  </defs>
+
+                  <rect class="zone" x="530" y="22" width="176" height="262" rx="10"/>
+                  <text class="m" x="542" y="40">STREAM</text>
+
+                  <g data-step="1"><rect class="box" x="24" y="52" width="128" height="60" rx="8"/><text class="t" x="38" y="78">브라우저 SDK</text><text class="s" x="38" y="98">최대 7일 재전송</text></g>
+                  <g data-step="1"><rect class="box" x="192" y="52" width="128" height="60" rx="8"/><text class="t" x="206" y="78">수집 Worker</text><text class="s" x="206" y="98">엣지</text></g>
+                  <g data-step="2"><rect class="box" x="360" y="52" width="140" height="60" rx="8"/><text class="t" x="374" y="78">Go 수신 서버</text><text class="s" x="374" y="98">GKE, HPA 2~8</text></g>
+                  <g data-step="2,3,5"><rect class="box" x="540" y="52" width="156" height="60" rx="8"/><text class="t" x="554" y="78">Kafka 원본 토픽</text><text class="s" x="554" y="98">12 파티션, 30일 보존</text></g>
+                  <g data-step="3"><rect class="box" x="556" y="212" width="140" height="60" rx="8"/><text class="t" x="570" y="238">Flink 세션 잡</text><text class="s" x="570" y="258">키 상태, RocksDB</text></g>
+                  <g data-step="3,4"><rect class="box" x="380" y="212" width="140" height="60" rx="8"/><text class="t" x="394" y="238">Kafka 결과 토픽</text><text class="s" x="394" y="258">세션 집계</text></g>
+                  <g data-step="4,5"><rect class="box" x="204" y="212" width="136" height="60" rx="8"/><text class="t" x="218" y="238">Go 적재기</text><text class="s" x="218" y="258">insert_quorum=2</text></g>
+                  <g data-step="4"><rect class="box" x="24" y="212" width="140" height="60" rx="8"/><text class="t" x="38" y="238">ClickHouse</text><text class="s" x="38" y="258">레플리카 2대</text></g>
+
+                  <path id="dg1-e1" class="flow" data-step="1" d="M152 82H186" marker-end="url(#dg1-ah)"/>
+                  <path id="dg1-e2" class="flow" data-step="1" d="M320 82H354" marker-end="url(#dg1-ah)"/>
+                  <path id="dg1-e3" class="flow" data-step="2" d="M500 82H534" marker-end="url(#dg1-ah)"/>
+                  <path id="dg1-e4" class="flow" data-step="3" d="M626 112V206" marker-end="url(#dg1-ah)"/>
+                  <path id="dg1-e5" class="flow" data-step="3" d="M556 242H526" marker-end="url(#dg1-ah)"/>
+                  <path id="dg1-e6" class="flow" data-step="4" d="M380 242H346" marker-end="url(#dg1-ah)"/>
+                  <path id="dg1-e7" class="flow" data-step="4" d="M204 242H170" marker-end="url(#dg1-ah)"/>
+                  <path id="dg1-e8" class="flow" data-step="4" d="M566 112C566 160 290 160 284 206" marker-end="url(#dg1-ah)"/>
+                  <path id="dg1-e9" class="flow edge--dash" data-step="5" d="M272 272V296H716V82H702" marker-end="url(#dg1-ah)"/>
+
+                  <text class="m" x="618" y="164" text-anchor="end">key = (고객사, 세션)</text>
+                  <text class="m" x="400" y="190">원본 이벤트</text>
+                  <text class="m" x="300" y="290">적재 확인 뒤 오프셋 확정</text>
+
+                  <circle class="pkt" r="4" data-step="1"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg1-e1"/></animateMotion></circle>
+                  <circle class="pkt" r="4" data-step="1"><animateMotion dur="1.2s" begin="0.6s" repeatCount="indefinite"><mpath href="#dg1-e2"/></animateMotion></circle>
+                  <circle class="pkt" r="4" data-step="2"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg1-e3"/></animateMotion></circle>
+                  <circle class="pkt" r="4" data-step="3"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#dg1-e4"/></animateMotion></circle>
+                  <circle class="pkt" r="4" data-step="4"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#dg1-e8"/></animateMotion></circle>
+                  <circle class="pkt" r="4" data-step="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg1-e7"/></animateMotion></circle>
+                  <circle class="pkt" r="4" data-step="5"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#dg1-e9"/></animateMotion></circle>
+                </svg>
+              </div>
+            </figure>
+
+            <ol class="steps">
+              <li>
+                <span class="steps__t">Kafka를 버퍼이자 재처리 원천으로 두었습니다</span>
+                <p>원본 토픽은 12 파티션에 30일 보존으로 잡았습니다. 파티션 키는 (고객사, 세션)입니다. 한 세션의 순서를 지키면서 부하를 고르게 나누기 위해서입니다.</p>
+                <span class="alt">Cloudflare Queues만 쓰는 구조는 소비하면 메시지가 사라져 다시 읽을 수 없어서 쓰지 않았습니다.</span>
+              </li>
+              <li>
+                <span class="steps__t">세션 상태는 Flink가 들고 중복을 지웁니다</span>
+                <p>SDK가 최대 7일까지 다시 보내므로 중복은 반드시 생깁니다. 세션 상태 안에 이벤트 ID를 7일 동안 두고 같은 이벤트는 버렸습니다.</p>
+                <span class="alt">Go 소비자가 직접 세션을 계산하는 쪽은 더 쌌지만, 키 상태와 타이머, 체크포인트를 다시 만들어야 했습니다.</span>
+              </li>
+              <li>
+                <span class="steps__t">적재가 확인된 뒤에만 오프셋을 확정합니다</span>
+                <p>적재 구간을 먼저 기록하고, 두 레플리카에 쓴 뒤, Kafka 오프셋을 확정했습니다. 같은 구간을 다시 넣어도 같은 토큰이라 중복으로 쌓이지 않습니다.</p>
+              </li>
+            </ol>
+
+            <h3>기술 선택 비교</h3>
+            <div class="table-wrap">
+              <table class="tbl">
+                <thead><tr><th scope="col">결정</th><th scope="col">선택</th><th scope="col">검토한 대안</th></tr></thead>
+                <tbody>
+                  <tr class="is-pick"><th scope="row">버퍼</th><td>Kafka, 30일 보존</td><td>Cloudflare Queues: 소비하면 다시 읽을 수 없음</td></tr>
+                  <tr><th scope="row">상태 처리</th><td>Flink</td><td>Go 소비자: 늦은 이벤트와 재처리를 직접 구현해야 함</td></tr>
+                  <tr><th scope="row">적재</th><td>Go 적재기</td><td>비동기 INSERT: 성공 응답과 실제 반영이 어긋남</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="code">
+              <div class="code__bar"><span>flink-conf (일부)</span><span>yaml</span></div>
+<pre><code><span class="tok-c"># 60초마다 RocksDB 증분 체크포인트를 GCS에 남깁니다</span>
+<span class="tok-k">execution.checkpointing.interval</span>: <span class="tok-n">60s</span>
+<span class="tok-k">execution.checkpointing.min-pause</span>: <span class="tok-n">30s</span>
+<span class="tok-k">execution.checkpointing.timeout</span>: <span class="tok-n">10min</span>
+<span class="tok-k">state.backend.type</span>: <span class="tok-s">rocksdb</span>
+<span class="tok-k">state.backend.incremental</span>: <span class="tok-n">true</span></code></pre>
+            </div>
+          </section>
+
+          <section id="d-result" aria-labelledby="d-result-h">
+            <h2 class="sechead" id="d-result-h"><span class="sechead__no">03</span><span class="sechead__title">결과</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ul class="metrics">
+              <li class="metric"><span class="metric__v">약 0.06%</span><span class="metric__k">미러링 24시간 고유 이벤트 차이</span><span class="metric__c">운영, 전환 전 대조</span></li>
+              <li class="metric"><span class="metric__v">12<span class="from"> / 12</span></span><span class="metric__k">적재 기록과 확정 오프셋이 일치한 파티션</span><span class="metric__c">운영, 일주일 뒤에도 차이 0</span></li>
+              <li class="metric"><span class="metric__v">약 1분</span><span class="metric__k">원본 도착부터 세션 집계까지</span><span class="metric__c">staging 합성 이벤트</span></li>
+            </ul>
+            <p>10월 중순부터 새 경로가 유일한 수집 경로입니다. 레플리카 1대를 멈춘 장애 주입에서는 쓰기를 설계대로 거부했고 유실은 없었습니다(staging).</p>
+            <div class="note"><span class="badge badge--warn">남은 일</span><span>Flink 롤백 절차는 staging에서만 실행했습니다. 운영에서 실행한 적은 없습니다.</span></div>
+          </section>
+
+          <section id="d-ts" aria-labelledby="d-ts-h">
+            <h2 class="sechead" id="d-ts-h"><span class="sechead__no">04</span><span class="sechead__title">트러블슈팅</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <article class="ts">
+              <header class="ts__head"><span class="ts__id">T-01</span><h3>미러링 첫날 사본이 약 0.2% 빠지는 문제</h3></header>
+              <dl class="ts__rows">
+                <div><dt>문제</dt><dd>기존 경로에는 있고 새 경로에는 없는 이벤트가 약 0.2% 나왔습니다. 실패 로그도 DLQ 기록도 없었습니다.</dd></div>
+                <div><dt>원인</dt><dd>빠진 이벤트는 모두 페이지를 떠날 때 나가는 이벤트였습니다. 클라이언트가 먼저 연결을 끊으면, 기존 경로를 기다린 뒤에 거는 <code>waitUntil</code> 줄까지 가지 못했습니다.</dd></div>
+                <div><dt>해결</dt><dd>사본 전송을 기존 경로를 기다리기 전에 <code>waitUntil</code>로 걸도록 순서를 바꿨습니다.</dd></div>
+                <div class="is-key"><dt>결과</dt><dd>배포 뒤 약 4천 건 대조에서 누락 0건이었습니다.</dd></div>
+              </dl>
+            </article>
+          </section>
+
+          <section id="d-kw" aria-labelledby="d-kw-h">
+            <h2 class="sechead" id="d-kw-h"><span class="sechead__no">05</span><span class="sechead__title">핵심 역량</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+            <ol class="keywords">
+              <li><span class="kw__n">01</span><span class="kw__t">스트림 처리 설계</span><p>중복, 늦은 이벤트, 재처리를 한 곳에서 다뤘습니다.</p></li>
+              <li><span class="kw__n">02</span><span class="kw__t">무중단 전환</span><p>두 경로를 같이 돌려 대조한 뒤 바꿨습니다.</p></li>
+              <li><span class="kw__n">03</span><span class="kw__t">정합성 검증</span><p>건수 대신 키 집합과 오프셋을 맞춰 봤습니다.</p></li>
+            </ol>
+          </section>
+
+          <nav class="pager" aria-label="다른 프로젝트">
+            <a class="prev" href="#work"><span class="k">이전 프로젝트</span><span class="t">ClickHouse 저장 구조와 조회 경로 재설계</span></a>
+            <a class="next" href="#work"><span class="k">다음 프로젝트</span><span class="t">GKE와 GitOps로 인프라 이전</span></a>
+          </nav>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="shell foot">
+  <span>© 2026 모진영</span>
+  <span>디자인 시스템 견본 페이지</span>
+</footer>
+</body>
+</html>
