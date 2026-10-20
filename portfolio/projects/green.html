@@ -398,6 +398,49 @@
             <h2 class="sechead" id="d-cutover-h"><span class="sechead__no">05</span><span class="sechead__title">안전한 전환</span><span class="sechead__rule" aria-hidden="true"></span></h2>
             <p class="gc-lead">수집 Worker의 설정값 하나로 단계를 나눠, 기존 경로를 끄기 전까지는 매 단계마다 되돌리는 방법이 있는 상태에서 옮겼습니다. 설정값은 꺼짐, mirror, primary 세 가지입니다.</p>
 
+            <p>먼저 이벤트 한 건이 지나는 정상 경로를 보고, 탭을 바꿔 가며 Flink job이 다시 뜰 때, 같은 이벤트가 다시 올 때, 늦게 올 때, 전환 중 이상이 생길 때 어떻게 같은 결과로 돌아오는지 볼 수 있습니다.</p>
+
+<figure class="dg scn" id="gf" data-step-ms="4200" data-scenarios='[{"id":"normal","label":"정상 한 건","steps":[{"ok":["gf-n-sdk","gf-e-sw","gf-e-sw-l0","gf-n-worker"],"t":["브라우저 SDK가 이벤트에 ID를 붙여 수집 Worker로 보냅니다.","이벤트 하나는 고객사, 세션, 이벤트 ID의 조합으로 구별해서, 같은 이벤트가 다시 와도 알아볼 수 있습니다.","200 응답을 받지 못하면 SDK는 같은 이벤트를 다시 보냅니다."]},{"ok":["gf-e-wr","gf-e-wr-l0","gf-n-recv","gf-e-rk","gf-e-rk-l0","gf-n-kafka"],"t":["receiver는 Kafka가 기록을 확인한 뒤에만 200을 돌려주고, 고객사와 세션의 조합을 key로 12개 partition 중 늘 같은 곳에 씁니다.","SDK는 200을 받으면 그 이벤트를 다시 보내지 않으므로, 200은 더 보내지 않아도 된다는 약속입니다.","Kafka에 쓰지 못하면 예비 queue로 보내고, 거기에도 못 넣으면 503을 돌려줍니다."]},{"ok":["gf-e-kf","gf-e-kf-l0","gf-n-flink"],"t":["Flink job이 Kafka에서 이벤트를 읽어 세션 state를 갱신하고, 받은 이벤트 ID를 7일 동안 기억합니다.","결과의 버전을 재처리 회차, 반영한 이벤트 수, 상태만으로 정해서 같은 입력이면 늘 같은 결과가 나옵니다.","Flink가 멈춰도 이벤트는 Kafka에 30일 동안 남아 있어 다시 읽을 수 있습니다."]},{"ok":["gf-e-fs","gf-e-fs-l0","gf-n-sink","gf-e-sc","gf-e-sc-l0","gf-n-ch"],"t":["집계 sinker가 넣을 구간을 먼저 기록하고 ClickHouse에 넣은 뒤, replica 두 대가 받았는지 확인하고 Kafka offset을 확정합니다.","순서를 이렇게 정해 두면 중간에 죽어도 어디까지 넣었는지 알 수 있습니다.","replica 한 대가 내려가면 쓰기가 멈추고, 밀린 데이터는 Kafka에 남습니다."]}]},{"id":"flink","label":"Flink job 재기동","steps":[{"ok":["gf-n-kafka","gf-e-kf","gf-e-kf-l0","gf-n-flink","gf-e-snap","gf-e-snap-l0","gf-n-ckpt"],"t":["Flink job은 일하는 동안 state의 스냅샷인 checkpoint를 60초마다 남깁니다.","job이 죽어도 처음부터 다시 계산하지 않고 마지막 지점에서 이어가기 위해서입니다.","checkpoint 뒤에 도착한 이벤트는 아직 state에 반영되지 않은 채 Kafka에 있습니다."]},{"ok":["gf-n-kafka"],"fail":["gf-n-flink"],"t":["Flink job이 죽으면 세션 결과를 내는 일이 멈춥니다.","원본 이벤트는 Flink를 거치지 않는 sinker가 따로 저장하므로, Flink가 멈춰도 원본 저장은 멈추지 않습니다.","그동안 도착한 이벤트도 Kafka에 그대로 쌓입니다."]},{"recover":["gf-n-flink","gf-e-restore","gf-e-restore-l0","gf-n-ckpt","gf-e-kf","gf-e-kf-l0","gf-n-kafka"],"t":["job이 다시 뜨면 마지막 checkpoint로 state를 복원하고, 그 시점 뒤의 이벤트를 Kafka에서 다시 읽습니다.","state는 원본 로그에서 파생된 값이라, 로그를 이어 읽으면 다시 만들어집니다.","새 버전을 올리거나 되돌릴 때는 checkpoint 대신 savepoint를 씁니다."]},{"ok":["gf-n-flink","gf-e-fs","gf-e-fs-l0","gf-n-sink","gf-e-sc","gf-e-sc-l0","gf-n-ch"],"t":["checkpoint 뒤 구간이 다시 처리되면 같은 버전의 행이 ClickHouse에 한 번 더 들어갑니다.","결과가 입력만으로 정해지고 읽는 쪽이 세션마다 가장 큰 버전 하나만 고르므로 화면 결과는 같습니다.","checkpoint 모드가 at-least-once라서 이 중복은 막지 않고, 읽을 때 걸러냅니다."]}]},{"id":"dup","label":"같은 이벤트 재전송","steps":[{"ok":["gf-n-sdk"],"fail":["gf-e-sw","gf-e-sw-l0"],"t":["브라우저 재전송이나 queue 재전달 때문에 같은 이벤트가 두 번 이상 오는 일은 반드시 생깁니다.","그래서 중복을 없애려 하기보다, 중복이 와도 결과가 한 번 넣은 것과 같게 만들었습니다.","만든 지 7일이 지난 이벤트는 SDK가 더 보내지 않게 했습니다. 서버가 기억하는 기간이 7일이기 때문입니다."]},{"ok":["gf-n-worker","gf-e-wr","gf-e-wr-l0","gf-n-recv","gf-e-rk","gf-e-rk-l0","gf-n-kafka"],"t":["receiver는 같은 이벤트도 받아 Kafka에 한 번 더 쌓고, 원본 테이블에도 한 번 더 들어갑니다.","저장 전에 거르다 잘못 판정하면 정상 이벤트를 버리게 되고 그 판단은 되돌릴 수 없어서, 원본은 그대로 둡니다.","원본 테이블을 직접 읽는 화면은 중복된 행 가운데 최신본 하나만 골라 읽어야 합니다."]},{"recover":["gf-e-kf","gf-e-kf-l0","gf-n-flink"],"t":["Flink는 이미 받은 이벤트 ID를 7일 동안 기억하고 있어서, 같은 ID가 다시 오면 버립니다.","되돌릴 수 없는 계산 바로 앞에서 한 번만 반영하도록 거르는 자리를 정했습니다.","ID는 같은데 내용이 다르면 한쪽을 고르지 않고 따로 빼서 알립니다."]},{"recover":["gf-e-fs","gf-e-fs-l0","gf-n-sink","gf-e-sc","gf-e-sc-l0","gf-n-ch"],"t":["sinker가 중간에 죽어 같은 구간을 다시 넣어도, 같은 구간이면 같은 dedup token이 붙어 ClickHouse가 한 번만 받습니다.","token을 topic, partition, offset 구간, 대상 테이블로 계산하기 때문에 같은 구간이면 늘 같은 값이 나옵니다.","replica 두 대가 모두 받아야 성공으로 보므로, 하나가 내려가면 쓰기가 멈추고 밀린 데이터는 Kafka에 남습니다."]}]},{"id":"late","label":"늦게 온 이벤트","steps":[{"ok":["gf-n-sdk","gf-e-sw","gf-e-sw-l0","gf-n-worker","gf-e-wr","gf-e-wr-l0","gf-n-recv","gf-e-rk","gf-e-rk-l0","gf-n-kafka"],"t":["세션 결과가 이미 나간 뒤에 그 세션의 이벤트가 늦게 도착합니다.","SDK는 이벤트를 최대 7일까지 다시 보내고, 탭이 함께 쓰는 장기 세션에는 끝났다는 신호가 없기 때문입니다.","기존 경로는 이미 낸 결과를 고칠 수 없어서 늦게 온 이벤트를 반영하지 못했습니다."]},{"ok":["gf-e-kf","gf-e-kf-l0","gf-n-flink"],"t":["Flink는 세션을 닫지 않고 그 세션의 state에 이벤트를 반영해, 하루 단위 조각의 버전을 올려 다시 냅니다.","세션을 닫으면 늦은 이벤트가 올 때마다 다시 열어야 해서, 세션을 버전을 올려 고쳐 쓰는 key로 다뤘습니다.","조각은 날짜가 끝나고 7일이 지나면 마감합니다."]},{"ok":["gf-e-fs","gf-e-fs-l0","gf-n-sink","gf-e-sc","gf-e-sc-l0","gf-n-ch"],"t":["버전이 올라간 행이 ClickHouse에 추가되어, 같은 세션에 버전이 다른 행이 쌓입니다.","반영한 이벤트 수는 줄어들지 않으므로 새 결과가 옛 버전에 가려 사라지지 않습니다.","읽는 쪽은 세션마다 가장 큰 버전 하나만 골라야 합니다."]}]},{"id":"cut","label":"cutover 중 이상","steps":[{"ok":["gf-n-sdk","gf-e-sw","gf-e-sw-l0","gf-n-worker","gf-e-wold","gf-e-wold-l0","gf-n-old","gf-e-wr","gf-e-wr-l0","gf-n-recv","gf-e-rk","gf-e-rk-l0","gf-n-kafka"],"t":["mirror 단계에서는 기존 경로가 서비스를 하고, 같은 이벤트의 복사본이 새 경로로 갑니다.","수집 Worker의 설정값 하나로 단계를 나눠, 기존 경로를 끄기 전까지는 매 단계에서 되돌릴 방법이 있게 했습니다.","두 경로는 이벤트 키 집합과 partition별 offset으로 대조합니다."]},{"ok":["gf-n-old","gf-e-wold","gf-e-wold-l0"],"fail":["gf-e-wr","gf-e-wr-l0"],"t":["mirror 단계에서 문제가 보이면 설정값을 꺼서 새 경로로 가는 복사본 전송을 멈춥니다.","기존 경로가 계속 서비스를 하고 있어서, 멈추는 것만으로 이전 상태가 됩니다.","새 경로가 받은 것은 복사본뿐이라 서비스에는 영향이 없습니다."]},{"fail":["gf-e-rk","gf-e-rk-l0"],"recover":["gf-e-rspare","gf-e-rspare-l0","gf-n-spare"],"t":["primary 단계에서 Kafka 기록에 실패하면 receiver가 예비 queue에 넣습니다.","장애 때만 쓰는 경로는 필요할 때 고장 나 있기 쉬워서, 평소에도 트래픽의 1%를 예비 queue로 흘려 검증합니다.","예비 queue에도 넣지 못하면 503을 돌려줍니다."]},{"recover":["gf-e-wold","gf-e-wold-l0","gf-n-old"],"t":["primary 단계에서 문제가 있으면 기존 경로에 먼저 동기로 쓰는 방식으로 돌아가고, 이때 유실은 없습니다.","되돌리는 방법이 단계마다 달라서, 각 단계로 넘어가는 go/no-go를 직접 판단했습니다.","읽기를 새 계층으로 바꾼 뒤에는 읽는 곳만 기존 쪽으로 되돌릴 수 있습니다."]},{"fail":["gf-n-old"],"recover":["gf-n-spare","gf-e-rspare","gf-e-rspare-l0","gf-n-sdk","gf-e-sw","gf-e-sw-l0"],"t":["기존 경로의 적재를 끄고 관리형 클러스터를 해지하면 되돌릴 기존 경로가 없습니다.","그래서 예비 queue의 14일 보관과 SDK의 재전송이 마지막 안전망입니다.","해지 직전에는 새 경로에 없고 다시 계산할 수도 없는 원천 데이터를 snapshot으로 보관해 원본과 대조했습니다."]}]}]'>
+  <figcaption><span class="n">그림 3</span>이벤트 한 건의 경로와 실패 시나리오</figcaption>
+  <div class="dg__canvas">
+    <svg viewBox="0 0 728 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="이벤트가 SDK, 수집 Worker, receiver, Kafka, Flink, sinker, ClickHouse를 지나는 정상 경로와, Flink 재기동, 같은 이벤트 재전송, 늦게 온 이벤트, cutover 중 이상 시나리오를 단계별로 보여 줍니다.">
+      <defs>
+        <marker id="gf-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
+      </defs>
+      <g id="gf-n-sdk" data-scn="normal dup late cut"><rect class="box" x="24" y="50" width="170" height="60" rx="8"/><text class="t" x="38" y="76">브라우저 SDK</text><text class="s" x="38" y="96">이벤트 ID를 붙임</text></g>
+      <g id="gf-n-worker" data-scn="normal dup late cut"><rect class="box" x="279" y="50" width="170" height="60" rx="8"/><text class="t" x="293" y="76">수집 Worker</text><text class="s" x="293" y="96">설정값으로 단계 나눔</text></g>
+      <g id="gf-n-recv" data-scn="normal dup late cut"><rect class="box" x="534" y="50" width="170" height="60" rx="8"/><text class="t" x="548" y="76">receiver</text><text class="s" x="548" y="96">Kafka 확인 뒤 200</text></g>
+      <g id="gf-n-kafka"><rect class="box" x="534" y="160" width="170" height="60" rx="8"/><text class="t" x="548" y="186">Kafka 원본 로그</text><text class="s" x="548" y="206">12개 partition, 30일</text></g>
+      <g id="gf-n-flink" data-scn="normal flink dup late"><rect class="box" x="279" y="160" width="170" height="60" rx="8"/><text class="t" x="293" y="186">Flink job</text><text class="s" x="293" y="206">세션 state 계산</text></g>
+      <g id="gf-n-sink" data-scn="normal flink dup late"><rect class="box" x="24" y="160" width="170" height="60" rx="8"/><text class="t" x="38" y="186">집계 sinker</text><text class="s" x="38" y="206">구간 단위로 적재</text></g>
+      <g id="gf-n-ch" data-scn="normal flink dup late"><rect class="box" x="24" y="270" width="170" height="60" rx="8"/><text class="t" x="38" y="296">ClickHouse</text><text class="s" x="38" y="316">버전별 행 저장</text></g>
+      <g id="gf-n-ckpt" data-scn="flink"><rect class="box" x="279" y="270" width="170" height="60" rx="8"/><text class="t" x="293" y="296">checkpoint</text><text class="s" x="293" y="316">60초마다 남김</text></g>
+      <g id="gf-n-spare" data-scn="cut"><rect class="box" x="279" y="160" width="170" height="60" rx="8"/><text class="t" x="293" y="186">예비 queue</text><text class="s" x="293" y="206">14일 보관</text></g>
+      <g id="gf-n-old" data-scn="cut"><rect class="box" x="24" y="160" width="170" height="60" rx="8"/><text class="t" x="38" y="186">기존 경로</text><text class="s" x="38" y="206">먼저 쓰는 방식</text></g>
+      <path id="gf-e-sw" class="edge" data-scn="normal dup late cut" d="M194 80H273" marker-end="url(#gf-ah)"/>
+      <text id="gf-e-sw-l0" class="s" data-scn="normal dup late cut" text-anchor="middle" x="233.5" y="72">전송</text>
+      <path id="gf-e-wr" class="edge" data-scn="normal dup late cut" d="M449 80H528" marker-end="url(#gf-ah)"/>
+      <text id="gf-e-wr-l0" class="s" data-scn="normal dup late cut" text-anchor="middle" x="488.5" y="72">전달</text>
+      <path id="gf-e-rk" class="edge" data-scn="normal dup late cut" d="M619 110V154" marker-end="url(#gf-ah)"/>
+      <text id="gf-e-rk-l0" class="s" data-scn="normal dup late cut" x="627" y="138">기록 확인</text>
+      <path id="gf-e-kf" class="edge" data-scn="normal flink dup late" d="M534 190H455" marker-end="url(#gf-ah)"/>
+      <text id="gf-e-kf-l0" class="s" data-scn="normal flink dup late" text-anchor="middle" x="491.5" y="182">읽기</text>
+      <path id="gf-e-fs" class="edge" data-scn="normal flink dup late" d="M279 190H200" marker-end="url(#gf-ah)"/>
+      <text id="gf-e-fs-l0" class="s" data-scn="normal flink dup late" text-anchor="middle" x="236.5" y="182">결과 전달</text>
+      <path id="gf-e-sc" class="edge" data-scn="normal flink dup late" d="M109 220V264" marker-end="url(#gf-ah)"/>
+      <text id="gf-e-sc-l0" class="s" data-scn="normal flink dup late" x="117" y="246">구간 먼저 기록 뒤 적재</text>
+      <path id="gf-e-snap" class="edge" data-scn="flink" d="M340 220V264" marker-end="url(#gf-ah)"/>
+      <text id="gf-e-snap-l0" class="s" data-scn="flink" text-anchor="end" x="332" y="246">남김</text>
+      <path id="gf-e-restore" class="edge" data-scn="flink" d="M390 264V220" marker-end="url(#gf-ah)"/>
+      <text id="gf-e-restore-l0" class="s" data-scn="flink" x="398" y="246">복원</text>
+      <path id="gf-e-rspare" class="edge" data-scn="cut" d="M560 110V135H364V154" marker-end="url(#gf-ah)"/>
+      <text id="gf-e-rspare-l0" class="s" data-scn="cut" text-anchor="middle" x="462" y="128">Kafka 실패 시</text>
+      <path id="gf-e-wold" class="edge" data-scn="cut" d="M330 110V135H109V154" marker-end="url(#gf-ah)"/>
+      <text id="gf-e-wold-l0" class="s" data-scn="cut" text-anchor="middle" x="220" y="128">기존 경로로 서비스</text>
+    </svg>
+  </div>
+</figure>
+
 <figure class="dg" id="dg-green-c" style="--dg-min: 600px" data-step-ms="3600"
   data-idle="전환은 다섯 단계입니다. 단계마다 무엇을 하고 무엇을 확인하는지, 문제가 생기면 어떻게 되돌리는지를 한 줄에 놓았습니다."
   data-steps='[
@@ -407,7 +450,7 @@
   {"t":"화면이 읽는 곳을 새 계층으로 바꿉니다. 해지 전까지는 읽는 곳만 기존 쪽으로 되돌릴 수 있습니다.", "d": 4000},
   {"t":"기존 경로의 적재를 끄고 관리형 클러스터를 해지합니다. 이제 되돌릴 기존 경로가 없어서, 예비 queue 14일과 SDK의 재전송이 마지막 안전망입니다.", "d": 4600}
 ]'>
-  <figcaption><span class="n">그림 3</span>mirroring에서 cutover까지, 단계마다 되돌리는 방법</figcaption>
+  <figcaption><span class="n">그림 4</span>mirroring에서 cutover까지, 단계마다 되돌리는 방법</figcaption>
   <div class="dg__canvas">
     <svg viewBox="0 0 728 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="전환 다섯 단계. 리허설, mirror, primary, 읽기 전환, 기존 적재 끔 순서로 각 단계의 하는 일과 되돌리는 방법을 보여 줍니다.">
       <defs>
@@ -499,60 +542,42 @@
               <li>과거분의 세션 결과는 복사한 원본을 Flink BATCH 모드로 처음부터 다시 읽어 만들었습니다. 스트리밍과 같은 계산 코드를 쓰므로, 과거분을 위한 코드를 따로 만들지 않았습니다.</li>
             </ul>
 
-<figure class="dg" id="dg-green-d" style="--dg-min: 600px" data-step-ms="3600"
-  data-idle="원본 로그를 다시 읽어 상태를 만드는 세 가지 경우입니다. 평소의 스트리밍, 보관 기간 안의 장애 복구, 보관 기간 밖 과거분의 재생을 한 그림에 놓았습니다."
-  data-steps='[
-  {"t":"평소에는 Kafka 원본 로그를 Flink 스트리밍 job이 읽어 keyed state를 갱신하고, 결과를 ClickHouse의 세션 조각 표에 냅니다. 결과의 재처리 회차는 0입니다."},
-  {"t":"보관 기간 안에서 장애가 나면 마지막 checkpoint를 복원하고, 그 시점 뒤의 이벤트를 Kafka에서 다시 읽습니다. 같은 입력이므로 같은 결과가 나옵니다.", "d": 4600},
-  {"t":"Kafka 보관 기간 밖의 과거분은 ClickHouse에 복사해 둔 원본을 Flink BATCH job이 처음부터 읽습니다. 스트리밍과 같은 계산 코드를 쓰고, 결과는 재처리 회차 1로 따로 쌓습니다.", "d": 4800},
-  {"t":"마감된 버전끼리만 회차 0과 회차 1을 비교하고, 최신 날은 제외합니다. 차이의 사유를 설명할 수 있으면 읽기 상한을 0에서 1로 바꿔 화면이 재생 결과를 읽게 합니다. 상한은 언제든 0으로 되돌립니다.", "d": 5200}
-]'>
-  <figcaption><span class="n">그림 4</span>원본 로그를 다시 읽어 상태를 만드는 세 가지 경우</figcaption>
+<figure class="dg scn" id="gr" data-step-ms="4200" data-scenarios='[{"id":"normal","label":"평소 처리","steps":[{"ok":["gr-n-kafka","gr-e-kf","gr-e-kf-l0","gr-n-flink","gr-e-ft","gr-e-ft-l0","gr-n-t0"],"t":["평소에는 Flink 스트리밍 job이 Kafka 원본 로그를 읽어 keyed state를 갱신하고, 결과를 ClickHouse의 세션 조각 표에 냅니다.","상태는 원본 로그에서 파생된 값일 뿐이라, 잃어도 로그를 다시 읽어 만들 수 있습니다.","Flink가 멈춰도 원본 이벤트 저장은 멈추지 않습니다."]}]},{"id":"inside","label":"보관 기간 안의 장애","steps":[{"ok":["gr-n-kafka","gr-e-kf","gr-e-kf-l0","gr-n-flink","gr-e-snap","gr-e-snap-l0","gr-n-ckpt"],"t":["Kafka의 보관 기간 30일 안에서는 Flink가 checkpoint를 60초마다 남기며 일합니다.","원본 로그가 남아 있으므로 장애가 나도 로그를 다시 읽으면 됩니다.","checkpoint 뒤의 이벤트는 아직 state에 반영되지 않았습니다."]},{"ok":["gr-n-kafka"],"fail":["gr-n-flink"],"t":["Flink job에 장애가 나서 결과를 내는 일이 멈춥니다.","원본 이벤트는 Kafka에 계속 쌓이고 있어서 잃지 않습니다.","장애가 길어지면 보관 기간 30일 안에 복구해야 로그만으로 되살릴 수 있습니다."]},{"recover":["gr-n-flink","gr-e-restore","gr-e-restore-l0","gr-n-ckpt","gr-e-kf","gr-e-kf-l0","gr-n-kafka"],"t":["마지막 checkpoint를 복원하고, 그 시점 뒤의 이벤트를 Kafka에서 다시 읽습니다.","결과가 입력만으로 정해지도록 만들었기 때문에 같은 입력을 다시 읽으면 같은 결과가 나옵니다.","다시 읽은 구간의 행이 한 번 더 들어가도 읽는 쪽이 가장 큰 버전 하나만 고릅니다."]},{"ok":["gr-e-ft","gr-e-ft-l0","gr-n-t0"],"t":["복구한 job이 이어서 결과를 세션 조각 표에 냅니다.","입력이 같으므로 장애가 없었을 때와 같은 결과입니다.","같은 버전이 두 번 들어간 행은 읽을 때 하나로 고릅니다."]}]},{"id":"outside","label":"보관 기간 밖의 재생","steps":[{"ok":["gr-n-src","gr-e-sb","gr-e-sb-l0","gr-n-batch"],"t":["Kafka 보관 기간 밖의 과거분은 ClickHouse에 복사해 둔 원본을 Flink BATCH job이 처음부터 읽습니다.","스트리밍과 같은 계산 코드를 써서, 과거분을 위한 코드를 따로 만들지 않았습니다.","Kafka 로그만으로는 전환 이전 과거분을 다시 만들 수 없기 때문에 원본을 기존 클러스터에서 새 클러스터로 복사했습니다."]},{"ok":["gr-e-bt","gr-e-bt-l0","gr-n-t1"],"t":["BATCH 결과는 재처리 회차 1로 따로 쌓습니다.","회차를 나누면 스트리밍 결과와 나란히 두고 비교할 수 있습니다.","읽기 상한을 바꾸기 전까지 화면은 회차 0 결과를 읽습니다."]},{"ok":["gr-e-tc","gr-e-tc-l0","gr-n-cmp"],"t":["마감된 버전끼리만 회차 0과 회차 1을 비교하고, 아직 늦은 이벤트가 올 수 있는 최신 날은 제외합니다.","경계가 되는 하루는 스트리밍 쪽이 18,212건, 재생 쪽이 18,215건이었고, 차이 3건은 스트리밍이 내보내지 못했던 것이었습니다.","합격선을 숫자로 정하지 않고, 차이가 나면 그 사유를 설명할 수 있는지로 판단했습니다."]},{"recover":["gr-e-cc","gr-e-cc-l0","gr-n-cap"],"t":["차이의 사유를 설명할 수 있으면 읽기 상한을 0에서 1로 바꿔 화면이 재생 결과를 읽게 합니다.","값 하나로 읽는 쪽을 바꾸므로, 언제든 0으로 되돌릴 수 있습니다.","0으로 되돌리면 화면은 다시 스트리밍 결과를 읽습니다."]}]}]'>
+  <figcaption><span class="n">그림 5</span>원본 로그를 다시 읽어 상태를 만드는 세 가지 경우</figcaption>
   <div class="dg__canvas">
-    <svg viewBox="0 0 728 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kafka 원본 로그를 Flink 스트리밍 job이 읽는 평소 경로, checkpoint 복원 뒤 다시 읽는 장애 복구 경로, 보관 기간 밖 원본을 BATCH job이 재생해 회차 1 결과를 만들고 비교한 뒤 읽기 상한을 바꾸는 경로를 보여 줍니다.">
+    <svg viewBox="0 0 728 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="평소의 스트리밍 처리, 보관 기간 안에서 checkpoint 복원 뒤 Kafka를 다시 읽는 장애 복구, 보관 기간 밖 원본을 BATCH job으로 재생해 비교한 뒤 읽기 상한을 바꾸는 경로를 시나리오별로 보여 줍니다.">
       <defs>
-        <marker id="dg-green-d-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
+        <marker id="gr-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
       </defs>
-
-      <!-- 평소 -->
-      <text class="m" data-step="1" x="24" y="28">평소 처리</text>
-      <g data-step="1,2"><rect class="box" x="24" y="40" width="180" height="64" rx="8"/><text class="t" x="38" y="66">Kafka 원본 로그</text><text class="s" x="38" y="86">순서대로 쌓임, 30일</text></g>
-      <g data-step="1,2"><rect class="box" x="274" y="40" width="180" height="64" rx="8"/><text class="t" x="288" y="66">Flink 스트리밍 job</text><text class="s" x="288" y="86">keyed state로 계산</text></g>
-      <g data-step="1,4"><rect class="box" x="524" y="40" width="180" height="64" rx="8"/><text class="t" x="538" y="66">세션 조각 표</text><text class="s" x="538" y="86">재처리 회차 0</text></g>
-      <path id="dg-green-d-e1" class="flow" data-step="1,2" d="M204 72H268" marker-end="url(#dg-green-d-ah)"/>
-      <path id="dg-green-d-e2" class="flow" data-step="1" d="M454 72H518" marker-end="url(#dg-green-d-ah)"/>
-
-      <!-- 장애 복구 -->
-      <text class="m" data-step="2" x="24" y="160">보관 기간 안의 장애: checkpoint 복원 뒤 다시 읽음</text>
-      <g data-step="2"><rect class="box" x="274" y="174" width="180" height="56" rx="8"/><text class="t" x="288" y="198">checkpoint</text><text class="s" x="288" y="217">60초마다 남기는 스냅샷</text></g>
-      <path id="dg-green-d-e3" class="flow" data-step="2" d="M364 174V114" marker-end="url(#dg-green-d-ah)"/>
-
-      <!-- 과거분 재생 -->
-      <text class="m" data-step="3" x="24" y="290">보관 기간 밖의 과거분: 복사해 둔 원본을 BATCH로 재생</text>
-      <g data-step="3"><rect class="box" x="24" y="300" width="180" height="64" rx="8"/><text class="t" x="38" y="326">ClickHouse 원본</text><text class="s" x="38" y="346">Kafka 이전의 과거분</text></g>
-      <g data-step="3,4"><rect class="box" x="274" y="300" width="180" height="64" rx="8"/><text class="t" x="288" y="326">Flink BATCH job</text><text class="s" x="288" y="346">같은 계산 코드</text></g>
-      <g data-step="3,4"><rect class="box" x="524" y="300" width="180" height="64" rx="8"/><text class="t" x="538" y="326">세션 조각 표</text><text class="s" x="538" y="346">재처리 회차 1</text></g>
-      <path id="dg-green-d-e4" class="flow" data-step="3" d="M204 332H268" marker-end="url(#dg-green-d-ah)"/>
-      <path id="dg-green-d-e5" class="flow" data-step="3" d="M454 332H518" marker-end="url(#dg-green-d-ah)"/>
-
-      <!-- 비교와 전환 -->
-      <text class="m" data-step="4" x="24" y="420">비교한 뒤 읽기를 전환</text>
-      <g data-step="4"><rect class="box" x="214" y="430" width="240" height="64" rx="8"/><text class="t" x="228" y="456">마감된 버전끼리 비교</text><text class="s" x="228" y="476">회차 0과 1, 최신 날은 제외</text></g>
-      <g data-step="4"><rect class="box" x="524" y="430" width="180" height="64" rx="8"/><text class="t" x="538" y="456">읽기 상한</text><text class="s" x="538" y="476">0에서 1로 바꿔 전환</text></g>
-      <path id="dg-green-d-e6" class="flow" data-step="4" d="M364 368V424" marker-end="url(#dg-green-d-ah)"/>
-      <path id="dg-green-d-e7" class="flow" data-step="4" d="M454 462H518" marker-end="url(#dg-green-d-ah)"/>
-
-      <circle class="pkt" data-step="1" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-d-e1"/></animateMotion></circle>
-      <circle class="pkt" data-step="1" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-d-e2"/></animateMotion></circle>
-      <circle class="pkt" data-step="2" r="4"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#dg-green-d-e3"/></animateMotion></circle>
-      <circle class="pkt" data-step="2" r="4"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#dg-green-d-e1"/></animateMotion></circle>
-      <circle class="pkt" data-step="3" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-d-e4"/></animateMotion></circle>
-      <circle class="pkt" data-step="3" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-d-e5"/></animateMotion></circle>
-      <circle class="pkt" data-step="4" r="4"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#dg-green-d-e6"/></animateMotion></circle>
-      <circle class="pkt" data-step="4" r="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-green-d-e7"/></animateMotion></circle>
+      <g id="gr-n-kafka" data-scn="normal inside"><rect class="box" x="24" y="50" width="170" height="60" rx="8"/><text class="t" x="38" y="76">Kafka 원본 로그</text><text class="s" x="38" y="96">순서대로 쌓임, 30일</text></g>
+      <g id="gr-n-flink" data-scn="normal inside"><rect class="box" x="279" y="50" width="170" height="60" rx="8"/><text class="t" x="293" y="76">Flink 스트리밍 job</text><text class="s" x="293" y="96">keyed state로 계산</text></g>
+      <g id="gr-n-t0" data-scn="normal inside"><rect class="box" x="534" y="50" width="170" height="60" rx="8"/><text class="t" x="548" y="76">세션 조각 표</text><text class="s" x="548" y="96">재처리 회차 0</text></g>
+      <g id="gr-n-ckpt" data-scn="inside"><rect class="box" x="279" y="160" width="170" height="60" rx="8"/><text class="t" x="293" y="186">checkpoint</text><text class="s" x="293" y="206">60초마다 남김</text></g>
+      <g id="gr-n-src" data-scn="outside"><rect class="box" x="24" y="50" width="170" height="60" rx="8"/><text class="t" x="38" y="76">ClickHouse 원본</text><text class="s" x="38" y="96">Kafka 이전의 과거분</text></g>
+      <g id="gr-n-batch" data-scn="outside"><rect class="box" x="279" y="50" width="170" height="60" rx="8"/><text class="t" x="293" y="76">Flink BATCH job</text><text class="s" x="293" y="96">같은 계산 코드</text></g>
+      <g id="gr-n-t1" data-scn="outside"><rect class="box" x="534" y="50" width="170" height="60" rx="8"/><text class="t" x="548" y="76">세션 조각 표</text><text class="s" x="548" y="96">재처리 회차 1</text></g>
+      <g id="gr-n-cmp" data-scn="outside"><rect class="box" x="534" y="160" width="170" height="60" rx="8"/><text class="t" x="548" y="186">마감 버전 비교</text><text class="s" x="548" y="206">회차 0과 1, 최신 날 제외</text></g>
+      <g id="gr-n-cap" data-scn="outside"><rect class="box" x="279" y="160" width="170" height="60" rx="8"/><text class="t" x="293" y="186">읽기 상한</text><text class="s" x="293" y="206">0에서 1로 바꿔 전환</text></g>
+      <path id="gr-e-kf" class="edge" data-scn="normal inside" d="M194 80H273" marker-end="url(#gr-ah)"/>
+      <text id="gr-e-kf-l0" class="s" data-scn="normal inside" text-anchor="middle" x="233.5" y="72">읽기</text>
+      <path id="gr-e-ft" class="edge" data-scn="normal inside" d="M449 80H528" marker-end="url(#gr-ah)"/>
+      <text id="gr-e-ft-l0" class="s" data-scn="normal inside" text-anchor="middle" x="488.5" y="72">결과</text>
+      <path id="gr-e-snap" class="edge" data-scn="inside" d="M340 110V154" marker-end="url(#gr-ah)"/>
+      <text id="gr-e-snap-l0" class="s" data-scn="inside" text-anchor="end" x="332" y="138">남김</text>
+      <path id="gr-e-restore" class="edge" data-scn="inside" d="M390 154V110" marker-end="url(#gr-ah)"/>
+      <text id="gr-e-restore-l0" class="s" data-scn="inside" x="398" y="138">복원</text>
+      <path id="gr-e-sb" class="edge" data-scn="outside" d="M194 80H273" marker-end="url(#gr-ah)"/>
+      <text id="gr-e-sb-l0" class="s" data-scn="outside" text-anchor="middle" x="233.5" y="72">읽기</text>
+      <path id="gr-e-bt" class="edge" data-scn="outside" d="M449 80H528" marker-end="url(#gr-ah)"/>
+      <text id="gr-e-bt-l0" class="s" data-scn="outside" text-anchor="middle" x="488.5" y="72">결과</text>
+      <path id="gr-e-tc" class="edge" data-scn="outside" d="M619 110V154" marker-end="url(#gr-ah)"/>
+      <text id="gr-e-tc-l0" class="s" data-scn="outside" x="627" y="138">비교</text>
+      <path id="gr-e-cc" class="edge" data-scn="outside" d="M534 190H455" marker-end="url(#gr-ah)"/>
+      <text id="gr-e-cc-l0" class="s" data-scn="outside" text-anchor="middle" x="491.5" y="182">차이 설명</text>
     </svg>
   </div>
 </figure>
+
 
 
             <p>스트리밍 결과와 재생 결과는 마감된 버전끼리만 비교하고, 아직 늦은 이벤트가 올 수 있는 최신 날은 제외했습니다. 경계가 되는 하루를 비교하니 스트리밍 쪽이 18,212건, 재생 쪽이 18,215건이었습니다. 차이 3건은 스트리밍이 내보내지 못했던 것이었습니다. 합격선을 숫자로 정해 두지 않고, 차이가 나면 그 사유를 설명할 수 있는지로 판단했습니다. 판단이 끝난 뒤 읽기 상한 값을 0에서 1로 바꿔 화면이 재생 결과를 읽게 했습니다. 이 값은 언제든 0으로 되돌릴 수 있습니다.</p>

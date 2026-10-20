@@ -73,6 +73,16 @@
 
           <section id="d-process" aria-labelledby="d-process-h">
             <h2 class="sechead" id="d-process-h"><span class="sechead__no">02</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
+<p>그림 1은 파티션을 나눈 때와 없앤 때, part가 쌓이고 병합되는 과정을 나란히 놓은 것입니다. 그림 2는 이 구조를 포함해 화면별 조회 경로까지 그린 것입니다.</p>
+<figure class="dg scn" id="scn-ch-part" style="--dg-min: 728px" data-step-ms="4200" data-scenarios='[{"id":"before","label":"전: hash 파티션 64개","steps":[{"ok":["p-ins"],"t":["INSERT가 들어오면 MergeTree는 쓰기를 파티션 값별로 나누고, 파티션마다 part라는 데이터 조각을 따로 만듭니다.","행을 64개 파티션에 고르게 흩는 hash 파티션을 썼기 때문에 INSERT 배치 하나가 최대 64개 part로 쪼개졌습니다.","데이터가 늘자 쓰기가 느려지고, 뒤에서 합치는 병합 작업의 부담도 커졌습니다."]},{"ok":["p-e1","p-pb"],"t":["작은 part가 INSERT마다 쌓입니다.","비교 실험의 약 9시간 구간에서 활성 part는 이 방식에서 1,019개였고, 새 part 생성과 병합 횟수도 많았습니다.","part가 많이 남아 있을수록 뒤의 두 단계가 무거워집니다."]},{"ok":["p-e2","p-mb"],"t":["part는 뒤에서 조금씩 병합되지만, 병합도 파티션 경계를 넘지 않습니다.","그래서 64개로 갈라진 part는 서로 합쳐지지 못하고 파티션마다 따로 병합됩니다.","병합이 끝나기 전의 part는 조회 때 그대로 읽힙니다."]},{"fail":["p-e3","p-fb"],"t":["FINAL을 붙인 조회는 아직 병합되지 않은 같은 키의 행을 조회 시점에 하나로 합치려고 part를 모두 읽습니다.","같은 키의 행을 맞춰 보기 때문에 part가 많을수록 메모리를 많이 썼습니다.","기존 테이블에서는 메모리 한도 4GiB를 넘겨 실패하던 전체 이력 FINAL 뷰 5종도 있었습니다."]}]},{"id":"after","label":"후: 파티션 없음","steps":[{"ok":["p-ins"],"t":["파티션 절을 없앤 테이블에서는 INSERT 배치 하나가 part 하나로 만들어집니다.","효과를 보려고 바꾼 것은 파티션 절 하나뿐이고, 엔진과 sort key는 그대로 두었습니다.","sort key가 같아서 날짜 범위로 읽는 조회는 구조상 좋아지지 않습니다."]},{"ok":["p-e1","p-pa"],"t":["part가 적게 쌓입니다.","운영 전환 뒤 원본 이벤트 테이블의 파티션은 64개에서 1개로, part는 454개에서 11개로 줄었습니다.","같은 약 9시간 비교 구간에서 활성 part는 5개였습니다."]},{"ok":["p-e2","p-ma"],"t":["part가 한 파티션 안에서 합쳐집니다.","경계가 없으니 병합이 part를 가리지 않습니다.","다만 큰 part끼리 병합하게 되면서 5분마다 FINAL로 도는 모니터링 쿼리의 최고 메모리가 약 10% 늘어, 상한을 512MiB로 올렸습니다."]},{"recover":["p-e3","p-fa"],"t":["FINAL이 읽을 part가 줄어, 고객별 FINAL count 쿼리의 메모리가 731~826MB에서 141MB로 줄었습니다.","24시간 FINAL count도 1,047~1,117MB에서 148MB가 되었습니다.","디스크 사용량은 11.46GiB와 11.29GiB로 거의 같았습니다."]}]}]'>
+  <figcaption><span class="n">그림 1</span>작은 part가 쌓이고 병합되는 원리: 파티션을 나눈 때와 없앤 때</figcaption>
+  <div class="dg__canvas">
+    <svg role="img" viewBox="0 0 728 330" xmlns="http://www.w3.org/2000/svg" aria-label="MergeTree에서 INSERT 배치가 part로 쌓이고 뒤에서 병합된 뒤 FINAL 조회가 part를 읽는 흐름. 전에는 hash 파티션 64개 때문에 배치 하나가 최대 64개 part로 쪼개졌고, 후에는 파티션이 없어 part 하나로 만들어집니다.">
+      <defs><marker id="scn-ch-part-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker></defs>
+      <g id="p-ins"><rect class="box" x="24" y="40" width="190" height="84" rx="8"/><text class="t" x="38" y="66">INSERT 배치</text><text class="s" x="38" y="86">한 번에 들어온 쓰기</text><text class="s" x="38" y="104">계속 들어옴</text></g><g id="p-pb" data-scn="before"><rect class="box" x="269" y="40" width="190" height="84" rx="8"/><text class="t" x="283" y="66">part 최대 64개</text><text class="s" x="283" y="86">파티션 값마다</text><text class="s" x="283" y="104">part 하나씩</text></g><g id="p-pa" data-scn="after"><rect class="box" x="269" y="40" width="190" height="84" rx="8"/><text class="t" x="283" y="66">part 1개</text><text class="s" x="283" y="86">파티션이 하나뿐</text><text class="s" x="283" y="104">쪼개지지 않음</text></g><g id="p-mb" data-scn="before"><rect class="box" x="514" y="40" width="190" height="84" rx="8"/><text class="t" x="528" y="66">뒤에서 병합</text><text class="s" x="528" y="86">파티션 안에서만</text><text class="s" x="528" y="104">경계를 넘지 않음</text></g><g id="p-ma" data-scn="after"><rect class="box" x="514" y="40" width="190" height="84" rx="8"/><text class="t" x="528" y="66">뒤에서 병합</text><text class="s" x="528" y="86">한 파티션 안에서</text><text class="s" x="528" y="104">part가 합쳐짐</text></g><g id="p-fb" data-scn="before"><rect class="box" x="269" y="210" width="190" height="84" rx="8"/><text class="t" x="283" y="236">FINAL 조회</text><text class="s" x="283" y="256">모든 part를 읽어</text><text class="s" x="283" y="274">같은 키를 합침</text></g><g id="p-fa" data-scn="after"><rect class="box" x="269" y="210" width="190" height="84" rx="8"/><text class="t" x="283" y="236">FINAL 조회</text><text class="s" x="283" y="256">읽을 part가 적음</text><text class="s" x="283" y="274">메모리 사용이 줄어듦</text></g><path id="p-e1" class="edge" d="M214 82H267" marker-end="url(#scn-ch-part-ah)"/><text class="s" x="240" y="74" text-anchor="middle">쓸 때마다</text><path id="p-e2" class="edge" d="M459 82H512" marker-end="url(#scn-ch-part-ah)"/><text class="s" x="486" y="74" text-anchor="middle">조금씩</text><path id="p-e3" class="edge" d="M364 126V208" marker-end="url(#scn-ch-part-ah)"/><text class="s" x="374" y="172">조회할 때 읽음</text>
+    </svg>
+  </div>
+</figure>
 <figure class="dg" id="dg-clickhouse" style="--dg-min: 560px" data-step-ms="3600" data-steps='[
   {"t":"INSERT 배치 하나가 hash 파티션 64개로 갈라지고, FINAL은 그 part를 모두 읽어 합칩니다."},
   {"t":"운영 입력을 mirroring해 비교하고, 로컬에서는 같은 입력을 재생해 결과가 같은지부터 확인했습니다."},
@@ -81,7 +91,7 @@
   {"t":"유입 채널 화면은 기간 안의 최신 이벤트를 먼저 고르고, 세션 단위로 줄인 뒤 채널 정보를 붙입니다."},
   {"t":"AI 유입 화면은 15분마다 갱신되는 조회용 테이블을 읽고, 갱신이 늦으면 원래 조회로 돌아갑니다."}
 ]'>
-  <figcaption><span class="n">그림 1</span>part가 생기는 원리와 화면별 조회 경로</figcaption>
+  <figcaption><span class="n">그림 2</span>part가 생기는 원리와 화면별 조회 경로</figcaption>
   <div class="dg__canvas">
     <svg viewBox="0 0 728 890" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -339,135 +349,12 @@
             <p>EXPLAIN과 시스템 테이블로 hash 파티션이 조회를 거르지 못한다는 것은 확인했습니다. 하지만 파티션을 없앴을 때 쓰기가 얼마나 가벼워지는지, 그리고 dedup 결과가 그대로인지는 직접 재 봐야 알 수 있었습니다. 원본 이벤트 테이블은 모든 화면이 읽는 곳이라, 바꾼 뒤에 틀린 것을 알면 rollback도 어렵습니다. rollback이 어려운 곳일수록 검증을 두껍게 해야 한다고 생각해, 운영을 바꾸기 전에 실험으로 먼저 답을 내기로 했습니다.</p>
             <p>가설은 한 문장이었습니다. 엔진, sort key, 열, 입력을 모두 같게 두고 파티션 절 하나만 없애면, dedup 결과는 같으면서 쓰기와 병합 비용은 줄어든다는 것입니다. 실험은 로컬 재생, 운영 입력을 mirroring해 받는 Shadow 비교, 운영 화면 쿼리로 새 테이블 후보를 번갈아 실행하는 비교의 세 단계로 쌓았고, 결과가 나온 뒤 기존 테이블과 새 테이블을 나란히 두는 Blue/Green 방식으로 운영 테이블을 교체했습니다.</p>
 
-<figure class="dg" id="dg-ch-ab" style="--dg-min: 560px" data-step-ms="3800"
-  data-idle="위쪽 두 줄은 같은 입력을 나눠 받은 A와 B이고, 아래는 채택 뒤 운영 테이블을 맞바꾼 방식입니다."
-  data-steps='[
-  {"t":"수집 Worker가 운영 queue에 발행한 배치가 성공하면, 같은 메시지를 그대로 Shadow queue에도 넣습니다. mirroring이 실패해도 운영 응답과 ACK는 바뀌지 않습니다.", "d": 4400},
-  {"t":"두 queue는 같은 코드와 설정의 consumer 로직이 받아 A 테이블과 B 테이블에 각각 적재합니다. 두 테이블은 PARTITION BY 절 하나만 다릅니다."},
-  {"t":"같은 시간 구간에서 같은 집계 쿼리로 결과가 같은지부터 대조하고, 그다음 INSERT 지연, part 수, 병합 횟수를 잽니다. 약 9시간 구간에서 활성 part는 A가 1,019개, B가 5개였습니다.", "d": 4600},
-  {"t":"무파티션을 채택한 뒤 운영 서비스 안에 새 테이블을 만들어 시간 순서로 backfill하고, bridge MV로 기존 테이블에 들어오는 행을 새 테이블에도 복사했습니다. 빠진 키와 본문 차이는 0이었습니다.", "d": 4600},
-  {"t":"EXCHANGE TABLES 한 문장으로 기존 테이블과 새 테이블의 이름을 맞바꿨습니다. 같은 문장을 다시 실행하면 원래대로 돌아갑니다."}
-]'>
-  <figcaption><span class="n">그림 2</span>같은 입력으로 A와 B를 비교하고, 이름만 맞바꿔 교체하기</figcaption>
+<figure class="dg scn" id="scn-ch-ab" style="--dg-min: 728px" data-step-ms="4600" data-scenarios='[{"id":"ab","label":"같은 입력으로 A/B 비교","steps":[{"ok":["b-wk","b-ewa","b-a"],"t":["수집 Worker가 운영 queue에 발행한 배치는 평소처럼 A 테이블에 적재됩니다.","A는 운영 테이블 그대로여서 비교의 기준이 됩니다.","운영 경로는 비교 때문에 바꾸지 않습니다."]},{"ok":["b-ewb","b-b"],"t":["발행이 성공한 배치를 같은 메시지 그대로 Shadow queue에도 넣고, 같은 코드와 설정의 consumer가 B 테이블에 적재합니다.","두 테이블이 같은 입력을 받아야 차이를 PARTITION BY 절 하나로 돌릴 수 있습니다.","mirroring이 실패해도 운영 응답과 ACK, retry는 바뀌지 않습니다."]},{"ok":["b-eam","b-ebm","b-ms"],"t":["같은 시간 구간에서 같은 집계 쿼리로 결과가 같은지 먼저 대조하고, 그다음 INSERT 지연, part 수, 병합 횟수를 잽니다. 약 9시간 구간에서 활성 part는 A가 1,019개, B가 5개였습니다.","결과가 다르면 성능 비교가 의미 없어서 일치 확인을 먼저 합니다.","두 서비스의 구성이 달라 이 수치는 방향의 근거로만 쓰고, 몇 배 좋아졌다는 주장에는 쓰지 않았습니다."]}]},{"id":"swap","label":"채택 뒤 테이블 교체","steps":[{"on":["s-old"],"ok":["s-new"],"t":["무파티션을 채택한 뒤 운영 서비스 안에서 기존 테이블 옆에 PARTITION BY 절만 뺀 같은 열 69개짜리 새 테이블을 만들고, 이벤트 시각 7일 구간 17개를 오래된 것부터 backfill합니다.","서비스를 통째로 새로 띄우면 파생 집계를 만드는 MV 19개와 뷰를 모두 다시 써야 하지만, 테이블 단위로 하면 schema가 같아 MV와 조회 코드는 그대로 둘 수 있습니다.","두 테이블의 열 이름 순서가 다르면 전환 스크립트가 멈춥니다."]},{"ok":["s-eob","s-br","s-ebn"],"t":["기존 테이블에 들어오는 행을 새 테이블에도 복사하는 bridge MV를 붙여 ClickHouse 안에서 dual write를 시작합니다.","교체 전에 두 테이블을 같은 상태로 맞춰 두기 위해서입니다.","bridge를 붙이기 전까지 들어온 구간은 26초 만에 다시 채웠습니다."]},{"ok":["s-ek","s-chk"],"t":["기존 테이블의 키 집합과 키별 최신 버전을 기준으로, 새 테이블에서 빠진 키와 본문 차이를 대조합니다. 빠진 키 0, 본문 차이 0이었습니다.","INSERT 도착이 p99 기준 약 10초까지 늦어서 실시간 대조는 구간 끝을 현재보다 60초 앞으로 두었습니다.","열 불일치, 대조 실패, 실시간 대조 불일치 중 하나라도 나오면 교체하지 않고 원본을 그대로 둡니다."]},{"t":["세 대조가 모두 맞은 뒤 9월 3일 EXCHANGE TABLES 한 문장으로 두 테이블의 이름을 맞바꿨습니다.","EXCHANGE 뒤에도 MV가 이름을 따라 새 테이블에서 trigger되는 것을 staging에서 먼저 확인했고, 일반 RENAME은 MV 연결을 끊어 쓰지 않았습니다.","전환은 서비스를 멈추지 않고 끝났습니다."],"ok":["s-ex"]}]},{"id":"back","label":"되돌림 경로","steps":[{"ok":["r-cur","r-e1","r-br","r-e2","r-kept"],"t":["교체 뒤에는 bridge MV가 이름을 따라 방향을 바꿔, 새 원본이 된 테이블에서 옛 테이블로 복사합니다.","그동안 옛 테이블이 최신 상태로 남아 있어 되돌릴 수 있습니다.","되돌릴 수 있는 기간은 late event가 p99 기준 4.3시간, 최대 24시간 늦게 도착하는 것을 보고 72시간으로 잡았습니다."]},{"recover":["s-ex"],"t":["되돌릴 때는 같은 EXCHANGE를 한 번 더 실행하면 끝납니다.","교체와 되돌림이 같은 한 문장이라는 점이 이 방식을 고른 가장 큰 이유였습니다.","EXCHANGE는 idempotent하지 않아 다시 실행하면 원래대로 돌아가므로, 배포 때마다 다시 적용되는 schema migration에는 넣지 않고 한 번만 실행했습니다."]},{"fail":["r-e1","r-e2"],"t":["교체 직후 bridge 때문에 매 flush가 옛 테이블의 64개 파티션에도 기록되어 INSERT p95가 10.4초로 나빠져, bridge를 계획보다 일찍 걷었습니다.","대조가 모두 통과해 되돌릴 가능성이 낮다고 보았습니다.","이때부터 되돌리려면 EXCHANGE를 다시 실행한 뒤 bridge를 걷은 이후 구간을 backfill해야 합니다."]}]}]'>
+  <figcaption><span class="n">그림 3</span>같은 입력으로 A와 B를 비교하고, 이름만 맞바꿔 교체하고, 되돌리기</figcaption>
   <div class="dg__canvas">
-    <svg viewBox="0 0 728 728" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <marker id="dg-ch-ab-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
-      </defs>
-
-      <!-- 왼쪽 줄 이름 -->
-      <text class="m" x="24" y="58">입력</text>
-      <text class="m" x="24" y="180">queue</text>
-      <text class="m" x="24" y="274">consumer</text>
-      <text class="m" x="24" y="368">저장</text>
-      <text class="m" x="24" y="492">측정</text>
-      <text class="m" x="24" y="624">교체</text>
-
-      <!-- 같은 입력 -->
-      <g data-step="1">
-        <rect class="box" x="244" y="24" width="240" height="60" rx="8"/>
-        <text class="t" x="258" y="50">수집 Worker</text>
-        <text class="s" x="258" y="70">같은 이벤트 배치</text>
-      </g>
-      <path id="dg-ch-ab-fa" class="flow" data-step="1" fill="none" d="M320 84C320 112 232 112 232 140" marker-end="url(#dg-ch-ab-ah)"/>
-      <path id="dg-ch-ab-fb" class="flow" data-step="1" fill="none" d="M408 84C408 112 560 112 560 140" marker-end="url(#dg-ch-ab-ah)"/>
-      <text class="m" x="574" y="104">실패해도 운영은 그대로</text>
-
-      <!-- 두 경로 구역 -->
-      <rect class="zone" x="96" y="116" width="272" height="294" rx="10"/>
-      <text class="m" x="110" y="134">A: 운영 경로</text>
-      <rect class="zone" x="424" y="116" width="272" height="294" rx="10"/>
-      <text class="m" x="438" y="134">B: Shadow 경로</text>
-
-      <!-- queue -->
-      <g data-step="1,2">
-        <rect class="box" x="112" y="146" width="240" height="60" rx="8"/>
-        <text class="t" x="126" y="172">운영 queue</text>
-        <text class="s" x="126" y="192">main queue</text>
-      </g>
-      <g data-step="1,2">
-        <rect class="box" x="440" y="146" width="240" height="60" rx="8" style="stroke-dasharray: 4 3"/>
-        <text class="t" x="454" y="172">Shadow queue</text>
-        <text class="s" x="454" y="192">발행 성공 뒤 같은 배치 mirroring</text>
-      </g>
-      <path id="dg-ch-ab-a1" class="flow" data-step="2" fill="none" d="M232 206V234" marker-end="url(#dg-ch-ab-ah)"/>
-      <path id="dg-ch-ab-b1" class="flow" data-step="2" fill="none" d="M560 206V234" marker-end="url(#dg-ch-ab-ah)"/>
-
-      <!-- 같은 consumer 로직 -->
-      <g data-step="2">
-        <rect class="box" x="112" y="240" width="240" height="60" rx="8"/>
-        <text class="t" x="126" y="266">consumer 로직</text>
-        <text class="s" x="126" y="286">운영 consumer</text>
-      </g>
-      <g data-step="2">
-        <rect class="box" x="440" y="240" width="240" height="60" rx="8" style="stroke-dasharray: 4 3"/>
-        <text class="t" x="454" y="266">consumer 로직</text>
-        <text class="s" x="454" y="286">운영과 같은 코드와 설정</text>
-      </g>
-      <path id="dg-ch-ab-a2" class="flow" data-step="2" fill="none" d="M232 300V328" marker-end="url(#dg-ch-ab-ah)"/>
-      <path id="dg-ch-ab-b2" class="flow" data-step="2" fill="none" d="M560 300V328" marker-end="url(#dg-ch-ab-ah)"/>
-
-      <!-- 두 테이블 -->
-      <g data-step="2,3">
-        <rect class="box" x="112" y="334" width="240" height="60" rx="8"/>
-        <text class="t" x="126" y="360">A 테이블</text>
-        <text class="s" x="126" y="380">hash 파티션 64개</text>
-      </g>
-      <g data-step="2,3">
-        <rect class="box" x="440" y="334" width="240" height="60" rx="8" style="stroke-dasharray: 4 3"/>
-        <text class="t" x="454" y="360">B 테이블</text>
-        <text class="s" x="454" y="380">무파티션, 별도 ClickHouse 서비스</text>
-      </g>
-      <text class="m" x="396" y="430" text-anchor="middle">차이는 PARTITION BY 절 하나</text>
-
-      <!-- 측정 -->
-      <path id="dg-ch-ab-ma" class="flow" data-step="3" fill="none" d="M232 394V440" marker-end="url(#dg-ch-ab-ah)"/>
-      <path id="dg-ch-ab-mb" class="flow" data-step="3" fill="none" d="M560 394V440" marker-end="url(#dg-ch-ab-ah)"/>
-      <g data-step="3,4">
-        <rect class="box" x="112" y="446" width="568" height="84" rx="8"/>
-        <text class="t" x="126" y="472">같은 시간 구간, 같은 집계 쿼리로 측정</text>
-        <text class="s" x="126" y="492">결과 일치 확인이 먼저, 그다음 INSERT 지연, part 수, 병합 횟수</text>
-      </g>
-      <g data-step="3">
-        <rect class="chip-r" x="126" y="502" width="124" height="20" rx="5"/>
-        <text class="chip-t" x="134" y="516">INSERT 예외 0 대 0</text>
-        <rect class="chip-r" x="260" y="502" width="172" height="20" rx="5"/>
-        <text class="chip-t" x="268" y="516">활성 part 1,019개 대 5개</text>
-      </g>
-
-      <!-- 채택 뒤 운영 교체 -->
-      <rect class="zone" x="96" y="556" width="600" height="148" rx="10"/>
-      <text class="m" x="110" y="574">채택 뒤, 운영 서비스 안에서 교체</text>
-      <path id="dg-ch-ab-ad" class="flow" data-step="4" fill="none" d="M560 530V584" marker-end="url(#dg-ch-ab-ah)"/>
-      <text class="m" x="572" y="547">무파티션 채택</text>
-      <g data-step="4,5">
-        <rect class="box" x="112" y="590" width="220" height="60" rx="8"/>
-        <text class="t" x="126" y="616">기존 테이블</text>
-        <text class="s" x="126" y="636">hash 파티션 64개</text>
-      </g>
-      <g data-step="4,5">
-        <rect class="box" x="460" y="590" width="220" height="60" rx="8"/>
-        <text class="t" x="474" y="616">새 테이블</text>
-        <text class="s" x="474" y="636">같은 열 69개, 파티션 없음</text>
-      </g>
-      <path id="dg-ch-ab-ex" class="flow" data-step="5" fill="none" d="M338 620H454" marker-start="url(#dg-ch-ab-ah)" marker-end="url(#dg-ch-ab-ah)"/>
-      <text class="m" x="396" y="610" text-anchor="middle">EXCHANGE TABLES</text>
-      <text class="m" x="396" y="640" text-anchor="middle">다시 실행하면 원위치</text>
-      <path id="dg-ch-ab-br" class="flow edge--dash" data-step="4" fill="none" d="M222 650V676H570V656" marker-end="url(#dg-ch-ab-ah)"/>
-      <text class="m" x="396" y="694" text-anchor="middle">bridge MV dual write, 키 대조 차이 0</text>
-
-      <!-- 움직이는 점 -->
-      <circle class="pkt" r="4" data-step="1"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#dg-ch-ab-fa"/></animateMotion></circle>
-      <circle class="pkt" r="4" data-step="1"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#dg-ch-ab-fb"/></animateMotion></circle>
-      <circle class="pkt" r="4" data-step="2"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-ch-ab-a1"/></animateMotion></circle>
-      <circle class="pkt" r="4" data-step="2"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-ch-ab-b1"/></animateMotion></circle>
-      <circle class="pkt" r="4" data-step="2"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-ch-ab-a2"/></animateMotion></circle>
-      <circle class="pkt" r="4" data-step="2"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-ch-ab-b2"/></animateMotion></circle>
-      <circle class="pkt" r="4" data-step="3"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-ch-ab-ma"/></animateMotion></circle>
-      <circle class="pkt" r="4" data-step="3"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-ch-ab-mb"/></animateMotion></circle>
-      <circle class="pkt" r="4" data-step="4"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-ch-ab-ad"/></animateMotion></circle>
-      <circle class="pkt" r="4" data-step="4"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#dg-ch-ab-br"/></animateMotion></circle>
-      <circle class="pkt" r="4" data-step="5"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#dg-ch-ab-ex"/></animateMotion></circle>
+    <svg role="img" viewBox="0 0 728 410" xmlns="http://www.w3.org/2000/svg" aria-label="A/B 비교와 테이블 교체 시나리오 도식. 같은 입력을 운영 테이블 A와 Shadow 테이블 B가 나눠 받아 비교하고, 채택 뒤에는 기존 테이블과 새 테이블의 이름을 EXCHANGE TABLES 한 문장으로 맞바꾸며, 되돌릴 때는 같은 문장을 한 번 더 실행합니다.">
+      <defs><marker id="scn-ch-ab-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker></defs>
+      <g id="b-wk" data-scn="ab"><rect class="box" x="24" y="150" width="170" height="84" rx="8"/><text class="t" x="38" y="176">수집 Worker</text><text class="s" x="38" y="196">같은 이벤트 배치</text></g><g id="b-a" data-scn="ab"><rect class="box" x="279" y="30" width="170" height="84" rx="8"/><text class="t" x="293" y="56">A 테이블</text><text class="s" x="293" y="76">hash 파티션 64개</text><text class="s" x="293" y="94">운영 queue로 적재</text></g><g id="b-b" data-scn="ab"><rect class="box" x="279" y="270" width="170" height="84" rx="8"/><text class="t" x="293" y="296">B 테이블</text><text class="s" x="293" y="316">파티션 없음</text><text class="s" x="293" y="334">별도 ClickHouse 서비스</text></g><g id="b-ms" data-scn="ab"><rect class="box" x="534" y="150" width="170" height="84" rx="8"/><text class="t" x="548" y="176">측정</text><text class="s" x="548" y="196">같은 시간 구간,</text><text class="s" x="548" y="214">같은 집계 쿼리</text></g><path id="b-ewa" class="edge" data-scn="ab" d="M194 176H236V72H277" marker-end="url(#scn-ch-ab-ah)"/><text class="s" data-scn="ab" x="230" y="128" text-anchor="end">운영 경로</text><path id="b-ewb" class="edge" data-scn="ab" d="M194 208H236V312H277" marker-end="url(#scn-ch-ab-ah)"/><text class="s" data-scn="ab" x="230" y="278" text-anchor="end">성공한 뒤 mirroring</text><path id="b-eam" class="edge" data-scn="ab" d="M449 72H492V176H532" marker-end="url(#scn-ch-ab-ah)"/><path id="b-ebm" class="edge" data-scn="ab" d="M449 312H492V208H532" marker-end="url(#scn-ch-ab-ah)"/><text class="s" data-scn="ab" x="364" y="386" text-anchor="middle">둘의 차이는 파티션 절 하나</text><g id="s-old" data-scn="swap"><rect class="box" x="24" y="30" width="170" height="84" rx="8"/><text class="t" x="38" y="56">기존 테이블</text><text class="s" x="38" y="76">hash 파티션 64개</text></g><g id="s-br" data-scn="swap"><rect class="box" x="279" y="30" width="170" height="84" rx="8"/><text class="t" x="293" y="56">bridge MV</text><text class="s" x="293" y="76">새 행을 새 테이블에도</text><text class="s" x="293" y="94">복사</text></g><g id="s-new" data-scn="swap"><rect class="box" x="534" y="30" width="170" height="84" rx="8"/><text class="t" x="548" y="56">새 테이블</text><text class="s" x="548" y="76">같은 열 69개</text><text class="s" x="548" y="94">파티션 없음</text></g><g id="s-chk" data-scn="swap"><rect class="box" x="279" y="170" width="170" height="84" rx="8"/><text class="t" x="293" y="196">키 대조</text><text class="s" x="293" y="216">빠진 키와</text><text class="s" x="293" y="234">본문 차이를 확인</text></g><path id="s-eob" class="edge" data-scn="swap" d="M194 72H277" marker-end="url(#scn-ch-ab-ah)"/><path id="s-ebn" class="edge" data-scn="swap" d="M449 72H532" marker-end="url(#scn-ch-ab-ah)"/><path id="s-ek" class="edge" data-scn="swap" d="M364 114V168" marker-end="url(#scn-ch-ab-ah)"/><path id="s-ex" class="edge" data-scn="swap back" d="M109 116V300H619V118" marker-start="url(#scn-ch-ab-ah)" marker-end="url(#scn-ch-ab-ah)"/><text class="s" data-scn="swap" x="364" y="292" text-anchor="middle">이름 맞바꾸기</text><text class="s" data-scn="swap" x="364" y="322" text-anchor="middle">같은 문장을 다시 실행하면 원위치</text><g id="r-kept" data-scn="back"><rect class="box" x="24" y="30" width="170" height="84" rx="8"/><text class="t" x="38" y="56">옛 테이블</text><text class="s" x="38" y="76">다른 이름으로 보관</text><text class="s" x="38" y="94">72시간 되돌림 가능</text></g><g id="r-br" data-scn="back"><rect class="box" x="279" y="30" width="170" height="84" rx="8"/><text class="t" x="293" y="56">bridge MV</text><text class="s" x="293" y="76">새 원본에서</text><text class="s" x="293" y="94">옛 테이블로 복사</text></g><g id="r-cur" data-scn="back"><rect class="box" x="534" y="30" width="170" height="84" rx="8"/><text class="t" x="548" y="56">운영 테이블</text><text class="s" x="548" y="76">교체 뒤 새 원본</text><text class="s" x="548" y="94">MV와 조회 코드 그대로</text></g><path id="r-e1" class="edge" data-scn="back" d="M532 72H451" marker-end="url(#scn-ch-ab-ah)"/><path id="r-e2" class="edge" data-scn="back" d="M277 72H196" marker-end="url(#scn-ch-ab-ah)"/><text class="s" data-scn="back" x="364" y="292" text-anchor="middle">같은 문장을 한 번 더 실행</text>
     </svg>
   </div>
 </figure>

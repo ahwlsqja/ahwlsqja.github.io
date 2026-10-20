@@ -74,129 +74,65 @@
             <p>기존 환경은 Cloud Run의 API, 인증, 권한 서비스와 관리형 ClickHouse로 이뤄져 있습니다. 새 환경은 GKE에 같은 서비스를 띄우고 ClickHouse는 관리형 대신 직접 운영하는 클러스터로 뒀습니다. 이 클러스터는 레플리카 사이의 replication log를 관리하는 Keeper 3대와 데이터를 담는 레플리카 2대로 이뤄져 있고, 이들을 한 리전 안의 서로 다른 존 3곳에 나눠 놓았습니다.</p>
             <p>기존 환경과 새 환경 사이에는 전환 스위치를 두 개 뒀습니다. API 트래픽은 로드밸런서가 두 환경에 요청을 나눠 보내는 backend 가중치로 옮기고, ClickHouse 읽기는 어느 쪽에서 읽을지 정하는 설정값 하나로 옮깁니다. 두 스위치 모두 rollback 절차를 먼저 확인한 뒤에 새 환경 쪽으로 넘겼습니다. 관리형 서비스 해지처럼 되돌릴 수 없는 단계는 맨 마지막에 뒀습니다.</p>
 
-            <figure class="dg" id="dg-platform" data-step-ms="3600" style="--dg-min: 560px" data-steps='[
-              {"t":"기존 환경(Cloud Run)을 그대로 두고 새 환경(GKE)에 5%를 보냈습니다. 기존 환경으로 rollback되는지 확인한 뒤 100%로 옮겼습니다."},
-              {"t":"새 환경의 운영 리소스 60여 개를 Git으로 가져와 diff가 0인 것을 확인한 뒤, 배포를 Argo CD에 맡기고 CI의 클러스터 쓰기 권한을 회수했습니다.", "d": 4200},
-              {"t":"새 환경의 ClickHouse는 Keeper 3대와 레플리카 2대를 존 a, b, c에 나눠, 존 하나가 빠져도 Keeper 2대와 레플리카 1대가 남게 했습니다.", "d": 4200},
-              {"t":"읽기를 옮기기 전에 레플리카마다 매일 GCS로 백업하고, 스테이징과 운영에서 복구 리허설을 했습니다."},
-              {"t":"과거 데이터는 청크마다 dedup 토큰을 붙여 backfill해, retry해도 중복되지 않게 했습니다. 다시 읽어 원본과 맞은 청크만 완료로 기록했습니다.", "d": 4200},
-              {"t":"읽기 경로를 설정값 하나로 새 환경으로 옮겼습니다. 되돌릴 수 없는 관리형 ClickHouse 해지는 맨 마지막에 했습니다.", "d": 4200}
-            ]'>
-              <figcaption><span class="n">그림 1</span>기존 환경을 남겨 둔 채 새 환경으로 옮긴 순서</figcaption>
-              <div class="dg__canvas">
-                <svg viewBox="0 0 728 672" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <marker id="dg-platform-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
-                  </defs>
+            <figure class="dg scn" id="scn-pf" data-step-ms="1600" style="--dg-min: 728px" data-scenarios='[{"id":"normal","label":"정상 흐름","steps":[{"on":["n-user","e-ul","n-lb","e-lo","n-old","e-ln","n-cfg","e-co","l-co"],"ok":["n-new"],"t":["기존 환경을 그대로 두고 GKE에 새 환경을 나란히 세웠고, 로드밸런서 가중치는 0으로 둬 사용자 요청은 아직 기존 환경이 받습니다.","실제 트래픽을 보내지 않은 채 새 환경의 서비스가 모두 정상인지 먼저 보려는 설계입니다.","새 환경에 문제가 있어도 사용자 요청은 기존 환경이 계속 받습니다."]},{"on":["n-new"],"ok":["e-nb","n-bak","l-nb"],"t":["읽기를 옮기기 전에 레플리카마다 매일 GCS로 올린 백업을 스테이징과 운영에서 실제로 복원해 봅니다.","직접 운영에서는 백업이 있는 것과 복구되는 것이 다른 문제여서, 1.95 GiB 데이터로 스테이징은 약 2분, 운영은 약 30초 걸리는 것을 확인하고 넘어갔습니다.","첫 스테이징 시도는 설정 문제로 실패했고, 고쳐 다시 돌려 테이블별 행 수와 hash가 원본과 같은 것을 확인했습니다."]},{"on":["n-lb","e-lo","n-old"],"ok":["e-ul","e-ln","l-ln-n","n-new"],"t":["인증 서버 요청의 5%만 새 환경으로 보내고, 기존 환경으로 한 번 되돌려 rollback이 되는지 확인합니다.","한 번도 실행해 보지 않은 rollback은 실제로 될지 알 수 없어서, 위험이 가장 작은 5% 시점에 먼저 실행해 봤습니다.","이 단계에서 스테이징 DB의 연결 한도가 모자란 문제가 드러나 5% 전환을 멈추고 새 환경의 Pod를 내려 연결을 돌려받았습니다."]},{"on":["n-lb","n-old"],"ok":["e-ul","e-ln","l-ln-n","n-new"],"t":["되돌렸을 때와 전부 옮겼을 때 각각 요청 12건을 보냈고 모두 정상으로 응답한 뒤, 요청 전부를 새 환경으로 옮깁니다.","rollback이 되는 것을 이미 확인했기 때문에 가중치를 끝까지 올릴 수 있었습니다.","기존 환경은 지우지 않고 남겨 두었으므로 이상이 보이면 가중치를 되돌릴 수 있습니다."]},{"on":["n-old"],"ok":["n-cfg","e-cn","l-cn","n-new"],"t":["이어서 ClickHouse 읽기를 설정값 하나로 새 환경으로 옮기고, 되돌릴 수 없는 관리형 서비스 해지는 맨 마지막에 합니다.","읽기 전환은 설정값 하나라 되돌릴 수 있지만 해지는 되돌릴 수 없어서 가장 뒤에 뒀습니다.","읽기에 문제가 생기면 같은 값을 되돌리고 재시작하면 기존 환경으로 돌아갑니다."]}]},{"id":"rollback","label":"새 환경 이상 시 rollback","steps":[{"ok":["n-user","e-ul","n-lb","e-ln","n-new","e-lo","n-old"],"on":["n-cfg","e-co","l-co","e-cn","l-cn"],"t":["요청의 일부를 새 환경으로 보내는 중이고, 기존 환경도 그대로 떠 있습니다.","되돌릴 곳이 남아 있어야 rollback이 가능해서 기존 환경을 지우지 않았습니다.","새 환경에 문제가 보이면 다음 단계처럼 멈춥니다."]},{"fail":["n-new","e-ln","l-ln-r"],"on":["n-lb"],"t":["새 환경에서 문제가 보이면 새 환경으로 가는 흐름을 멈춥니다.","기존 환경이 살아 있어서 흐름을 멈춰도 사용자 요청을 받을 곳이 있습니다.","실제로 전환 당일 새벽, 스테이징 DB의 동시 연결 25개가 모두 차서 권한 서비스가 503을 돌려줬고 5% 전환을 멈췄습니다."]},{"fail":["n-new","e-ln"],"recover":["e-lo","l-lo-r","n-old","n-cfg","e-co","l-co"],"t":["로드밸런서 가중치를 기존 환경으로 되돌리고, ClickHouse 읽기는 설정값을 되돌려 재시작합니다.","되돌리는 방법이 가중치와 설정값뿐이라, 이 방법이 실제로 되는지 5% 시점에 먼저 실행해 봤습니다.","기존 환경으로 되돌린 뒤 보낸 요청 12건은 모두 정상으로 응답했습니다."]},{"ok":["n-user","e-ul","n-lb","e-ln","n-new"],"on":["n-old"],"t":["원인을 고친 뒤 새 환경으로 다시 일부 요청을 보냅니다. 서비스별 connection pool 크기를 나눠 정해 쓰이는 연결이 15개로 내려온 것을 확인하고 같은 날 오후에 5%를 보냈습니다.","DB를 재시작해 연결 한도를 올리는 대신, 새 환경과 기존 환경이 한 DB를 함께 쓰는 구조에 맞춰 연결을 나눴습니다.","다시 문제가 생기면 같은 방법으로 가중치를 되돌립니다."]}]}]'>
+  <figcaption><span class="n">그림 1</span>Blue/Green 이관: 새 환경 병행에서 전체 전환까지, 이상 시 rollback</figcaption>
+  <div class="dg__canvas">
+    <svg viewBox="0 0 728 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="기존 환경을 두고 새 환경으로 트래픽과 ClickHouse 읽기를 옮기는 흐름과 이상 시 rollback 경로">
+      <defs>
+        <marker id="scn-pf-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
+      </defs>
+      <g id="n-user"><rect class="box" x="24" y="24" width="110" height="60" rx="8"/><text class="t" x="38" y="50">사용자</text><text class="s" x="38" y="70">API 요청</text></g>
+      <g id="n-lb"><rect class="box" x="294" y="24" width="140" height="60" rx="8"/><text class="t" x="308" y="50">로드밸런서</text><text class="s" x="308" y="70">가중치로 나눔</text></g>
+      <g id="n-old"><rect class="box" x="24" y="135" width="220" height="84" rx="8"/><text class="t" x="38" y="161">기존 환경</text><text class="s" x="38" y="181">Cloud Run, 관리형 ClickHouse</text><text class="s" x="38" y="199">해지는 맨 마지막에</text></g>
+      <g id="n-new"><rect class="box" x="484" y="135" width="220" height="84" rx="8"/><text class="t" x="498" y="161">새 환경 (GKE)</text><text class="s" x="498" y="181">API, 인증, 권한</text><text class="s" x="498" y="199">ClickHouse 직접 운영</text></g>
+      <g id="n-cfg"><rect class="box" x="294" y="270" width="140" height="60" rx="8"/><text class="t" x="308" y="296">읽기 설정값</text><text class="s" x="308" y="316">ClickHouse 읽을 곳</text></g>
+      <g id="n-bak"><rect class="box" x="484" y="266" width="220" height="60" rx="8"/><text class="t" x="498" y="292">복구 리허설</text><text class="s" x="498" y="312">백업을 실제로 복원해 확인</text></g>
+      <path id="e-ul" class="edge" d="M134 54H288" marker-end="url(#scn-pf-ah)"/>
+      <path id="e-lo" class="edge" d="M320 84V110H134V129" marker-end="url(#scn-pf-ah)"/>
+      <path id="e-ln" class="edge" d="M408 84V110H594V129" marker-end="url(#scn-pf-ah)"/>
+      <path id="e-co" class="edge" d="M320 270V248H134V225" marker-end="url(#scn-pf-ah)"/>
+      <path id="e-cn" class="edge" d="M408 270V248H594V225" marker-end="url(#scn-pf-ah)"/>
+      <path id="e-nb" class="edge" d="M680 219V260" marker-end="url(#scn-pf-ah)"/>
+      <text id="l-lo-r" class="s" data-scn="rollback" x="150" y="102">이상 시 되돌림</text>
+      <text id="l-ln-n" class="s" data-scn="normal" x="450" y="102">비율을 올려 보냄</text>
+      <text id="l-ln-r" class="s" data-scn="rollback" x="450" y="102">이상 시 멈춤</text>
+      <text id="l-co" class="s" x="150" y="240">읽을 곳 지정</text>
+      <text id="l-cn" class="s" x="450" y="240">읽을 곳 지정</text>
+      <text id="l-nb" class="s" data-scn="normal" x="672" y="246" text-anchor="end">백업 복원</text>
+    </svg>
+  </div>
+</figure>
 
-                  <!-- 구역 -->
-                  <rect class="zone" x="208" y="24" width="496" height="104" rx="10"/>
-                  <text class="m" x="220" y="42">배포 경로</text>
-                  <text class="m" x="692" y="42" text-anchor="end">스테이징은 자동 반영, 운영은 확인 뒤 sync</text>
+            <p>ClickHouse는 stateful 시스템이라, 쓰기 성공 조건과 노드 하나가 빠졌을 때의 동작을 따로 그렸습니다.</p>
 
-                  <rect class="zone-fill" x="208" y="172" width="496" height="386" rx="10"/>
-                  <rect class="zone" x="208" y="172" width="496" height="386" rx="10"/>
-                  <text class="m" x="220" y="190">새 환경, GKE 리전</text>
-                  <rect class="zone" x="220" y="284" width="152" height="258" rx="8"/>
-                  <rect class="zone" x="380" y="284" width="152" height="258" rx="8"/>
-                  <rect class="zone" x="540" y="284" width="152" height="258" rx="8"/>
-                  <text class="m" x="232" y="301">존 a</text>
-                  <text class="m" x="392" y="301">존 b</text>
-                  <text class="m" x="552" y="301">존 c</text>
-
-                  <rect class="zone" x="24" y="274" width="160" height="178" rx="10"/>
-                  <text class="m" x="36" y="291">기존 환경</text>
-
-                  <!-- 1. 트래픽 -->
-                  <g data-step="1"><rect class="box" x="36" y="54" width="136" height="60" rx="8"/><text class="t" x="50" y="89">사용자</text></g>
-                  <g data-step="1"><rect class="box" x="36" y="200" width="136" height="60" rx="8"/><text class="t" x="50" y="226">로드밸런서</text><text class="s" x="50" y="246">가중치로 나눔</text></g>
-                  <g data-step="1"><rect class="box" x="36" y="300" width="136" height="60" rx="8"/><text class="t" x="50" y="326">Cloud Run</text><text class="s" x="50" y="346">API, 인증, 권한</text></g>
-                  <g data-step="1,2,6"><rect class="box" x="552" y="200" width="140" height="60" rx="8"/><text class="t" x="566" y="226">API, 인증, 권한</text><text class="s" x="566" y="246">GKE로 옮김</text></g>
-
-                  <path class="flow" data-step="1" fill="none" d="M104 114V194" marker-end="url(#dg-platform-ah)"/>
-                  <path class="flow" data-step="1" fill="none" d="M104 260V294" marker-end="url(#dg-platform-ah)"/>
-                  <path id="dg-platform-p1" class="flow" data-step="1" fill="none" d="M172 230H546" marker-end="url(#dg-platform-ah)"/>
-                  <g data-step="1">
-                    <rect class="chip-r" x="282" y="204" width="28" height="18" rx="4"/><text class="chip-t" x="296" y="217" text-anchor="middle">5%</text>
-                    <text class="m" x="320" y="217" text-anchor="middle">→</text>
-                    <rect class="chip-r" x="330" y="204" width="54" height="18" rx="4"/><text class="chip-t" x="357" y="217" text-anchor="middle">0% 롤백</text>
-                    <text class="m" x="394" y="217" text-anchor="middle">→</text>
-                    <rect class="chip-r" x="404" y="204" width="38" height="18" rx="4"/><text class="chip-t" x="423" y="217" text-anchor="middle">100%</text>
-                  </g>
-                  <text class="m" data-step="1" x="359" y="250" text-anchor="middle">롤백과 100% 때 요청 12건 모두 정상</text>
-
-                  <!-- 2. 배포 경로 -->
-                  <g data-step="2"><rect class="box" x="221" y="54" width="92" height="60" rx="8"/><text class="t" x="235" y="80">CI</text><text class="s" x="235" y="100">이미지 빌드</text></g>
-                  <g data-step="2"><rect class="box" x="347" y="54" width="92" height="60" rx="8"/><text class="t" x="361" y="80">Kargo</text><text class="s" x="361" y="100">버전 갱신</text></g>
-                  <g data-step="2"><rect class="box" x="473" y="54" width="92" height="60" rx="8"/><text class="t" x="487" y="80">Git 저장소</text><text class="s" x="487" y="100">배포 기준</text></g>
-                  <g data-step="2"><rect class="box" x="599" y="54" width="92" height="60" rx="8"/><text class="t" x="613" y="80">Argo CD</text><text class="s" x="613" y="100">Git대로 반영</text></g>
-
-                  <path class="flow" data-step="2" fill="none" d="M313 84H341" marker-end="url(#dg-platform-ah)"/>
-                  <path class="flow" data-step="2" fill="none" d="M439 84H467" marker-end="url(#dg-platform-ah)"/>
-                  <path class="flow" data-step="2" fill="none" d="M565 84H593" marker-end="url(#dg-platform-ah)"/>
-                  <path id="dg-platform-p2" class="flow" data-step="2" fill="none" d="M672 114V194" marker-end="url(#dg-platform-ah)"/>
-                  <path class="flow edge--dash" data-step="2" fill="none" d="M519 172V120" marker-end="url(#dg-platform-ah)"/>
-                  <text class="m" data-step="2" x="527" y="151">60여 개 가져와 diff 0</text>
-                  <g data-step="2">
-                    <path class="edge edge--dash" fill="none" d="M267 114V166" marker-end="url(#dg-platform-ah)"/>
-                    <path class="edge bad" fill="none" stroke-width="2" d="M261 140L273 152M273 140L261 152"/>
-                    <text class="m" x="281" y="151">클러스터 쓰기 권한 회수</text>
-                  </g>
-
-                  <!-- 3. 존 나누기 -->
-                  <g data-step="3"><rect class="box" x="234" y="312" width="100" height="60" rx="8"/><text class="t" x="248" y="338">Keeper 1</text><text class="s" x="248" y="358">복제 기록</text></g>
-                  <g data-step=""><rect class="box" x="394" y="312" width="100" height="60" rx="8"/><text class="t" x="408" y="338">Keeper 2</text><text class="s" x="408" y="358">복제 기록</text></g>
-                  <g data-step="3"><rect class="box" x="554" y="312" width="100" height="60" rx="8"/><text class="t" x="568" y="338">Keeper 3</text><text class="s" x="568" y="358">복제 기록</text></g>
-                  <path class="edge" data-step="3" fill="none" d="M334 342H394"/>
-                  <path class="edge" data-step="3" fill="none" d="M494 342H554"/>
-                  <g data-step="3">
-                    <text class="m" x="234" y="398">Keeper 3대 중 2대가</text>
-                    <text class="m" x="234" y="412">살아 있으면 쓰기를 받음</text>
-                  </g>
-                  <g data-step="3">
-                    <path class="edge bad" fill="none" stroke-width="2" d="M459 292L467 300M467 292L459 300"/>
-                    <text class="m" x="524" y="301" text-anchor="end" style="fill: var(--bad)">장애 가정</text>
-                  </g>
-
-                  <g data-step="3-6"><rect class="box" x="234" y="466" width="120" height="60" rx="8"/><text class="t" x="248" y="492">레플리카 1</text><text class="s" x="248" y="512">ClickHouse</text></g>
-                  <g data-step="4-6"><rect class="box" x="394" y="466" width="120" height="60" rx="8"/><text class="t" x="408" y="492">레플리카 2</text><text class="s" x="408" y="512">ClickHouse</text></g>
-
-                  <!-- 4. 백업 -->
-                  <g data-step="4"><rect class="box" x="234" y="588" width="236" height="60" rx="8"/><text class="t" x="248" y="614">GCS 백업</text><text class="s" x="248" y="634">레플리카마다 매일</text></g>
-                  <g data-step="4"><rect class="box" x="504" y="588" width="188" height="60" rx="8"/><text class="t" x="518" y="614">복구 리허설</text><text class="s" x="518" y="634">스테이징 약 2분, 운영 약 30초</text></g>
-                  <path class="flow" data-step="4" fill="none" d="M294 526V582" marker-end="url(#dg-platform-ah)"/>
-                  <path class="flow" data-step="4" fill="none" d="M454 526V582" marker-end="url(#dg-platform-ah)"/>
-                  <path class="flow edge--dash" data-step="4" fill="none" d="M470 618H498" marker-end="url(#dg-platform-ah)"/>
-                  <text class="m" data-step="4" x="504" y="578">1.95 GiB 기준</text>
-
-                  <!-- 5. backfill -->
-                  <g data-step="5"><rect class="box" x="36" y="376" width="136" height="60" rx="8"/><text class="t" x="50" y="402">ClickHouse</text><text class="s" x="50" y="422">관리형 서비스</text></g>
-                  <g data-step="5"><rect class="box" x="36" y="466" width="136" height="60" rx="8"/><text class="t" x="50" y="492">Backfill</text><text class="s" x="50" y="512">청크마다 dedup 토큰</text></g>
-                  <path class="flow" data-step="5" fill="none" d="M104 436V460" marker-end="url(#dg-platform-ah)"/>
-                  <path id="dg-platform-p3" class="flow" data-step="5" fill="none" d="M172 488H228" marker-end="url(#dg-platform-ah)"/>
-                  <path class="flow edge--dash" data-step="5" fill="none" d="M228 510H178" marker-end="url(#dg-platform-ah)"/>
-                  <text class="m" data-step="5" x="36" y="546">다시 읽어 맞으면 완료</text>
-                  <path class="flow" data-step="5" fill="none" d="M360 496H388" marker-start="url(#dg-platform-ah)" marker-end="url(#dg-platform-ah)"/>
-                  <g data-step="5">
-                    <text class="m" x="394" y="440">서로 복제,</text>
-                    <text class="m" x="394" y="454">둘 다 받아야 성공</text>
-                  </g>
-
-                  <!-- 6. 읽기 전환과 해지 -->
-                  <path class="flow" data-step="6" fill="none" d="M674 260V496H520" marker-end="url(#dg-platform-ah)"/>
-                  <g data-step="6">
-                    <text class="m" x="552" y="466">읽기 경로 전환</text>
-                    <text class="m" x="552" y="480">설정값 하나로</text>
-                  </g>
-                  <g data-step="6"><rect class="chip-r" x="134" y="387" width="30" height="18" rx="4"/><text class="chip-t" x="149" y="400" text-anchor="middle">해지</text></g>
-
-                  <!-- 움직이는 점 3개 -->
-                  <circle class="pkt" r="4" data-step="1"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#dg-platform-p1"/></animateMotion></circle>
-                  <circle class="pkt" r="4" data-step="2"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-platform-p2"/></animateMotion></circle>
-                  <circle class="pkt" r="4" data-step="5"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-platform-p3"/></animateMotion></circle>
-                </svg>
-              </div>
-            </figure>
+            <figure class="dg scn" id="scn-ch" data-step-ms="1600" style="--dg-min: 728px" data-scenarios='[{"id":"write","label":"정상 쓰기","steps":[{"ok":["n-kf","e-kr1","e-kr2","n-r1","n-r2","l-q","e-rr","l-rr"],"t":["Kafka에 쌓인 데이터를 두 레플리카에 쓰고, 두 곳이 모두 받아야 성공으로 처리합니다.","한 곳만 받아도 성공으로 보면 레플리카끼리 데이터가 서로 달라질 수 있어서, 쓰기 성공에 필요한 레플리카 수를 2로 정했습니다.","둘 중 하나라도 받지 못하면 성공으로 치지 않습니다."]},{"on":["n-r1","n-r2"],"ok":["e-rk1","e-rk2","l-rk1","l-rk2","n-k1","n-k2","n-k3"],"t":["레플리카 사이의 복제 기록은 Keeper 3대가 관리합니다.","Keeper는 3대 중 2대가 살아 있어야 쓰기를 받고, 존마다 1대씩 둬서 존 하나가 빠져도 1대만 잃습니다.","처음 적용했을 때 Keeper 3대가 한 존에 몰렸던 문제는 존 분산을 필수 조건으로 바꿔 고쳤습니다."]}]},{"id":"replica","label":"복제 노드 한 대 장애","steps":[{"ok":["n-kf","e-kr1","e-kr2","n-r1","n-r2","e-rr","l-rr","e-rk1","e-rk2","l-rk1","l-rk2","n-k1","n-k2","n-k3","l-q"],"t":["정상일 때는 두 레플리카가 모두 받아야 쓰기가 성공합니다.","레플리카 수와 쓰기 성공에 필요한 수가 맞지 않으면, Kafka에서 ClickHouse로 넣는 적재 consumer가 아예 시작하지 않게 했습니다.","다음 단계에서 레플리카 한 대가 빠지면 어떻게 되는지 봅니다."]},{"on":["n-kf","n-r1","e-kr1","n-k1","n-k2","n-k3"],"fail":["n-r2","e-kr2","e-rr","e-rk2","l-q"],"t":["레플리카 한 대가 빠지면 두 곳이 모두 받아야 한다는 조건을 채울 수 없어 쓰기가 멈춥니다.","쓰기가 멈추는 쪽이 레플리카끼리 데이터가 서로 달라지는 쪽보다 복구하기 쉬워서 이렇게 골랐습니다.","레플리카 한 대가 빠지거나 rolling restart를 하는 동안 적재가 멈추는 것이 이 선택의 대가입니다."]},{"fail":["n-r2","e-kr2","e-rr","e-rk2"],"on":["n-r1","e-kr1","n-kf","l-pile"],"t":["멈춘 동안 들어온 데이터는 ClickHouse 앞단의 Kafka에 쌓여 있습니다.","쓰기를 받아 주는 대신 앞단에서 기다리게 해서, 데이터가 어긋난 채 들어가는 일을 피합니다.","그 동안 데이터 적재는 멈춰 있습니다."]}]},{"id":"keeper","label":"존 하나 장애","steps":[{"ok":["n-kf","e-kr1","e-kr2","n-r1","n-r2","e-rr","l-rr","e-rk1","e-rk2","l-rk1","l-rk2","n-k1","n-k2","n-k3","l-q"],"t":["Keeper 3대가 존 a, b, c에 한 대씩 있고, 레플리카 2대는 서로 다른 존에 있습니다.","복제 기록을 관리하는 Keeper를 존마다 한 대씩 둔 것은 존 하나가 통째로 빠지는 경우를 견디기 위해서입니다.","다음 단계에서 존 하나가 빠졌을 때를 봅니다."]},{"on":["n-kf","e-kr1","n-r1","n-k1","n-k3"],"ok":["e-rk1","l-rk1"],"fail":["n-k2","n-r2","e-kr2","e-rr","e-rk2","l-q"],"t":["존 b가 빠져 Keeper 1대와 레플리카 1대를 잃어도 Keeper 2대와 레플리카 1대가 남습니다.","Keeper는 3대 중 2대가 살아 있으면 쓰기를 받기 때문에, 남은 2대로 복제 기록 관리가 이어집니다.","두 레플리카가 모두 받아야 한다는 조건 때문에 쓰기는 멈추고, 그 동안 들어온 데이터는 Kafka에 쌓입니다."]}]}]'>
+  <figcaption><span class="n">그림 2</span>ClickHouse 쓰기 성공 조건과 노드 장애</figcaption>
+  <div class="dg__canvas">
+    <svg viewBox="0 0 728 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kafka에서 두 레플리카로 쓰고 Keeper 3대가 복제 기록을 관리하는 구조와 노드 하나가 빠졌을 때의 동작">
+      <defs>
+        <marker id="scn-ch-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
+      </defs>
+      <rect class="zone" x="520" y="30" width="184" height="290" rx="10"/>
+      <text class="s" x="532" y="52">Keeper 3대, 존마다 1대</text>
+      <g id="n-kf"><rect class="box" x="24" y="150" width="140" height="70" rx="8"/><text class="t" x="38" y="176">Kafka</text><text class="s" x="38" y="196">적재 대기열</text></g>
+      <g id="n-r1"><rect class="box" x="270" y="50" width="160" height="70" rx="8"/><text class="t" x="284" y="76">레플리카 1</text><text class="s" x="284" y="96">ClickHouse, 존 a</text></g>
+      <g id="n-r2"><rect class="box" x="270" y="250" width="160" height="70" rx="8"/><text class="t" x="284" y="276">레플리카 2</text><text class="s" x="284" y="296">ClickHouse, 존 b</text></g>
+      <g id="n-k1"><rect class="box" x="536" y="70" width="152" height="56" rx="8"/><text class="t" x="550" y="96">Keeper 1</text><text class="s" x="550" y="116">존 a</text></g>
+      <g id="n-k2"><rect class="box" x="536" y="152" width="152" height="56" rx="8"/><text class="t" x="550" y="178">Keeper 2</text><text class="s" x="550" y="198">존 b</text></g>
+      <g id="n-k3"><rect class="box" x="536" y="234" width="152" height="56" rx="8"/><text class="t" x="550" y="260">Keeper 3</text><text class="s" x="550" y="280">존 c</text></g>
+      <path id="e-kr1" class="edge" d="M164 170H217V85H264" marker-end="url(#scn-ch-ah)"/>
+      <path id="e-kr2" class="edge" d="M164 200H217V285H264" marker-end="url(#scn-ch-ah)"/>
+      <path id="e-rr" class="edge" d="M350 126V244" marker-start="url(#scn-ch-ah)" marker-end="url(#scn-ch-ah)"/>
+      <path id="e-rk1" class="edge" d="M430 85H514" marker-end="url(#scn-ch-ah)"/>
+      <path id="e-rk2" class="edge" d="M430 285H514" marker-end="url(#scn-ch-ah)"/>
+      <text id="l-rr" class="s" x="358" y="189">서로 복제</text>
+      <text id="l-rk1" class="s" x="436" y="77">복제 기록</text>
+      <text id="l-rk2" class="s" x="436" y="277">복제 기록</text>
+      <g id="l-q"><text class="s" x="230" y="166">두 레플리카가</text><text class="s" x="230" y="184">모두 받아야</text><text class="s" x="230" y="202">성공으로 처리</text></g>
+      <text id="l-pile" class="s" data-scn="replica" x="24" y="242">멈춘 동안 쌓임</text>
+    </svg>
+  </div>
+</figure>
 
             <ol class="steps">
               <li>

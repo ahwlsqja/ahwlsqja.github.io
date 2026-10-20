@@ -74,112 +74,53 @@
           <section id="d-process" aria-labelledby="d-process-h">
             <h2 class="sechead" id="d-process-h"><span class="sechead__no">02</span><span class="sechead__title">해결 과정</span><span class="sechead__rule" aria-hidden="true"></span></h2>
 
-<figure class="dg" id="dg-elt" style="--dg-min: 560px" data-step-ms="3200" data-steps='[
-  {"t":"SDK는 retry할 때도 같은 ID를 쓰고, 수집 게이트웨이가 30분 안에 이미 본 ID를 KV로 거릅니다."},
-  {"t":"수집 게이트웨이가 main queue에 넣으면, 적재 consumer가 R2에 원본 기록을 남긴 뒤 원본 테이블에 넣습니다."},
-  {"t":"원본 테이블은 그대로 두고, 현재 상태 테이블, 세션 집계 테이블, 조회용 뷰 순서로 집계 단위를 나눠 읽습니다."},
-  {"t":"적재가 실패하면 3번 retry하고 DLQ에서 1번 다시 보낸 뒤, 최종 보관 queue가 받은 다음에만 ack합니다.", "d": 4200},
-  {"t":"장애가 풀린 뒤 임시 consumer가 최종 보관 queue에서 10건만 먼저 main queue로 보내 확인하고, 나머지를 보냅니다.", "d": 4200},
-  {"t":"장애 구간의 R2 원본 기록 ID와 원본 테이블 ID를 양쪽으로 맞춰 보고, 한쪽에만 있는 ID가 0인 것을 확인합니다.", "d": 4200}
-]'>
-  <figcaption><span class="n">그림 1</span>수집부터 조회까지, 실패와 복구 경로</figcaption>
+<figure class="dg scn" id="el" data-step-ms="4200" data-scenarios='[{"id":"normal","label":"정상 수집","steps":[{"ok":["el-n-sdk","el-e-sg","el-e-sg-l0","el-n-gw"],"t":["SDK가 이벤트를 수집 게이트웨이로 보냅니다. retry할 때도 이벤트 ID와 발생 시각을 바꾸지 않습니다.","그래야 뒤에서 같은 이벤트인지 알아볼 수 있습니다.","SDK는 세션 시작 이벤트를 게이트웨이가 202 응답에 담아 돌려준 것만 지워서, queue에 들어가지 못한 이벤트를 먼저 지우는 일이 없습니다."]},{"ok":["el-n-gw","el-e-gk","el-e-gk-l0","el-n-kv"],"t":["수집 게이트웨이가 30분 안에 이미 본 ID를 KV로 한 번 거릅니다.","중복은 한 곳에서 모두 막을 수 없다고 보고, 게이트웨이, 적재 consumer, ClickHouse의 세 곳에서 나눠 거릅니다.","30분을 넘겨 다시 온 이벤트는 이 단계를 통과합니다."]},{"ok":["el-e-gq","el-e-gq-l0","el-n-q","el-e-qc","el-e-qc-l0","el-n-cons"],"t":["게이트웨이가 이벤트를 main queue에 넣고, 적재 consumer가 꺼내 갑니다.","queue는 같은 메시지를 다시 전달할 수 있어서, 중복이 올 수 있다는 전제로 뒤쪽을 설계했습니다.","적재 consumer는 자기 처리 범위 안에서 생긴 중복을 한 번 더 거릅니다."]},{"ok":["el-n-cons","el-e-cr","el-e-cr-l0","el-n-r2"],"t":["적재 consumer가 ClickHouse에 넣기 직전에 R2에 원본 사본을 30일 동안 남깁니다.","ack한 뒤에 쓰기가 실패하면 그 메시지는 queue에도 DLQ에도 없어서, 되살릴 원본은 이 사본뿐입니다.","R2에 쓰다 실패해도 적재는 그대로 진행하기 때문에, 사본에도 없는 이벤트는 이 방법으로 찾을 수 없습니다."]},{"ok":["el-n-cons","el-e-cc","el-e-cc-l0","el-n-ch"],"t":["적재 consumer가 ClickHouse의 원본 테이블에 이벤트를 넣습니다.","원본 테이블은 들어온 이벤트를 그대로 보관해 언제든 다시 읽을 수 있게 하고, 집계는 현재 상태, 세션 집계, 조회용 뷰로 나눠 읽습니다.","같은 이벤트가 두 번 들어와도 ReplacingMergeTree가 병합 때 정리하고, 정확한 값이 필요한 곳은 FINAL이나 argMax로 읽습니다."]}]},{"id":"before","label":"바꾸기 전, 메시지를 잃음","steps":[{"ok":["el-n-q","el-e-qc","el-e-qc-l0","el-n-cons"],"fail":["el-e-cc","el-e-cc-l0","el-n-ch"],"t":["2026년 5월, 들어온 데이터의 schema가 테이블과 맞지 않아 ClickHouse 쓰기가 실패했고, 적재가 약 9시간 멈췄습니다.","실패가 HTTP 오류로 드러나지 않아서 경보가 울리지 않았습니다.","멈춘 동안 데이터 일부를 잃었습니다."]},{"fail":["el-e-retry","el-e-retry-l0","el-e-dlq","el-e-dlq-l0","el-n-dlq"],"t":["실패한 메시지는 main queue에서 3번 retry한 뒤 DLQ로 갑니다.","일시적인 실패에는 다시 시도할 기회를 주려는 설계였습니다.","schema 불일치 같은 영구 실패는 retry를 더 해도 풀리지 않습니다."]},{"fail":["el-n-dlq","el-e-resend","el-e-resend-l0"],"t":["DLQ consumer가 메시지를 main queue로 한 번 다시 보내고, 그 메시지를 ack해서 DLQ에서 지웠습니다.","ack는 메시지를 책임질 다음 단계가 정해졌다는 뜻이어야 하는데, 이 흐름에서는 그 약속이 지켜지지 않았습니다.","다시 보낸 메시지가 또 실패해도 DLQ에는 남아 있지 않았습니다."]},{"fail":["el-e-final","el-e-final-l0","el-n-final"],"t":["다시 보낸 메시지가 또 실패해도 최종 보관 queue로 가지 않았고, 최종 보관 queue는 설정만 돼 있고 비어 있었습니다.","메시지를 책임지는 곳이 사라졌기 때문입니다.","그래서 다시 보낸 뒤에도 실패한 메시지는 어디에도 남지 않았습니다."]}]},{"id":"after","label":"바꾼 뒤, 보관 확인 뒤 ack","steps":[{"ok":["el-n-q","el-e-qc","el-e-qc-l0","el-n-cons"],"fail":["el-e-cc","el-e-cc-l0","el-e-retry","el-e-retry-l0","el-e-dlq","el-e-dlq-l0","el-n-dlq"],"t":["적재가 실패하면 main queue에서 3번 retry하고, 그래도 안 되면 DLQ로 보냅니다.","일시적인 실패는 retry로 넘기고, 영구적인 실패는 뒤에서 따로 모으려는 구조입니다.","이 단계의 실패는 아직 어느 곳에서도 사라지지 않았습니다."]},{"ok":["el-e-resend","el-e-resend-l0"],"t":["DLQ에서는 main queue로 1번만 다시 보냅니다.","일시적인 실패에는 기회를 한 번 더 주고, 영구적인 실패가 main queue를 계속 막지 않게 하려는 것입니다.","다시 보낸 메시지가 또 실패하면 다음 단계로 넘어갑니다."]},{"recover":["el-e-final","el-e-final-l0","el-n-final"],"t":["또 실패한 메시지는 꺼내 가는 consumer가 없는 최종 보관 queue에 14일 동안 둡니다.","영구적인 실패를 한곳에 모아 사람이 확인하게 하려는 것입니다.","보관 기간 14일이 지나면 메시지를 잃기 때문에, 들어온 지 얼마나 지났는지도 따로 감시합니다."]},{"recover":["el-n-dlq","el-e-final","el-e-final-l0","el-n-final"],"t":["최종 보관 queue가 메시지를 받은 것을 확인한 뒤에만 DLQ에서 ack합니다.","ack는 메시지를 책임질 다음 단계가 정해졌다는 뜻이어야 하기 때문입니다.","받기 전에 ack하면 그 메시지를 책임지는 곳이 사라집니다."]}]},{"id":"recover","label":"복구와 R2 대조","steps":[{"ok":["el-n-final"],"fail":["el-e-cc","el-e-cc-l0","el-n-ch"],"t":["2026년 6월, ClickHouse 인스턴스가 종료되어 적재가 4시간 가까이 멈췄고 최종 보관 queue에 3천 건 넘게 쌓였습니다.","실패한 메시지를 최종 보관 queue에 14일 동안 두기 때문에 그 안에는 되살릴 수 있습니다.","14일이 지나면 그대로 잃는 상황이었습니다."]},{"recover":["el-n-tmp","el-e-pull","el-e-pull-l0","el-n-final"],"t":["최종 보관 queue에는 꺼내 가는 consumer가 없어서, 장애가 풀린 뒤 임시 pull consumer를 붙여 10건만 먼저 꺼냅니다.","처음부터 전부 보내지 않고 일부로 먼저 확인하려는 것입니다.","복구할 때 임시 consumer를 붙이는 절차는 별도 runbook으로 만들었습니다."]},{"recover":["el-n-tmp","el-e-tmain","el-e-tmain-l0","el-n-q"],"t":["10건을 main queue로 보내 모두 적재되는 것을 확인하고, 나머지를 같은 방식으로 보냅니다.","main queue로 보내는 데 성공한 뒤에만 ack해서, 보내는 도중에 잃지 않게 했습니다.","보내기에 실패하면 ack하지 않으므로 메시지는 최종 보관 queue에 남습니다."]},{"recover":["el-n-cons","el-e-cr","el-e-cr-l0","el-n-r2","el-e-cc","el-e-cc-l0","el-n-ch","el-e-cmp","el-e-cmp-l0"],"t":["queue가 비었다는 것은 ClickHouse에 모두 들어갔다는 뜻이 아니라서, 장애 구간의 ClickHouse 이벤트 ID와 R2 원본 기록의 ID를 맞춰 봤습니다.","R2 원본 기록은 ClickHouse에 넣기 직전에 남기는 사본이라서, ack 뒤에 잃은 것도 이 사본으로만 되살릴 수 있습니다.","양쪽 ID 3,900여 개가 같았고 한쪽에만 있는 ID는 없었으며, 이 확인은 그 장애 구간에 한정한 것입니다."]}]}]'>
+  <figcaption><span class="n">그림 1</span>수집부터 적재까지, 실패와 복구 경로</figcaption>
   <div class="dg__canvas">
-    <svg viewBox="0 0 728 590" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 728 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="브라우저 SDK에서 수집 게이트웨이, main queue, 적재 consumer, R2 원본 기록, ClickHouse로 가는 정상 경로와, 적재 실패 때 메시지를 잃었던 흐름, 바꾼 뒤의 흐름, 복구와 대조 과정을 시나리오별로 보여 줍니다.">
       <defs>
-        <marker id="dg-elt-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
-        <marker id="dg-elt-ahb" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" style="fill: var(--bad)" d="M0 0L8 4L0 8z"/></marker>
-        <marker id="dg-elt-ahw" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" style="fill: var(--warn)" d="M0 0L8 4L0 8z"/></marker>
+        <marker id="el-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
       </defs>
-
-      <!-- 구역 -->
-      <rect class="zone" fill="none" x="24" y="120" width="124" height="96" rx="10"/>
-      <text class="m" x="34" y="138">브라우저</text>
-      <rect class="zone" fill="none" x="160" y="24" width="402" height="304" rx="10"/>
-      <text class="m" x="174" y="44">엣지 (Cloudflare)</text>
-      <rect class="zone" fill="none" x="582" y="120" width="122" height="366" rx="10"/>
-      <text class="m" x="592" y="138">ClickHouse</text>
-
-      <!-- 2026.10 전환 표시 -->
-      <rect style="fill: var(--surface-3); stroke: var(--line-2)" x="292" y="31" width="128" height="19" rx="9.5"/>
-      <text class="m" x="356" y="44" text-anchor="middle">2026.10 Kafka로 전환</text>
-
-      <!-- 제어 (항상 회색) -->
-      <g style="opacity: .72">
-        <rect class="zone" fill="none" x="24" y="226" width="124" height="200" rx="10"/>
-        <text class="m" x="34" y="244">제어</text>
-        <rect class="box" style="fill: var(--surface)" x="34" y="252" width="104" height="60" rx="8"/>
-        <text class="t" x="48" y="278">outbox</text>
-        <text class="s" x="48" y="298">한 방향 전달</text>
-        <rect class="box" style="fill: var(--surface)" x="34" y="352" width="104" height="60" rx="8"/>
-        <text class="t" x="48" y="378">PostgreSQL</text>
-        <text class="s" x="48" y="398">설정, 권한</text>
-        <path class="edge" fill="none" d="M86 352V318" marker-end="url(#dg-elt-ah)"/>
-        <path class="edge" fill="none" d="M138 282H168" marker-end="url(#dg-elt-ah)"/>
-      </g>
-
-      <!-- 초기 이관 (지금은 돌지 않는 경로) -->
-      <g style="opacity: .5">
-        <rect class="zone" fill="none" x="160" y="436" width="402" height="98" rx="10"/>
-        <text class="m" x="174" y="454">초기 이관 (2026.04)</text>
-        <rect class="box" style="fill: var(--surface); stroke-dasharray: 4 3" x="174" y="462" width="186" height="60" rx="8"/>
-        <text class="t" x="188" y="488">기존 PostgreSQL 데이터</text>
-        <text class="s" x="188" y="508">추출, 마스킹, 변환</text>
-        <rect class="box" style="fill: var(--surface); stroke-dasharray: 4 3" x="396" y="462" width="96" height="60" rx="8"/>
-        <text class="t" x="410" y="488">Parquet</text>
-        <text class="s" x="410" y="508">한 번 적재</text>
-        <path class="edge edge--dash" fill="none" d="M360 492H390" marker-end="url(#dg-elt-ah)"/>
-        <path class="edge edge--dash" fill="none" d="M492 492H572V196H586" marker-end="url(#dg-elt-ah)"/>
-      </g>
-
-      <!-- 노드 -->
-      <g data-step="1"><rect class="box" x="34" y="148" width="104" height="60" rx="8"/><text class="t" x="48" y="174">SDK</text><text class="s" x="48" y="194">같은 ID로 retry</text></g>
-      <g data-step="1,2"><rect class="box" x="174" y="148" width="116" height="60" rx="8"/><text class="t" x="188" y="174">수집 게이트웨이</text><text class="s" x="188" y="194">Workers</text></g>
-      <g data-step="1"><rect class="box" x="174" y="252" width="116" height="60" rx="8"/><text class="t" x="188" y="278">KV</text><text class="s" x="188" y="298">30분 안 같은 ID</text></g>
-      <g data-step="2,4,5"><rect class="box" x="324" y="148" width="84" height="60" rx="8"/><text class="t" x="338" y="174">main queue</text><text class="s" x="338" y="194">retry 3번</text></g>
-      <g data-step="2"><rect class="box" x="442" y="148" width="108" height="60" rx="8"/><text class="t" x="456" y="174">적재 consumer</text><text class="s" x="456" y="194">queue에서 꺼내 적재</text></g>
-      <g data-step="2,6"><rect class="box" x="442" y="52" width="108" height="60" rx="8"/><text class="t" x="456" y="78">R2 원본 기록</text><text class="s" x="456" y="98">적재 직전, 30일</text></g>
-      <g data-step="4"><rect class="box" x="324" y="252" width="84" height="60" rx="8"/><text class="t" x="338" y="278">DLQ</text><text class="s" x="338" y="298">1번 더 보냄</text></g>
-      <g data-step="4,5"><rect class="box" x="442" y="252" width="108" height="60" rx="8"/><text class="t" x="456" y="278">보관 queue</text><text class="s" x="456" y="298">소비자 없음, 14일</text></g>
-      <g data-step="5"><rect class="box" style="stroke-dasharray: 4 3" x="294" y="352" width="120" height="60" rx="8"/><text class="t" x="308" y="378">임시 consumer</text><text class="s" x="308" y="398">10건 먼저 확인</text></g>
-
-      <g data-step="2,3,6"><rect class="box" x="592" y="148" width="102" height="60" rx="8"/><text class="t" x="606" y="174">원본 테이블</text><text class="s" x="606" y="194">그대로 보관</text></g>
-      <g data-step="3"><rect class="box" x="592" y="236" width="102" height="60" rx="8"/><text class="t" x="606" y="262">현재 상태</text><text class="s" x="606" y="282">키마다 최신 값</text></g>
-      <g data-step="3"><rect class="box" x="592" y="324" width="102" height="60" rx="8"/><text class="t" x="606" y="350">세션 집계</text><text class="s" x="606" y="370">세션 단위</text></g>
-      <g data-step="3"><rect class="box" x="592" y="412" width="102" height="60" rx="8"/><text class="t" x="606" y="438">조회용 뷰</text><text class="s" x="606" y="458">기간, 정렬</text></g>
-      <g data-step="3"><rect class="box" x="592" y="506" width="102" height="60" rx="8"/><text class="t" x="606" y="541">대시보드 API</text></g>
-
-      <!-- 평소 경로 (굵게) -->
-      <path id="dg-elt-e1" class="flow" fill="none" style="stroke-width: 2.25" data-step="1" d="M138 178H168" marker-end="url(#dg-elt-ah)"/>
-      <path id="dg-elt-e3" class="flow edge--dash" fill="none" data-step="1" d="M232 208V246" marker-end="url(#dg-elt-ah)"/>
-      <path id="dg-elt-e4" class="flow" fill="none" style="stroke-width: 2.25" data-step="2" d="M290 178H318" marker-end="url(#dg-elt-ah)"/>
-      <path id="dg-elt-e6a" class="flow" fill="none" style="stroke-width: 2.25" data-step="2" d="M408 178H436" marker-end="url(#dg-elt-ah)"/>
-      <path id="dg-elt-e6b" class="flow" fill="none" style="stroke-width: 2.25" data-step="2" d="M550 178H586" marker-end="url(#dg-elt-ah)"/>
-      <path id="dg-elt-e7" class="flow edge--dash" fill="none" data-step="2" d="M496 148V118" marker-end="url(#dg-elt-ah)"/>
-      <path id="dg-elt-e9a" class="flow" fill="none" style="stroke-width: 2.25" data-step="3" d="M643 208V230" marker-end="url(#dg-elt-ah)"/>
-      <path id="dg-elt-e9b" class="flow" fill="none" style="stroke-width: 2.25" data-step="3" d="M643 296V318" marker-end="url(#dg-elt-ah)"/>
-      <path id="dg-elt-e9c" class="flow" fill="none" style="stroke-width: 2.25" data-step="3" d="M643 384V406" marker-end="url(#dg-elt-ah)"/>
-      <path id="dg-elt-e9d" class="flow" fill="none" style="stroke-width: 2.25" data-step="3" d="M643 472V500" marker-end="url(#dg-elt-ah)"/>
-
-      <!-- 실패 경로 -->
-      <path id="dg-elt-e8a" class="flow edge--dash bad" fill="none" data-step="4" d="M390 208V246" marker-end="url(#dg-elt-ahb)"/>
-      <path id="dg-elt-e8b" class="flow edge--dash bad" fill="none" data-step="4" d="M346 252V214" marker-end="url(#dg-elt-ahb)"/>
-      <path id="dg-elt-e8c" class="flow edge--dash bad" fill="none" data-step="4" d="M408 282H436" marker-end="url(#dg-elt-ahb)"/>
-
-      <!-- 복구와 대조 -->
-      <path id="dg-elt-e12a" class="flow warn" fill="none" data-step="5" d="M472 312V382H420" marker-end="url(#dg-elt-ahw)"/>
-      <path id="dg-elt-e12b" class="flow warn" fill="none" data-step="5" d="M307 352V196H318" marker-end="url(#dg-elt-ahw)"/>
-      <path id="dg-elt-e13" class="flow edge--dash warn" fill="none" style="stroke-width: 2.5" data-step="6" d="M556 82H666V142" marker-start="url(#dg-elt-ahw)" marker-end="url(#dg-elt-ahw)"/>
-      <text class="m" x="704" y="40" text-anchor="end">2026.06 장애 구간</text>
-      <text class="m" style="fill: var(--warn)" x="704" y="55" text-anchor="end">ID 3,900여 개 양쪽 대조</text>
-      <text class="m" style="fill: var(--warn)" x="704" y="70" text-anchor="end">한쪽에만 있는 ID 0</text>
-
-      <!-- 움직이는 점 -->
-      <circle class="pkt" r="4" data-step="1"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-elt-e1"/></animateMotion></circle>
-      <circle class="pkt" r="4" data-step="2"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#dg-elt-e6b"/></animateMotion></circle>
-      <circle class="pkt" r="4" data-step="5"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#dg-elt-e12b"/></animateMotion></circle>
+      <g id="el-n-sdk" data-scn="normal"><rect class="box" x="24" y="50" width="170" height="60" rx="8"/><text class="t" x="38" y="76">브라우저 SDK</text><text class="s" x="38" y="96">retry도 같은 ID</text></g>
+      <g id="el-n-gw" data-scn="normal"><rect class="box" x="279" y="50" width="170" height="60" rx="8"/><text class="t" x="293" y="76">수집 게이트웨이</text><text class="s" x="293" y="96">Workers</text></g>
+      <g id="el-n-kv" data-scn="normal"><rect class="box" x="279" y="160" width="170" height="60" rx="8"/><text class="t" x="293" y="186">KV</text><text class="s" x="293" y="206">30분 안 본 ID</text></g>
+      <g id="el-n-q"><rect class="box" x="534" y="50" width="170" height="60" rx="8"/><text class="t" x="548" y="76">main queue</text><text class="s" x="548" y="96">retry 3번</text></g>
+      <g id="el-n-cons"><rect class="box" x="534" y="160" width="170" height="60" rx="8"/><text class="t" x="548" y="186">적재 consumer</text><text class="s" x="548" y="206">queue에서 꺼내 적재</text></g>
+      <g id="el-n-r2" data-scn="normal recover"><rect class="box" x="279" y="270" width="170" height="60" rx="8"/><text class="t" x="293" y="296">R2 원본 기록</text><text class="s" x="293" y="316">적재 직전, 30일</text></g>
+      <g id="el-n-ch"><rect class="box" x="534" y="270" width="170" height="60" rx="8"/><text class="t" x="548" y="296">ClickHouse</text><text class="s" x="548" y="316">원본 테이블</text></g>
+      <g id="el-n-dlq" data-scn="before after"><rect class="box" x="279" y="50" width="170" height="60" rx="8"/><text class="t" x="293" y="76">DLQ</text><text class="s" x="293" y="96">1번만 다시 보냄</text></g>
+      <g id="el-n-final" data-scn="before after recover"><rect class="box" x="279" y="160" width="170" height="60" rx="8"/><text class="t" x="293" y="186">최종 보관 queue</text><text class="s" data-scn="after recover" x="293" y="206">consumer 없음, 14일</text><text class="s" data-scn="before" x="293" y="206">설정만 있고 비어 있음</text></g>
+      <g id="el-n-tmp" data-scn="recover"><rect class="box" x="24" y="50" width="170" height="60" rx="8"/><text class="t" x="38" y="76">임시 consumer</text><text class="s" x="38" y="96">10건 먼저 확인</text></g>
+      <path id="el-e-sg" class="edge" data-scn="normal" d="M194 80H273" marker-end="url(#el-ah)"/>
+      <text id="el-e-sg-l0" class="s" data-scn="normal" text-anchor="middle" x="233.5" y="72">전송</text>
+      <path id="el-e-gq" class="edge" data-scn="normal" d="M449 80H528" marker-end="url(#el-ah)"/>
+      <text id="el-e-gq-l0" class="s" data-scn="normal" text-anchor="middle" x="488.5" y="72">넣기</text>
+      <path id="el-e-gk" class="edge" data-scn="normal" d="M364 110V154" marker-end="url(#el-ah)"/>
+      <text id="el-e-gk-l0" class="s" data-scn="normal" x="372" y="138">30분 안 본 ID 거름</text>
+      <path id="el-e-qc" class="edge" d="M650 110V154" marker-end="url(#el-ah)"/>
+      <text id="el-e-qc-l0" class="s" x="658" y="138">꺼내 적재</text>
+      <path id="el-e-cr" class="edge" data-scn="normal recover" d="M575 220V245H364V264" marker-end="url(#el-ah)"/>
+      <text id="el-e-cr-l0" class="s" data-scn="normal recover" text-anchor="middle" x="470" y="236">먼저 사본 남김</text>
+      <path id="el-e-cc" class="edge" d="M650 220V264" marker-end="url(#el-ah)"/>
+      <text id="el-e-cc-l0" class="s" x="658" y="246">쓰기</text>
+      <path id="el-e-retry" class="edge" data-scn="before after" d="M590 160V116" marker-end="url(#el-ah)"/>
+      <text id="el-e-retry-l0" class="s" data-scn="before after" text-anchor="end" x="582" y="138">retry 3번</text>
+      <path id="el-e-dlq" class="edge" data-scn="before after" d="M528 68H455" marker-end="url(#el-ah)"/>
+      <text id="el-e-dlq-l0" class="s" data-scn="before after" text-anchor="middle" x="491.5" y="60">3번 실패</text>
+      <path id="el-e-resend" class="edge" data-scn="before after" d="M455 92H528" marker-end="url(#el-ah)"/>
+      <text id="el-e-resend-l0" class="s" data-scn="before after" text-anchor="middle" x="491.5" y="106">1번 재전송</text>
+      <path id="el-e-final" class="edge" data-scn="before after" d="M364 110V154" marker-end="url(#el-ah)"/>
+      <text id="el-e-final-l0" class="s" data-scn="before after" x="372" y="138">또 실패하면</text>
+      <path id="el-e-cmp" class="edge" data-scn="recover" d="M455 300H528" marker-start="url(#el-ah)" marker-end="url(#el-ah)"/>
+      <text id="el-e-cmp-l0" class="s" data-scn="recover" text-anchor="middle" x="491.5" y="292">ID 대조</text>
+      <path id="el-e-pull" class="edge" data-scn="recover" d="M279 190H109V116" marker-end="url(#el-ah)"/>
+      <text id="el-e-pull-l0" class="s" data-scn="recover" x="117" y="166">10건 먼저 꺼냄</text>
+      <path id="el-e-tmain" class="edge" data-scn="recover" d="M109 50V26H619V48" marker-end="url(#el-ah)"/>
+      <text id="el-e-tmain-l0" class="s" data-scn="recover" text-anchor="middle" x="364" y="19">main queue로 보냄</text>
     </svg>
   </div>
 </figure>
+
 
             <h3>1. 같은 이벤트가 여러 번 온다고 보고 테이블을 네 단계로 나눴습니다</h3>
             <p>ClickHouse 테이블은 원본 테이블, 현재 상태 테이블, 세션 집계 테이블, 조회용 뷰의 네 단계로 나눴고, 단계마다 집계 단위가 다릅니다. 원본 테이블은 들어온 이벤트를 그대로 보관해 언제든 다시 읽을 수 있게 했습니다. 현재 상태 테이블은 키마다 argMax 함수로 가장 최근 값을 골라 읽습니다. 세션 집계 테이블은 방문 세션 하나를 한 행으로 정리하고, 조회용 뷰는 대시보드가 기간을 골라 정렬된 결과를 읽어 가는 마지막 단계입니다.</p>

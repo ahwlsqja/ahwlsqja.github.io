@@ -421,3 +421,347 @@
     if (Math.abs(dx) > 40) show(page + (dx < 0 ? 1 : -1));
   });
 })();
+
+/* =====================================================================
+   6. 시나리오 스테퍼  figure.dg.scn[data-scenarios]
+   사용법: scenario-README.md. 기존 figure.dg[data-steps]와 독립이다.
+   ===================================================================== */
+(function () {
+  'use strict';
+  var doc = document;
+  var NS = 'http://www.w3.org/2000/svg';
+  var reduceMq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+  var KINDS = [['on', 'sc-neutral'], ['ok', 'sc-ok'], ['fail', 'sc-fail'], ['recover', 'sc-recover']];
+  var STATE_LABEL = { neutral: '진행', ok: '정상', fail: '실패', recover: '복구' };
+
+  function el(tag, cls, text) {
+    var n = doc.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function list(v) { return Array.isArray(v) ? v : []; }
+
+  function Scenario(fig, index) {
+    var data;
+    try { data = JSON.parse(fig.getAttribute('data-scenarios') || '[]'); } catch (e) { data = []; }
+    var svg = fig.querySelector('svg');
+    if (!svg || !Array.isArray(data)) return;
+    data = data.filter(function (s) { return s && Array.isArray(s.steps) && s.steps.length; });
+    if (!data.length) return;
+
+    var uid = fig.id || ('scn' + (index + 1));
+    if (!fig.id) fig.id = uid;
+    var stepMs = parseInt(fig.getAttribute('data-step-ms'), 10) || 1400;
+
+    // 캔버스
+    var canvas = svg.parentNode;
+    if (!canvas.classList || !canvas.classList.contains('dg__canvas')) {
+      var wrap = el('div', 'dg__canvas');
+      svg.parentNode.insertBefore(wrap, svg);
+      wrap.appendChild(svg);
+      canvas = wrap;
+    }
+    if (!svg.hasAttribute('role')) svg.setAttribute('role', 'img');
+    var cap0 = fig.querySelector('figcaption');
+    if (cap0 && !svg.hasAttribute('aria-labelledby') && !svg.hasAttribute('aria-label')) {
+      if (!cap0.id) cap0.id = uid + '-cap';
+      svg.setAttribute('aria-labelledby', cap0.id);
+    }
+
+    // 관리 대상 요소: 어느 단계에서든 id로 언급된 것
+    var managed = {};
+    data.forEach(function (sc) {
+      sc.steps.forEach(function (st) {
+        KINDS.forEach(function (k) {
+          list(st[k[0]]).forEach(function (id) {
+            if (!managed[id]) {
+              var n = doc.getElementById(id);
+              if (n && fig.contains(n)) managed[id] = n;
+            }
+          });
+        });
+      });
+    });
+    var scopedEls = Array.prototype.slice.call(svg.querySelectorAll('[data-scn]'));
+
+    // 탭
+    var tabs = [];
+    var tabBar = null;
+    if (data.length > 1) {
+      tabBar = el('div', 'scn__tabs');
+      tabBar.setAttribute('role', 'tablist');
+      tabBar.setAttribute('aria-label', '시나리오');
+      data.forEach(function (sc, i) {
+        var b = el('button', 'scn__tab', sc.label || ('시나리오 ' + (i + 1)));
+        b.type = 'button';
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-controls', uid);
+        b.id = uid + '-tab' + i;
+        b.addEventListener('click', function () { selectScenario(i, true); });
+        tabs.push(b);
+        tabBar.appendChild(b);
+      });
+      canvas.parentNode.insertBefore(tabBar, canvas);
+    }
+
+    // 컨트롤 바
+    var bar = el('div', 'dg__bar scn__bar');
+    var ctl = el('div', 'scn__ctl');
+    ctl.setAttribute('role', 'group');
+    ctl.setAttribute('aria-label', '단계 조작');
+    function mk(label) { var b = el('button', 'scn__btn', label); b.type = 'button'; b.setAttribute('aria-controls', uid); return b; }
+    var bFirst = mk('처음'), bPrev = mk('이전'), bNext = mk('다음'), bPlay = mk('재생');
+    bPlay.setAttribute('aria-pressed', 'false');
+    [bFirst, bPrev, bNext, bPlay].forEach(function (b) { ctl.appendChild(b); });
+    var count = el('span', 'dg__count');
+    count.setAttribute('aria-hidden', 'true');
+    var chip = el('span', 'scn__chip');
+    chip.setAttribute('aria-hidden', 'true');
+    bar.appendChild(ctl); bar.appendChild(count); bar.appendChild(chip);
+    var prog = el('div', 'dg__progress');
+    prog.setAttribute('aria-hidden', 'true');
+    bar.appendChild(prog);
+    canvas.parentNode.insertBefore(bar, canvas.nextSibling);
+
+    // 캡션 (aria-live)
+    var cap = el('div', 'scn__cap');
+    cap.setAttribute('aria-live', 'polite');
+    cap.setAttribute('aria-atomic', 'true');
+    bar.parentNode.insertBefore(cap, bar.nextSibling);
+
+    // 단계 목록 (정적으로 읽는 용도)
+    var ol = el('ol', 'dg__steps scn__steps');
+    ol.setAttribute('aria-label', '단계 목록');
+    var det = el('details', 'scn__all');
+    var sum = el('summary', null, '모든 단계 글로 보기');
+    det.appendChild(sum); det.appendChild(ol);
+    bar.parentNode.insertBefore(det, cap.nextSibling);
+    var printMq = window.matchMedia ? window.matchMedia('print') : { matches: false };
+    if (printMq.addEventListener) printMq.addEventListener('change', function (e) { if (e.matches) det.open = true; });
+
+    var sIdx = 0, cur = 0, playing = false, timer = 0;
+    var badges = [];
+    var itemBtns = [];
+
+    function capText(st) {
+      var t = st.t;
+      if (Array.isArray(t)) return t.join(' ');
+      return t || '';
+    }
+    function stateOf(st) {
+      if (list(st.recover).length) return 'recover';
+      if (list(st.fail).length) return 'fail';
+      if (list(st.ok).length) return 'ok';
+      return 'neutral';
+    }
+
+    function buildBadges() {
+      badges.forEach(function (b) { if (b.parentNode) b.parentNode.removeChild(b); });
+      badges = [];
+      var steps = data[sIdx].steps;
+      var seen = {};
+      steps.forEach(function (st, i) {
+        KINDS.forEach(function (k) {
+          list(st[k[0]]).forEach(function (id) {
+            var n = managed[id];
+            if (!n || seen[id] || n.getAttribute('data-scn-badge') === 'off') return;
+            if (/-l\d+$/.test(id) || /^text$/i.test(n.tagName) || (n.tagName.toLowerCase() === 'g' && !n.querySelector('rect,path,line,circle,ellipse,polygon'))) return;
+            seen[id] = true;
+            var bb;
+            try { bb = n.getBBox(); } catch (e) { return; }
+            if (!bb || (!bb.width && !bb.height)) return;
+            var isLine = /^(path|line|polyline)$/i.test(n.tagName);
+            var cx = bb.x + 2, cy = bb.y + 2;
+            if (isLine) {
+              cx = bb.x + bb.width / 2; cy = bb.y + bb.height / 2;
+              if (typeof n.getTotalLength === 'function') {
+                try { var pt = n.getPointAtLength(n.getTotalLength() * 0.2); cx = pt.x; cy = pt.y; } catch (e2) { /* 무시 */ }
+              }
+            }
+            var g = doc.createElementNS(NS, 'g');
+            g.setAttribute('class', 'sc-badge');
+            g.setAttribute('aria-hidden', 'true');
+            var c = doc.createElementNS(NS, 'circle');
+            c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 9);
+            var t = doc.createElementNS(NS, 'text');
+            t.setAttribute('x', cx); t.setAttribute('y', cy + 4); t.setAttribute('text-anchor', 'middle');
+            t.textContent = String(i + 1);
+            g.appendChild(c); g.appendChild(t);
+            svg.appendChild(g);
+            badges.push(g);
+          });
+        });
+      });
+    }
+
+    function buildSteps() {
+      var steps = data[sIdx].steps;
+      ol.innerHTML = '';
+      itemBtns = [];
+      prog.innerHTML = '';
+      steps.forEach(function (st, i) {
+        var li = doc.createElement('li');
+        var b = el('button', null, capText(st));
+        b.type = 'button';
+        b.addEventListener('click', function () { go(i); });
+        li.appendChild(b); ol.appendChild(li);
+        itemBtns.push(b);
+        prog.appendChild(doc.createElement('span'));
+      });
+    }
+
+    function render() {
+      var sc = data[sIdx];
+      var steps = sc.steps;
+      var st = steps[cur];
+      // 요소별 마지막으로 켜진 단계
+      Object.keys(managed).forEach(function (id) {
+        var n = managed[id];
+        var last = -1, kind = '';
+        for (var i = 0; i <= cur; i++) {
+          KINDS.forEach(function (k) {
+            if (list(steps[i][k[0]]).indexOf(id) >= 0) { last = i; kind = k[1]; }
+          });
+        }
+        var inScenario = steps.some(function (s) {
+          return KINDS.some(function (k) { return list(s[k[0]]).indexOf(id) >= 0; });
+        });
+        n.classList.remove('sc-neutral', 'sc-ok', 'sc-fail', 'sc-recover', 'sc-now', 'sc-past', 'sc-dim', 'sc-idle');
+        if (!inScenario) { n.classList.add('sc-idle'); return; }
+        if (last < 0) { n.classList.add('sc-dim'); return; }
+        n.classList.add(kind);
+        n.classList.add(last === cur ? 'sc-now' : 'sc-past');
+      });
+      scopedEls.forEach(function (n) {
+        var ids = (n.getAttribute('data-scn') || '').split(/\s+/);
+        n.classList.toggle('sc-hide', ids.indexOf(sc.id || ('s' + sIdx)) < 0 && ids.indexOf(String(sIdx)) < 0);
+      });
+      var state = stateOf(st);
+      fig.setAttribute('data-state', state);
+      chip.textContent = STATE_LABEL[state];
+      chip.className = 'scn__chip scn__chip--' + state;
+      count.innerHTML = '<b>' + (cur + 1) + '</b> / ' + steps.length;
+      // 캡션: 배열이면 3문장 분리 표시
+      cap.innerHTML = '';
+      var t = st.t;
+      if (Array.isArray(t)) {
+        t.forEach(function (s) { cap.appendChild(el('span', 'scn__line', s)); });
+      } else {
+        cap.appendChild(el('span', 'scn__line', t || ''));
+      }
+      itemBtns.forEach(function (b, k) {
+        if (k === cur) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+      });
+      Array.prototype.forEach.call(prog.children, function (s, k) {
+        s.className = k < cur ? 'done' : (k === cur ? 'cur' : '');
+      });
+      revealNow();
+      bFirst.disabled = cur === 0;
+      bPrev.disabled = cur === 0;
+      bNext.disabled = cur === steps.length - 1;
+    }
+
+    function revealNow() {
+      try {
+        if (canvas.scrollWidth <= canvas.clientWidth + 2) return;
+        var vb = svg.viewBox && svg.viewBox.baseVal;
+        if (!vb || !vb.width) return;
+        var k = svg.getBoundingClientRect().width / vb.width;
+        var minX = Infinity, maxX = -Infinity;
+        Object.keys(managed).forEach(function (id) {
+          var n = managed[id];
+          if (!n.classList.contains('sc-now')) return;
+          var bb = n.getBBox();
+          minX = Math.min(minX, bb.x); maxX = Math.max(maxX, bb.x + bb.width);
+        });
+        if (minX === Infinity) return;
+        var l = minX * k, r = maxX * k, w = canvas.clientWidth, sl = canvas.scrollLeft;
+        if (l < sl + 8 || r > sl + w - 8) {
+          var target = (r - l) > w ? l - 8 : (l + r) / 2 - w / 2;
+          canvas.scrollTo ? canvas.scrollTo({ left: Math.max(0, target), behavior: reduceMq.matches ? 'auto' : 'smooth' }) : (canvas.scrollLeft = Math.max(0, target));
+        }
+      } catch (e) { /* 무시 */ }
+    }
+    function stopTimer() { window.clearTimeout(timer); timer = 0; }
+    function pause() {
+      stopTimer();
+      playing = false;
+      fig.classList.remove('is-playing');
+      bPlay.setAttribute('aria-pressed', 'false');
+      bPlay.textContent = '재생';
+    }
+    function schedule() {
+      stopTimer();
+      var st = data[sIdx].steps[cur];
+      var d = (st && +st.d) || stepMs;
+      timer = window.setTimeout(function () {
+        if (cur >= data[sIdx].steps.length - 1) { pause(); return; }
+        cur += 1; render(); schedule();
+      }, d);
+    }
+    function play() {
+      if (reduceMq.matches) return;
+      if (cur >= data[sIdx].steps.length - 1) { cur = 0; render(); }
+      playing = true;
+      fig.classList.add('is-playing');
+      bPlay.setAttribute('aria-pressed', 'true');
+      bPlay.textContent = '정지';
+      schedule();
+    }
+    function go(i) {
+      pause();
+      var n = data[sIdx].steps.length;
+      cur = Math.max(0, Math.min(n - 1, i));
+      render();
+    }
+    function selectScenario(i, focusTab) {
+      pause();
+      sIdx = i; cur = 0;
+      tabs.forEach(function (b, k) {
+        b.setAttribute('aria-selected', k === i ? 'true' : 'false');
+        b.tabIndex = k === i ? 0 : -1;
+        b.classList.toggle('is-on', k === i);
+      });
+      if (focusTab && tabs[i]) tabs[i].focus();
+      buildSteps();
+      buildBadges();
+      render();
+    }
+    function syncMotion() {
+      var r = reduceMq.matches;
+      fig.classList.toggle('is-static', r);
+      bPlay.disabled = r;
+      bPlay.title = r ? '동작 줄이기 설정이 켜져 있어 자동 재생을 쓰지 않습니다. 다음 버튼으로 진행하세요.' : '';
+      if (r) { pause(); det.open = true; }
+    }
+
+    bFirst.addEventListener('click', function () { go(0); });
+    bPrev.addEventListener('click', function () { go(cur - 1); });
+    bNext.addEventListener('click', function () { go(cur + 1); });
+    bPlay.addEventListener('click', function () { if (playing) pause(); else play(); });
+
+    fig.addEventListener('keydown', function (e) {
+      var tg = e.target;
+      if (tg && /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)) return;
+      var onTab = tg && tg.getAttribute && tg.getAttribute('role') === 'tab';
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        var dir = e.key === 'ArrowRight' ? 1 : -1;
+        if (onTab) selectScenario((sIdx + dir + data.length) % data.length, true);
+        else go(cur + dir);
+      } else if (e.key === 'Home' && !onTab) { e.preventDefault(); go(0); }
+      else if (e.key === 'End' && !onTab) { e.preventDefault(); go(data[sIdx].steps.length - 1); }
+      else if (e.key === 'Escape') { pause(); }
+    });
+    doc.addEventListener('visibilitychange', function () { if (doc.hidden) pause(); });
+    if (reduceMq.addEventListener) reduceMq.addEventListener('change', syncMotion);
+    else if (reduceMq.addListener) reduceMq.addListener(syncMotion);
+
+    syncMotion();
+    selectScenario(0, false);
+    fig.setAttribute('data-ready', 'true');
+  }
+
+  Array.prototype.slice.call(doc.querySelectorAll('figure.scn[data-scenarios]')).forEach(Scenario);
+})();

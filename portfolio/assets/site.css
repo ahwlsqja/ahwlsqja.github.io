@@ -1360,3 +1360,99 @@ pre code { font-size: inherit; color: var(--text); white-space: pre; }
   .tbl--cards td[data-label]::before { content: attr(data-label); display: block; font-family: var(--f-mono); font-size: var(--fs-xs); color: var(--text-3); margin-bottom: 1px; }
 }
 .sre-flow { list-style: none; margin: 0; padding: 0; }
+
+/* =====================================================================
+   시나리오 스테퍼 (figure.dg.scn) — site.js 6번 섹션과 짝
+   색 4종: 중립(--text-3) / 정상(--accent) / 실패(--bad, 점선) / 복구(--ok)
+   ===================================================================== */
+.scn svg .ah { fill: var(--text-3); fill: context-stroke; }
+.scn svg [id] { transition: opacity 0.4s var(--ease); }
+.scn svg .box { transition: stroke 0.4s var(--ease), fill 0.4s var(--ease); }
+.scn svg path, .scn svg line { transition: stroke 0.4s var(--ease), stroke-width 0.4s var(--ease), opacity 0.4s var(--ease); }
+
+/* 위치: 지난 단계 옅게 / 현재 선명 / 나머지 희미 */
+.scn svg .sc-now { opacity: 1; }
+.scn svg .sc-past { opacity: 0.5; }
+.scn svg .sc-dim { opacity: 0.28; }
+.scn svg .sc-hide { display: none; }
+.scn svg .sc-idle { opacity: 0.85; }
+.scn__all { border-top: 1px solid var(--line); }
+.scn__all > summary { cursor: pointer; padding: var(--s-3) var(--s-4); font-size: var(--fs-sm); color: var(--text-2); }
+.scn__all > summary:hover { color: var(--text); }
+.scn__all > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* 의미 색: 노드(.box)와 글자(.t) */
+.scn svg .sc-neutral .box, .scn svg .box.sc-neutral { stroke: var(--text-2); }
+.scn svg .sc-ok .box, .scn svg .box.sc-ok { stroke: var(--accent); fill: var(--accent-soft); stroke-width: 1.5; }
+.scn svg .sc-ok .t, .scn svg .t.sc-ok { fill: var(--accent-ink); }
+.scn svg .sc-fail .box, .scn svg .box.sc-fail { stroke: var(--bad); fill: var(--bad-soft); stroke-width: 1.5; stroke-dasharray: 5 3; }
+.scn svg .sc-fail .t, .scn svg .t.sc-fail { fill: var(--bad); }
+.scn svg .sc-recover .box, .scn svg .box.sc-recover { stroke: var(--ok); fill: var(--ok-soft); stroke-width: 1.5; }
+.scn svg .sc-recover .t, .scn svg .t.sc-recover { fill: var(--ok); }
+
+/* 선: 구조 1.5 / 활성 3 / 실패 점선 2 */
+.scn svg path.sc-neutral, .scn svg line.sc-neutral { stroke: var(--text-2); stroke-width: 1.5; }
+.scn svg path.sc-ok, .scn svg line.sc-ok { stroke: var(--accent); stroke-width: 1.5; }
+.scn svg path.sc-recover, .scn svg line.sc-recover { stroke: var(--ok); stroke-width: 1.5; }
+.scn svg path.sc-fail, .scn svg line.sc-fail { stroke: var(--bad); stroke-width: 2; stroke-dasharray: 6 4; }
+.scn svg path.sc-now.sc-ok, .scn svg path.sc-now.sc-recover,
+.scn svg line.sc-now.sc-ok, .scn svg line.sc-now.sc-recover { stroke-width: 3; }
+.scn svg .sc-now.sc-fail.box, .scn svg .sc-now.sc-fail .box { stroke-width: 2; }
+.scn svg .sc-now.sc-ok .box, .scn svg .sc-now.sc-recover .box { stroke-width: 2.5; }
+.scn svg .edge--fail { stroke-dasharray: 6 4; stroke-width: 2; } /* 정지 상태에서도 점선으로 쓰는 실패 경로 */
+
+/* 재생 중 현재 흐름선만 흐른다 (실패 점선은 흐르지 않고 고정) */
+.scn.is-playing svg path.sc-now.sc-ok, .scn.is-playing svg path.sc-now.sc-recover {
+  stroke-dasharray: 8 6; animation: scn-flow 1s linear infinite;
+}
+@keyframes scn-flow { to { stroke-dashoffset: -14; } }
+
+/* 단계 번호 배지: 동작 줄이기에서만 보인다 */
+.scn svg .sc-badge { display: none; pointer-events: none; }
+.scn svg .sc-badge circle { fill: var(--surface-3); stroke: var(--text-3); stroke-width: 1; }
+.scn svg .sc-badge text { font-family: var(--f-mono); font-size: 12px; fill: var(--text); font-weight: 600; }
+.scn.is-static svg .sc-badge { display: block; }
+
+/* 탭 */
+.scn__tabs { display: flex; flex-wrap: wrap; gap: var(--s-2); padding: var(--s-3) var(--s-4) 0; border-bottom: 1px solid var(--line); }
+.scn__tab {
+  padding: 8px var(--s-3); margin-bottom: -1px;
+  border: 1px solid transparent; border-bottom: 0; border-radius: var(--r-sm) var(--r-sm) 0 0;
+  background: transparent; color: var(--text-2); font: inherit; font-size: var(--fs-md); cursor: pointer;
+}
+.scn__tab:hover { color: var(--text); }
+.scn__tab.is-on { color: var(--text); background: var(--surface); border-color: var(--line); border-bottom: 1px solid var(--surface); box-shadow: inset 0 2px 0 var(--accent); }
+.scn__tab:focus-visible, .scn__btn:focus-visible, .scn__steps button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 버튼 */
+.scn__ctl { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.scn__btn {
+  min-height: 36px; padding: 0 var(--s-3);
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  background: var(--surface-2); color: var(--text-2); font: inherit; font-size: var(--fs-sm); cursor: pointer;
+}
+.scn__btn:hover:not(:disabled) { color: var(--text); border-color: var(--text-3); }
+.scn__btn:disabled { opacity: 0.4; cursor: default; }
+.scn__btn[aria-pressed="true"] { color: var(--accent-ink); border-color: var(--accent-line); background: var(--accent-soft); }
+
+/* 상태 칩: 색만으로 뜻을 전하지 않도록 글자를 함께 쓴다 */
+.scn__chip { font-family: var(--f-mono); font-size: var(--fs-xs); padding: 2px 8px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--text-2); }
+.scn__chip--ok { color: var(--accent-ink); border-color: var(--accent-line); background: var(--accent-soft); }
+.scn__chip--fail { color: var(--bad); border-color: var(--bad); background: var(--bad-soft); border-style: dashed; }
+.scn__chip--recover { color: var(--ok); border-color: var(--ok); background: var(--ok-soft); }
+
+/* 캡션 */
+.scn__cap { padding: var(--s-3) var(--s-4); border-top: 1px solid var(--line); min-height: 4.5em; font-size: var(--fs-md); line-height: 1.65; color: var(--text); }
+.scn__line { display: block; }
+.scn__line + .scn__line { margin-top: 2px; color: var(--text-2); }
+
+/* 모바일: 도식만 자체 가로 스크롤 (기존 .dg__canvas 규칙). 버튼은 줄바꿈 */
+@media (max-width: 600px) {
+  .scn { --dg-min: 720px; } /* viewBox 폭과 같게: 글자를 1:1(12px)로 유지 */
+  .scn__tabs { padding-inline: var(--s-3); }
+  .scn__btn { min-height: 40px; flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scn svg path.sc-now.sc-ok, .scn svg path.sc-now.sc-recover { animation: none; stroke-dasharray: none; }
+}
+@media print { .scn__all > summary { display: none; } .scn svg .sc-dim, .scn svg .sc-past { opacity: 1; } .scn__tabs, .scn__bar { display: none !important; } }
